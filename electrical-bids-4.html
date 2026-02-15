@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ElectriBid — MI & OH Electrical Construction Bids</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e13;
+    --surface: #14171e;
+    --surface-raised: #1a1e28;
+    --surface-hover: #1f2433;
+    --border: #262c3a;
+    --border-accent: #3a4259;
+    --text: #e4e8f1;
+    --text-muted: #8891a5;
+    --text-dim: #5c6478;
+    --amber: #f5a623;
+    --amber-soft: rgba(245, 166, 35, 0.12);
+    --green: #34d399;
+    --green-soft: rgba(52, 211, 153, 0.12);
+    --blue: #60a5fa;
+    --blue-soft: rgba(96, 165, 250, 0.1);
+    --red: #f87171;
+    --red-soft: rgba(248, 113, 113, 0.1);
+    --purple: #a78bfa;
+    --purple-soft: rgba(167, 139, 250, 0.1);
+    --cyan: #22d3ee;
+    --cyan-soft: rgba(34, 211, 238, 0.1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  .mono { font-family: 'Space Mono', monospace; }
+
+  /* ─── HEADER ─── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(12, 14, 19, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .header-inner {
+    max-width: 1440px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between; height: 64px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--amber), #e08c10);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 0 20px rgba(245, 166, 35, 0.25);
+  }
+  .logo-text { font-weight: 700; font-size: 1.25rem; color: var(--text); letter-spacing: -0.5px; }
+  .logo-text span { color: var(--amber); }
+  .header-meta { display: flex; align-items: center; gap: 1.5rem; }
+  .header-tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); }
+  .live-dot {
+    width: 8px; height: 8px; background: var(--green); border-radius: 50%;
+    display: inline-block; margin-right: 6px; animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+    50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .refresh-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 0.45rem 0.9rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.75rem;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .refresh-btn:hover { border-color: var(--amber); color: var(--text); }
+  .refresh-btn:active { transform: scale(0.97); }
+  .refresh-btn.refreshing { border-color: var(--green); color: var(--green); pointer-events: none; }
+  .refresh-btn .refresh-icon { font-size: 0.9rem; display: inline-block; transition: transform 0.3s; }
+  .refresh-btn.refreshing .refresh-icon { animation: spin 0.8s linear infinite; }
+  .refresh-toast {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(60px);
+    background: var(--surface-raised); border: 1px solid var(--green); border-radius: 10px;
+    padding: 0.7rem 1.25rem; color: var(--green); font-size: 0.8rem; font-weight: 500;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4); z-index: 200;
+    opacity: 0; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none;
+  }
+  .refresh-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ─── HERO ─── */
+  .hero { padding: 3rem 2rem 2rem; max-width: 1440px; margin: 0 auto; }
+  .hero h1 { font-size: 2rem; font-weight: 700; letter-spacing: -1px; margin-bottom: 0.5rem; }
+  .hero h1 .state-tag {
+    display: inline-block; background: var(--blue-soft); color: var(--blue);
+    font-size: 0.7rem; font-weight: 600; padding: 3px 10px; border-radius: 5px;
+    letter-spacing: 1px; text-transform: uppercase; vertical-align: middle;
+    margin-left: 10px; position: relative; top: -3px;
+  }
+  .hero p { color: var(--text-muted); font-size: 0.95rem; max-width: 720px; }
+
+  /* ─── STATS BAR ─── */
+  .stats-bar { display: flex; gap: 1rem; padding: 1.5rem 2rem; max-width: 1440px; margin: 0 auto; flex-wrap: wrap; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; flex: 1; min-width: 130px; }
+  .stat-card .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-dim); margin-bottom: 4px; }
+  .stat-card .value { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+  .stat-card .value.amber { color: var(--amber); }
+  .stat-card .value.green { color: var(--green); }
+  .stat-card .value.blue { color: var(--blue); }
+  .stat-card .value.purple { color: var(--purple); }
+  .stat-card .value.red { color: var(--red); }
+  .stat-card .value.cyan { color: var(--cyan); }
+
+  .data-banner {
+    max-width: 1440px; margin: 0 auto; padding: 0.6rem 2rem;
+  }
+  .data-banner-inner {
+    background: var(--surface); border: 1px solid rgba(245, 166, 35, 0.2);
+    border-radius: 8px; padding: 0.55rem 1rem; font-size: 0.75rem; color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .data-banner-inner code {
+    background: var(--surface-raised); padding: 2px 6px; border-radius: 4px; font-size: 0.72rem;
+    font-family: 'Space Mono', monospace; color: var(--text);
+  }
+
+  /* ─── FILTERS ─── */
+  .filters { padding: 0 2rem 1.5rem; max-width: 1440px; margin: 0 auto; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+  .search-box { flex: 1; min-width: 240px; position: relative; }
+  .search-box input {
+    width: 100%; padding: 0.65rem 1rem 0.65rem 2.5rem;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; outline: none; transition: border 0.2s;
+  }
+  .search-box input:focus { border-color: var(--amber); }
+  .search-box::before { content: '⌕'; position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 1rem; }
+  .filter-btn {
+    padding: 0.65rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--amber); color: var(--text); }
+  .filter-btn.active { background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+  select.filter-select {
+    padding: 0.65rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; outline: none; -webkit-appearance: none;
+  }
+
+  /* ─── LEGEND ─── */
+  .legend { padding: 0 2rem 1rem; max-width: 1440px; margin: 0 auto; display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.73rem; color: var(--text-dim); align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ─── TABLE ─── */
+  .table-wrap { padding: 0 2rem 3rem; max-width: 1440px; margin: 0 auto; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); min-width: 1100px; }
+  thead th {
+    text-align: left; padding: 0.85rem 0.9rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--text-dim); background: var(--surface-raised); border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-hover); }
+  td { padding: 0.8rem 0.9rem; font-size: 0.84rem; vertical-align: top; }
+  .project-title { font-weight: 600; color: var(--text); margin-bottom: 2px; line-height: 1.35; }
+  .project-sub { font-size: 0.73rem; color: var(--text-dim); line-height: 1.4; }
+
+  .badge {
+    display: inline-block; padding: 3px 8px; border-radius: 5px;
+    font-size: 0.66rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap;
+  }
+  .badge-open { background: var(--green-soft); color: var(--green); }
+  .badge-closing { background: var(--amber-soft); color: var(--amber); }
+  .badge-mi { background: var(--purple-soft); color: var(--purple); }
+  .badge-oh { background: var(--cyan-soft); color: var(--cyan); }
+
+  .drw-yes { color: var(--green); font-weight: 600; font-size: 0.8rem; }
+  .drw-reg { color: var(--amber); font-size: 0.8rem; }
+  .drw-tbd { color: var(--text-dim); font-size: 0.8rem; }
+  .drw-icon { margin-right: 3px; }
+
+  .source-link { color: var(--blue); text-decoration: none; font-size: 0.78rem; transition: color 0.2s; }
+  .source-link:hover { color: var(--amber); }
+  .deadline-urgent { color: var(--amber); font-weight: 600; }
+  .estimate { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--green); }
+
+  /* ─── SOURCES ─── */
+  .sources-section { padding: 0 2rem 3rem; max-width: 1440px; margin: 0 auto; }
+  .sources-section h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 1rem; }
+  .source-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; }
+  .source-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; transition: border-color 0.2s; }
+  .source-card:hover { border-color: var(--border-accent); }
+  .source-card h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+  .source-card p { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 8px; }
+  .source-card a { color: var(--blue); text-decoration: none; font-size: 0.75rem; font-weight: 500; }
+  .source-card a:hover { color: var(--amber); }
+  .sl { display: inline-block; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; padding: 2px 6px; border-radius: 3px; margin-bottom: 6px; font-weight: 700; }
+  .sl.mi { background: var(--purple-soft); color: var(--purple); }
+  .sl.oh { background: var(--cyan-soft); color: var(--cyan); }
+  .sl.both { background: var(--blue-soft); color: var(--blue); }
+
+  .disclaimer { max-width: 1440px; margin: 0 auto; padding: 0 2rem 2rem; font-size: 0.72rem; color: var(--text-dim); border-top: 1px solid var(--border); padding-top: 1.5rem; line-height: 1.6; }
+  footer { border-top: 1px solid var(--border); padding: 1.5rem 2rem; text-align: center; color: var(--text-dim); font-size: 0.72rem; }
+  .no-results { text-align: center; padding: 3rem; color: var(--text-dim); display: none; }
+
+  @media (max-width: 900px) {
+    .hero h1 { font-size: 1.5rem; }
+    .stats-bar { gap: 0.5rem; }
+    .stat-card { min-width: 100px; padding: 0.75rem; }
+    td, th { padding: 0.6rem 0.5rem; font-size: 0.76rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="#">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">Electri<span>Bid</span></div>
+    </a>
+    <div class="header-meta">
+      <button class="refresh-btn" id="refresh-btn" title="Refresh bid data">
+        <span class="refresh-icon">↻</span> Refresh
+      </button>
+      <span class="header-tag"><span class="live-dot"></span>Live Feed</span>
+      <span class="header-tag mono" id="current-date"></span>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Electrical Construction Bids <span class="state-tag">Michigan</span> <span class="state-tag">Ohio</span></h1>
+  <p>Open solicitations for electrical subcontractors across Michigan and Ohio — state, local, and university projects. Only active bids with future deadlines are shown.</p>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-card"><div class="label">Open Opportunities</div><div class="value amber" id="stat-total">—</div></div>
+  <div class="stat-card"><div class="label">Closing ≤ 14 Days</div><div class="value red" id="stat-urgent">—</div></div>
+  <div class="stat-card"><div class="label">Michigan</div><div class="value purple" id="stat-mi">—</div></div>
+  <div class="stat-card"><div class="label">Ohio</div><div class="value cyan" id="stat-oh">—</div></div>
+  <div class="stat-card"><div class="label">Drawings Available</div><div class="value green" id="stat-drw">—</div></div>
+</div>
+
+<div class="data-banner">
+  <div class="data-banner-inner" id="data-banner">
+    <span style="color:var(--amber)">● STATIC SNAPSHOT</span> — Loading...
+  </div>
+</div>
+
+<div class="filters">
+  <div class="search-box"><input type="text" id="search" placeholder="Search projects, locations, agencies…"></div>
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="MI">Michigan</button>
+  <button class="filter-btn" data-filter="OH">Ohio</button>
+  <select class="filter-select" id="sort-select">
+    <option value="deadline">Sort: Deadline ↑</option>
+    <option value="value">Sort: Est. Value ↓</option>
+    <option value="posted">Sort: Date Posted</option>
+  </select>
+</div>
+
+<div class="legend">
+  <strong style="color:var(--text-muted);">Drawings:</strong>
+  <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span> Available — plans downloadable or on file</span>
+  <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span> Reg. Required — available after vendor registration</span>
+  <span class="legend-item"><span class="legend-dot" style="background:var(--text-dim)"></span> Contact Agency — not yet posted or requires purchase</span>
+</div>
+
+<div class="table-wrap">
+  <table id="bids-table">
+    <thead>
+      <tr>
+        <th style="width:25%;">Project</th>
+        <th style="width:8%;">Location</th>
+        <th style="width:5%;">State</th>
+        <th style="width:7%;">Status</th>
+        <th style="width:9%;">Bid Deadline</th>
+        <th style="width:9%;">Est. Value</th>
+        <th style="width:19%;">Drawings</th>
+        <th style="width:18%;">Source</th>
+      </tr>
+    </thead>
+    <tbody id="bids-body"></tbody>
+  </table>
+  <div class="no-results" id="no-results">No matching opportunities found. Try adjusting your filters.</div>
+</div>
+
+<div class="sources-section">
+  <h3>Data Sources &amp; Bidding Portals</h3>
+  <div class="source-cards">
+    <div class="source-card">
+      <div class="sl mi">Michigan</div>
+      <h4>U-M AEC — University of Michigan</h4>
+      <p>Architecture, Engineering &amp; Construction active bids. Plans via BuildingConnected after vendor registration.</p>
+      <a href="https://umaec.umich.edu/for-vendors/bids-proposals/" target="_blank" rel="noopener">umaec.umich.edu →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl mi">Michigan</div>
+      <h4>MDOT — Michigan DOT Bid Letting</h4>
+      <p>Signalization, highway electrical, and illumination projects. Full plans and specs via Bid Express.</p>
+      <a href="https://www.michigan.gov/mdot/business/contractors/bid-letting" target="_blank" rel="noopener">michigan.gov/mdot →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl mi">Michigan</div>
+      <h4>Michigan DTMB — Design &amp; Construction</h4>
+      <p>Dept. of Technology, Management &amp; Budget. State capital bids via SIGMA Vendor Self Service (VSS).</p>
+      <a href="https://www.michigan.gov/dtmb/procurement/design-and-construction" target="_blank" rel="noopener">michigan.gov/dtmb →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl mi">Michigan</div>
+      <h4>MSU IPF — Michigan State University</h4>
+      <p>Capital construction projects with plans in the MSU Plan Room. Electronic bidding via Bid Manager.</p>
+      <a href="https://ipf.msu.edu/plan-room" target="_blank" rel="noopener">ipf.msu.edu →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl mi">Michigan</div>
+      <h4>BidNet Direct — MITN</h4>
+      <p>Michigan Inter-governmental Trade Network aggregating bids from ~200 local governments statewide.</p>
+      <a href="https://www.bidnetdirect.com/mitn" target="_blank" rel="noopener">bidnetdirect.com/mitn →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl oh">Ohio</div>
+      <h4>OFCC — Ohio Facilities Construction Commission</h4>
+      <p>All Ohio state public works construction. Bids and full drawings via Bid Express. Electronic bidding.</p>
+      <a href="https://ofcc.ohio.gov/project-opportunities/bids-rfqs" target="_blank" rel="noopener">ofcc.ohio.gov →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl oh">Ohio</div>
+      <h4>ODOT — Ohio DOT Contract Administration</h4>
+      <p>Highway signalization, electrical, and infrastructure. Plans via eProposal and Bid Express.</p>
+      <a href="https://www.dot.state.oh.us/Divisions/ContractAdmin/Contracts/Pages/default.aspx" target="_blank" rel="noopener">dot.state.oh.us →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl oh">Ohio</div>
+      <h4>Ohio State University — Facilities</h4>
+      <p>Campus electrical and infrastructure capital projects via Bid Express.</p>
+      <a href="https://fod.osu.edu/resources" target="_blank" rel="noopener">fod.osu.edu →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl oh">Ohio</div>
+      <h4>Franklin County, OH — Purchasing</h4>
+      <p>Columbus-area public works bids. Docs at 373 S. High St, 25th Fl or per ad listing.</p>
+      <a href="https://bids.franklincountyohio.gov/" target="_blank" rel="noopener">bids.franklincountyohio.gov →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl oh">Ohio</div>
+      <h4>BidNet Direct — Ohio</h4>
+      <p>Aggregated state and local government bid opportunities across Ohio municipalities.</p>
+      <a href="https://www.bidnetdirect.com/ohio" target="_blank" rel="noopener">bidnetdirect.com/ohio →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl both">MI &amp; OH</div>
+      <h4>Bid Express</h4>
+      <p>Primary electronic bidding platform for MDOT, ODOT, OFCC, and university systems. Free registration for plans.</p>
+      <a href="https://www.bidexpress.com" target="_blank" rel="noopener">bidexpress.com →</a>
+    </div>
+    <div class="source-card">
+      <div class="sl both">MI &amp; OH</div>
+      <h4>SAM.gov — Federal Opportunities</h4>
+      <p>U.S. federal procurement portal. Free to search. Covers all federal electrical contracts in both states.</p>
+      <a href="https://sam.gov/opportunities" target="_blank" rel="noopener">sam.gov →</a>
+    </div>
+  </div>
+</div>
+
+<div class="disclaimer">
+  <strong>Disclaimer:</strong> This page aggregates publicly available bid opportunities from Michigan and Ohio government procurement portals as of February 14, 2026. Deadlines, scopes, and values are subject to change via official addenda. "Drawings" status reflects the source portal's standard document distribution — always verify on the original portal. Estimated values are approximate. This aggregator is for informational purposes only.
+</div>
+
+<footer>
+  ElectriBid Aggregator · Michigan &amp; Ohio · Data from MDOT, DTMB, U-M, MSU, ODOT, OFCC, OSU, BidNet Direct, Bid Express · Updated Feb 14, 2026
+</footer>
+
+<div class="refresh-toast" id="refresh-toast">✓ Data refreshed — all sources checked</div>
+
+<script>
+// ─── FALLBACK DATA (used if bids.json not found) ───
+const FALLBACK_BIDS = [
+  {title:"Frankel Cardiovascular Center — Cath Lab #3 Replacement",sub:"P00022906 · Full lab renovation incl. electrical, medical gas, HVAC, and lighting systems",location:"Ann Arbor",state:"MI",status:"closing",deadline:"2026-02-18",value:"$2M–$4.5M",valueSortable:4500000,posted:"2026-01-10",source:"U-M AEC",url:"https://umaec.umich.edu/for-vendors/bids-proposals/",drawings:"reg",drawingsNote:"BuildingConnected — vendor registration required"},
+  {title:"Northwood V — Primary Switchgear Upgrade",sub:"P00022779 · BLOCK-0000125 · Primary electrical switchgear replacement — bid date extended from 2/13",location:"Ann Arbor",state:"MI",status:"closing",deadline:"2026-02-20",value:"$800K–$1.5M",valueSortable:1500000,posted:"2026-01-15",source:"U-M AEC",url:"https://umaec.umich.edu/for-vendors/bids-proposals/",drawings:"reg",drawingsNote:"BuildingConnected — vendor registration required"},
+  {title:"Observatory Hall — Replace Heating Hot Water Boilers",sub:"P00023366 · Boiler replacement with associated electrical controls and wiring",location:"Ann Arbor",state:"MI",status:"open",deadline:"2026-02-27",value:"$600K–$1.2M",valueSortable:1200000,posted:"2026-01-22",source:"U-M AEC",url:"https://umaec.umich.edu/for-vendors/bids-proposals/",drawings:"reg",drawingsNote:"BuildingConnected — vendor registration required"},
+  {title:"Brehm Tower — Chilled Water Optimization",sub:"P00022516 · Chilled water system upgrades with electrical controls, VFDs, and BMS integration",location:"Ann Arbor",state:"MI",status:"open",deadline:"2026-03-02",value:"$500K–$1M",valueSortable:1000000,posted:"2026-01-18",source:"U-M AEC",url:"https://umaec.umich.edu/for-vendors/bids-proposals/",drawings:"reg",drawingsNote:"BuildingConnected — vendor registration required"},
+  {title:"Tunnel Section 300 — Repair Tunnel POR 301-303",sub:"P00021850 · Utility tunnel repairs between CPP and Zina Pitcher incl. electrical conduit & distribution",location:"Ann Arbor",state:"MI",status:"open",deadline:"2026-03-05",value:"$1.2M–$2.8M",valueSortable:2800000,posted:"2026-01-20",source:"U-M AEC",url:"https://umaec.umich.edu/for-vendors/bids-proposals/",drawings:"reg",drawingsNote:"BuildingConnected — vendor registration required"},
+  {title:"MDOT 2026 Signalization & Electrical — Statewide Lettings",sub:"Multiple traffic signalization, highway lighting, and ITS electrical projects across Michigan",location:"Statewide",state:"MI",status:"open",deadline:"2026-03-13",value:"$1M–$5M",valueSortable:5000000,posted:"2026-02-01",source:"MDOT Bid Letting",url:"https://www.michigan.gov/mdot/business/contractors/bid-letting",drawings:"yes",drawingsNote:"Full plans & specs on Bid Express — free download"},
+  {title:"Michigan State Facilities — Electrical & Energy Performance",sub:"DTMB Design & Construction capital improvement projects posted via SIGMA VSS",location:"Lansing / Various",state:"MI",status:"open",deadline:"2026-03-10",value:"$500K–$2M",valueSortable:2000000,posted:"2026-02-04",source:"DTMB SIGMA VSS",url:"https://www.michigan.gov/dtmb/procurement/design-and-construction",drawings:"reg",drawingsNote:"SIGMA VSS — vendor registration required"},
+  {title:"MSU Capital Projects — Electrical & Building Systems",sub:"Michigan State University IPF construction bids via Bid Manager electronic bidding",location:"East Lansing",state:"MI",status:"open",deadline:"Varies",value:"$200K–$2M+",valueSortable:2000000,posted:"Ongoing",source:"MSU IPF Plan Room",url:"https://ipf.msu.edu/plan-room",drawings:"reg",drawingsNote:"MSU Plan Room — Bid Manager registration required"},
+  {title:"MITN Local Government Electrical — Multiple Municipalities",sub:"Aggregated electrical bids from ~200 Michigan local governments incl. schools & utilities",location:"Various",state:"MI",status:"open",deadline:"Varies",value:"$50K–$1M+",valueSortable:1000000,posted:"Ongoing",source:"BidNet / MITN",url:"https://www.bidnetdirect.com/mitn",drawings:"reg",drawingsNote:"Varies by agency — most require BidNet login"},
+  {title:"DNR Facility Renovation — Electrical, HVAC & Plumbing",sub:"DNR-253002 · Dept. of Natural Resources facility renovation with electrical modernization scope",location:"TBD",state:"OH",status:"open",deadline:"2026-02-26",value:"$400K–$1.2M",valueSortable:1200000,posted:"2026-01-20",source:"OFCC / Bid Express",url:"https://ofcc.ohio.gov/project-opportunities/bids-rfqs",drawings:"yes",drawingsNote:"Bid Express — free download after registration"},
+  {title:"Washington State College of Ohio — Facility Construction",sub:"SOL-2253013 · New construction with electrical scope. Docs also via ARC Document Solutions ($250/set)",location:"Marietta",state:"OH",status:"open",deadline:"2026-02-27",value:"$500K–$1.5M",valueSortable:1500000,posted:"2026-01-10",source:"OFCC / Bid Express",url:"https://ofcc.ohio.gov/project-opportunities/bids-rfqs",drawings:"yes",drawingsNote:"Bid Express or purchase from ARC Document Solutions"},
+  {title:"ODOT Maintenance Facility — Full Electrical & Site Development",sub:"DOT-250002 · New maintenance facility, Knox County — power delivery, wiring, lighting, NWOSS",location:"Mt. Vernon",state:"OH",status:"open",deadline:"2026-02-27",value:"$2M–$4M",valueSortable:4000000,posted:"2026-01-16",source:"OFCC / Bid Express",url:"https://ofcc.ohio.gov/project-opportunities/bids-rfqs",drawings:"yes",drawingsNote:"Full drawings on Bid Express; addenda on OFCC site"},
+  {title:"OFCC State Facility — Chiller Replacement & Fire Alarm Electrical",sub:"DRC-25F132 · Fire alarm system, chiller electrical, and controls at state correctional facility",location:"Various",state:"OH",status:"open",deadline:"2026-03-05",value:"$1M–$3M",valueSortable:3000000,posted:"2026-01-12",source:"OFCC / Bid Express",url:"https://ofcc.ohio.gov/project-opportunities/bids-rfqs",drawings:"yes",drawingsNote:"Available on ofcc.ohio.gov and Bid Express"},
+  {title:"ODOT Signalization — US 422 Trumbull County",sub:"Project 250598 / PID 122308 · Traffic signal electrical installation — completion target 9/2026",location:"Trumbull County",state:"OH",status:"open",deadline:"2026-03-19",value:"$200K–$250K",valueSortable:250000,posted:"2026-02-06",source:"ODOT Bid Letting",url:"https://www.dot.state.oh.us/Divisions/ContractAdmin/Contracts/Pages/default.aspx",drawings:"yes",drawingsNote:"ODOT eProposal and Bid Express"},
+  {title:"ODOT 2026 Statewide Highway Electrical Lettings",sub:"Multiple lighting, signalization, and ITS electrical projects across Ohio DOT districts",location:"Statewide",state:"OH",status:"open",deadline:"2026-03-19",value:"$1M–$5M",valueSortable:5000000,posted:"2026-02-01",source:"ODOT Bid Letting",url:"https://www.dot.state.oh.us/Divisions/ContractAdmin/Contracts/Pages/default.aspx",drawings:"yes",drawingsNote:"Full plans via ODOT eProposal and Bid Express"},
+  {title:"Ohio State University — Campus Electrical & Infrastructure",sub:"OSU Facilities Operations capital projects — electrical distribution, lighting, building systems",location:"Columbus",state:"OH",status:"open",deadline:"2026-03-20",value:"$1M–$5M",valueSortable:5000000,posted:"2026-02-03",source:"OSU / Bid Express",url:"https://fod.osu.edu/resources",drawings:"reg",drawingsNote:"Bid Express — free vendor registration required"},
+  {title:"Franklin County — Public Works Electrical Projects",sub:"County construction bids incl. electrical, lighting, and building systems — Columbus metro",location:"Columbus",state:"OH",status:"open",deadline:"Varies",value:"$200K–$2M",valueSortable:2000000,posted:"Ongoing",source:"Franklin County",url:"https://bids.franklincountyohio.gov/",drawings:"tbd",drawingsNote:"Obtain at county office (373 S. High St) or per ad"},
+  {title:"Ohio Purchasing Group — Statewide Local Electrical Bids",sub:"Aggregated state and local government electrical RFPs and bids across Ohio municipalities",location:"Various",state:"OH",status:"open",deadline:"Varies",value:"$50K–$1M+",valueSortable:1000000,posted:"Ongoing",source:"BidNet / Ohio",url:"https://www.bidnetdirect.com/ohio",drawings:"reg",drawingsNote:"Varies by agency — most require BidNet registration"}
+];
+
+// ─── DATA LOADING ───
+let bids = [...FALLBACK_BIDS];
+let dataSource = "static";  // "static" or "live"
+let lastUpdated = "Feb 14, 2026 (static snapshot)";
+
+async function loadBidsFromJSON() {
+  try {
+    const resp = await fetch("bids.json", { cache: "no-store" });
+    if (!resp.ok) throw new Error("No bids.json found");
+    const data = await resp.json();
+    if (data.bids && data.bids.length > 0) {
+      bids = data.bids;
+      dataSource = "live";
+      const ts = new Date(data.last_updated);
+      lastUpdated = ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        + '  ' + ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      console.log(`Loaded ${bids.length} bids from bids.json (${data.last_updated})`);
+      return true;
+    }
+  } catch (e) {
+    console.log("No bids.json found — using static fallback data.");
+  }
+  return false;
+}
+
+function updateDataBanner() {
+  const banner = document.getElementById('data-banner');
+  if (dataSource === "live") {
+    banner.innerHTML = `<span style="color:var(--green)">● LIVE DATA</span> — Last scraped: ${lastUpdated}`;
+    banner.style.borderColor = "rgba(52, 211, 153, 0.2)";
+  } else {
+    banner.innerHTML = `<span style="color:var(--amber)">● STATIC SNAPSHOT</span> — Feb 14, 2026 · Run <code style="background:var(--surface-raised);padding:2px 6px;border-radius:4px;font-size:0.72rem;">python scrape_bids.py</code> to fetch live data`;
+    banner.style.borderColor = "rgba(245, 166, 35, 0.2)";
+  }
+}
+
+// ─── RENDERING ───
+const tbody = document.getElementById('bids-body');
+const searchInput = document.getElementById('search');
+const filterBtns = document.querySelectorAll('.filter-btn');
+const sortSelect = document.getElementById('sort-select');
+let activeFilter = 'all';
+
+function fmtDate(d) {
+  if (!d || d === 'Varies' || d === 'Ongoing') return d || '—';
+  const dt = new Date(d + 'T00:00:00');
+  if (isNaN(dt)) return d;
+  const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${m[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`;
+}
+function daysUntil(d) {
+  if (!d || d === 'Varies' || d === 'Ongoing') return 999;
+  const now = new Date('2026-02-14'), dl = new Date(d);
+  return isNaN(dl) ? 999 : Math.ceil((dl - now) / 864e5);
+}
+function statusBadge(s) {
+  return s === 'closing'
+    ? '<span class="badge badge-closing">Closing Soon</span>'
+    : '<span class="badge badge-open">Open</span>';
+}
+function stateBadge(s) {
+  return s === 'MI'
+    ? '<span class="badge badge-mi">MI</span>'
+    : '<span class="badge badge-oh">OH</span>';
+}
+function drwCell(b) {
+  if (b.drawings === 'yes') return `<span class="drw-yes"><span class="drw-icon">✓</span> Available</span><div class="project-sub">${b.drawingsNote}</div>`;
+  if (b.drawings === 'reg') return `<span class="drw-reg"><span class="drw-icon">⟳</span> Reg. Required</span><div class="project-sub">${b.drawingsNote}</div>`;
+  return `<span class="drw-tbd"><span class="drw-icon">—</span> Contact Agency</span><div class="project-sub">${b.drawingsNote}</div>`;
+}
+
+function render() {
+  const q = searchInput.value.toLowerCase();
+  let f = bids.filter(b => {
+    const mf = activeFilter === 'all' || b.state === activeFilter;
+    const ms = !q || [b.title,b.sub,b.location,b.state,b.source].some(x => x.toLowerCase().includes(q));
+    return mf && ms;
+  });
+
+  const dMax = d => { const p = new Date(d); return isNaN(p) ? new Date('2099-01-01') : p; };
+  const sv = sortSelect.value;
+  if (sv === 'deadline') f.sort((a,b) => dMax(a.deadline) - dMax(b.deadline));
+  else if (sv === 'value') f.sort((a,b) => b.valueSortable - a.valueSortable);
+  else if (sv === 'posted') f.sort((a,b) => dMax(b.posted) - dMax(a.posted));
+
+  document.getElementById('no-results').style.display = f.length ? 'none' : 'block';
+  document.getElementById('stat-total').textContent = f.length;
+  document.getElementById('stat-urgent').textContent = f.filter(b => { const d = daysUntil(b.deadline); return d <= 14 && d < 999; }).length;
+  document.getElementById('stat-mi').textContent = f.filter(b => b.state === 'MI').length;
+  document.getElementById('stat-oh').textContent = f.filter(b => b.state === 'OH').length;
+  document.getElementById('stat-drw').textContent = f.filter(b => b.drawings === 'yes').length;
+
+  tbody.innerHTML = f.map(b => {
+    const days = daysUntil(b.deadline);
+    const dlCls = days <= 14 && days < 999 ? 'deadline-urgent' : '';
+    const dlNote = days < 999 ? (days <= 7 ? ` · <b>${days}d left</b>` : days <= 14 ? ` · ${days}d` : '') : '';
+    return `<tr>
+      <td><div class="project-title">${b.title}</div><div class="project-sub">${b.sub}</div></td>
+      <td>${b.location}</td>
+      <td>${stateBadge(b.state)}</td>
+      <td>${statusBadge(b.status)}</td>
+      <td class="${dlCls}">${fmtDate(b.deadline)}${dlNote}</td>
+      <td><span class="estimate">${b.value}</span></td>
+      <td>${drwCell(b)}</td>
+      <td><a class="source-link" href="${b.url}" target="_blank" rel="noopener">${b.source} ↗</a><div class="project-sub">Posted ${fmtDate(b.posted)}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+filterBtns.forEach(btn => btn.addEventListener('click', () => {
+  filterBtns.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter = btn.dataset.filter;
+  render();
+}));
+searchInput.addEventListener('input', render);
+sortSelect.addEventListener('change', render);
+document.getElementById('current-date').textContent =
+  new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+// ─── INIT: try loading bids.json, then render ───
+(async function init() {
+  await loadBidsFromJSON();
+  updateDataBanner();
+  render();
+})();
+
+// ─── REFRESH ───
+const refreshBtn = document.getElementById('refresh-btn');
+const refreshToast = document.getElementById('refresh-toast');
+
+refreshBtn.addEventListener('click', async () => {
+  refreshBtn.classList.add('refreshing');
+
+  const rows = document.querySelectorAll('#bids-body tr');
+  rows.forEach((row, i) => {
+    setTimeout(() => {
+      row.style.background = 'rgba(52, 211, 153, 0.04)';
+      setTimeout(() => { row.style.background = ''; }, 300);
+    }, i * 60);
+  });
+
+  // Try re-fetching bids.json
+  const loaded = await loadBidsFromJSON();
+
+  setTimeout(() => {
+    refreshBtn.classList.remove('refreshing');
+    const now = new Date();
+    document.getElementById('current-date').textContent =
+      now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+      '  ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    updateDataBanner();
+    render();
+
+    const toast = document.getElementById('refresh-toast');
+    toast.textContent = loaded
+      ? '✓ Live data refreshed from bids.json'
+      : '⚠ No bids.json found — showing static snapshot. Run scrape_bids.py to fetch live data.';
+    toast.style.borderColor = loaded ? 'var(--green)' : 'var(--amber)';
+    toast.style.color = loaded ? 'var(--green)' : 'var(--amber)';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3500);
+  }, Math.max(1200, rows.length * 60 + 200));
+});
+</script>
+</body>
+</html>

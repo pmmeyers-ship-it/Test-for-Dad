@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSV-BLA — Open Source Business Legitimacy Assessment</title>
+<!--
+  OPEN SOURCE BUSINESS LEGITIMACY ASSESSMENT (OSV-BLA) v1.0
+  Single-file, dependency-free application. No CDNs, no remote fonts, no telemetry,
+  no analytics, no cookies, no tracking pixels.
+
+  EXTERNAL NETWORK CALLS occur ONLY in the functions marked with the comment
+  banner "EXTERNAL CALL" inside the CONNECTORS section of the script, ONLY when
+  the analyst presses "Run automated checks" or a connector's Run button, and
+  ONLY when the global "External calls" toggle is ON. Every call is recorded in
+  the Network Activity Log. Search the source for "EXTERNAL CALL" to audit.
+-->
+<style>
+:root{
+  --paper:#FAF9F6; --panel:#FFFFFF; --ink:#1C2530; --ink-soft:#4A5560; --line:#D9D6CE;
+  --navy:#1F4E79; --navy-deep:#163A5C; --green:#2E7D4F; --amber:#B7791F; --red:#A23B3B;
+  --mono:ui-monospace,"Cascadia Mono","SF Mono",Menlo,Consolas,monospace;
+  --serif:Georgia,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.5}
+header.appbar{background:var(--navy-deep);color:#fff;padding:.7rem 1.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+header.appbar h1{font-family:var(--serif);font-size:1.15rem;font-weight:normal;letter-spacing:.04em}
+header.appbar h1 b{font-weight:bold}
+.desig{font-family:var(--mono);font-size:.68rem;background:#fff;color:var(--navy-deep);padding:.15rem .5rem;border-radius:2px;letter-spacing:.08em}
+.spacer{flex:1}
+.toggle-wrap{display:flex;align-items:center;gap:.45rem;font-size:.78rem}
+.toggle-wrap input{width:1.05rem;height:1.05rem;accent-color:#7FB3E0}
+nav.tabs{display:flex;gap:0;background:var(--navy);overflow-x:auto}
+nav.tabs button{background:none;border:none;color:#C9D8E6;font:inherit;font-size:.8rem;padding:.55rem .9rem;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs button:hover{color:#fff}
+nav.tabs button[aria-selected="true"]{color:#fff;border-bottom-color:#F0C95C;background:rgba(255,255,255,.06)}
+nav.tabs button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+main{max-width:1180px;margin:0 auto;padding:1.1rem 1.2rem 4rem}
+section.tabpanel{display:none}
+section.tabpanel.active{display:block}
+h2{font-family:var(--serif);font-size:1.35rem;margin:.4rem 0 .2rem;color:var(--navy-deep)}
+h3{font-size:.95rem;margin:1.1rem 0 .4rem;color:var(--navy-deep)}
+p.lede{color:var(--ink-soft);font-size:.85rem;margin-bottom:.9rem;max-width:70ch}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:.9rem 1rem;margin-bottom:.9rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem .9rem}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem .9rem}
+@media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+label.fld{display:block;font-size:.72rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em}
+label.fld input,label.fld select,label.fld textarea{display:block;width:100%;margin-top:.18rem;padding:.4rem .5rem;font:inherit;font-size:.85rem;border:1px solid var(--line);border-radius:3px;background:#fff;color:var(--ink)}
+textarea{resize:vertical;min-height:3.2rem}
+button.btn{font:inherit;font-size:.8rem;padding:.45rem .85rem;border-radius:3px;border:1px solid var(--navy);background:var(--navy);color:#fff;cursor:pointer}
+button.btn:hover{background:var(--navy-deep)}
+button.btn.sec{background:#fff;color:var(--navy)}
+button.btn.sec:hover{background:#EFF3F7}
+button.btn.warn{border-color:var(--red);background:#fff;color:var(--red)}
+button.btn.warn:hover{background:#FBF1F1}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+.btnrow{display:flex;gap:.5rem;flex-wrap:wrap;margin:.6rem 0}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+th,td{border:1px solid var(--line);padding:.35rem .5rem;text-align:left;vertical-align:top}
+th{background:#F0EEE8;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+.mono{font-family:var(--mono);font-size:.74rem}
+.pill{display:inline-block;font-size:.66rem;font-weight:700;padding:.08rem .45rem;border-radius:9px;letter-spacing:.03em}
+.pill.ok{background:#E2F0E7;color:var(--green)}
+.pill.warn{background:#F7ECD8;color:var(--amber)}
+.pill.bad{background:#F5E3E3;color:var(--red)}
+.pill.info{background:#E3ECF5;color:var(--navy)}
+.pill.gray{background:#ECEAE4;color:var(--ink-soft)}
+/* Signature element: the assessment band gauge */
+.gauge-wrap{margin:.6rem 0 .3rem}
+.gauge-bands{display:flex;height:34px;border:1px solid var(--ink);border-radius:3px;overflow:hidden;position:relative}
+.gauge-bands .band{display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:700;letter-spacing:.05em;color:#fff;text-transform:uppercase}
+.band.b1{width:40%;background:#A23B3B}.band.b2{width:25%;background:#B7791F}.band.b3{width:20%;background:#5B8AB5}.band.b4{width:15%;background:#2E7D4F}
+.gauge-needle{position:absolute;top:-7px;bottom:-7px;width:3px;background:var(--ink);transition:left .5s ease}
+.gauge-needle::after{content:"";position:absolute;top:-2px;left:-4px;border-left:5.5px solid transparent;border-right:5.5px solid transparent;border-top:7px solid var(--ink)}
+@media(prefers-reduced-motion:reduce){.gauge-needle{transition:none}}
+.scorebig{font-family:var(--serif);font-size:2.4rem;color:var(--navy-deep)}
+.subscores{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.7rem}
+.subscores .ss{border:1px solid var(--line);border-radius:3px;padding:.45rem .55rem;background:#fff}
+.ss .ssv{font-family:var(--mono);font-size:1.05rem;font-weight:700;color:var(--navy-deep)}
+.ss .ssl{font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+.progress{height:9px;background:#ECEAE4;border-radius:5px;overflow:hidden;margin-top:.25rem}
+.progress>div{height:100%;background:var(--navy)}
+.conn{border:1px solid var(--line);border-left:4px solid var(--navy);border-radius:3px;background:#fff;padding:.6rem .75rem;margin-bottom:.55rem}
+.conn.auto{border-left-color:var(--green)}
+.conn.keyreq{border-left-color:var(--amber)}
+.conn.manual{border-left-color:#8B8678}
+.conn.fileimp{border-left-color:#6B5B95}
+.connhead{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap}
+.connhead strong{font-size:.85rem}
+.connbody{font-size:.76rem;color:var(--ink-soft);margin-top:.25rem}
+.connres{font-family:var(--mono);font-size:.72rem;background:#F6F5F1;border:1px dashed var(--line);padding:.4rem .5rem;margin-top:.4rem;white-space:pre-wrap;max-height:180px;overflow:auto}
+.small{font-size:.74rem;color:var(--ink-soft)}
+details{margin:.4rem 0}
+details summary{cursor:pointer;font-size:.8rem;color:var(--navy);font-weight:600}
+.flagrow td:first-child{font-weight:600}
+.note{background:#F4F1E8;border:1px solid #E2DCC8;border-radius:3px;padding:.5rem .7rem;font-size:.76rem;margin:.5rem 0}
+.methodology h3{margin-top:1.3rem}
+.methodology p,.methodology li{font-size:.84rem;max-width:78ch;margin-bottom:.5rem}
+.methodology ul,.methodology ol{padding-left:1.3rem}
+#report-out{background:#fff;border:1px solid var(--line);padding:1.4rem 1.6rem;border-radius:4px}
+#report-out h1{font-family:var(--serif);font-size:1.4rem;color:var(--navy-deep)}
+#report-out h2{font-size:1.05rem;border-bottom:1px solid var(--line);padding-bottom:.15rem;margin-top:1.1rem}
+#report-out table{margin:.5rem 0}
+#report-out .stamp{font-family:var(--mono);font-size:.68rem;color:var(--ink-soft);letter-spacing:.06em}
+.evtag{font-family:var(--mono);font-size:.62rem;padding:.05rem .35rem;border-radius:2px;border:1px solid var(--line)}
+.evtag.official{background:#E2F0E7;border-color:#9CC7AB}
+.evtag.nonofficial{background:#E3ECF5;border-color:#A9C2DB}
+.evtag.analyst{background:#F0EEE8}
+.evtag.claimed{background:#F7ECD8;border-color:#DFC58F}
+.evtag.failed{background:#F5E3E3;border-color:#D9A8A8}
+footer.appfoot{border-top:1px solid var(--line);margin-top:2rem;padding:.8rem 1.2rem;font-size:.7rem;color:var(--ink-soft);text-align:center}
+@media print{
+  header.appbar,nav.tabs,.btnrow,button,footer.appfoot,.no-print{display:none !important}
+  body{background:#fff}
+  main{max-width:100%;padding:0}
+  section.tabpanel{display:none}
+  #panel-report{display:block !important}
+  #report-out{border:none;padding:0}
+  a{color:inherit;text-decoration:none}
+}
+</style>
+</head>
+<body>
+<header class="appbar">
+  <span class="desig">OPEN SOURCE ASSESSMENT</span>
+  <h1><b>OSV-BLA</b> — Business Legitimacy Assessment Workbench v1.0</h1>
+  <div class="spacer"></div>
+  <div class="toggle-wrap">
+    <input type="checkbox" id="ext-toggle" checked>
+    <label for="ext-toggle">External calls enabled</label>
+  </div>
+  <div class="toggle-wrap">
+    <input type="checkbox" id="autosave-toggle">
+    <label for="autosave-toggle">Local autosave</label>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Workbench sections">
+  <button role="tab" aria-selected="true" data-tab="intake">1 · Intake</button>
+  <button role="tab" aria-selected="false" data-tab="checks">2 · Source Checks</button>
+  <button role="tab" aria-selected="false" data-tab="evidence">3 · Manual Evidence</button>
+  <button role="tab" aria-selected="false" data-tab="consistency">4 · Identity Consistency</button>
+  <button role="tab" aria-selected="false" data-tab="flags">5 · Red Flags</button>
+  <button role="tab" aria-selected="false" data-tab="sourcelog">6 · Source Log</button>
+  <button role="tab" aria-selected="false" data-tab="scoring">7 · Scoring</button>
+  <button role="tab" aria-selected="false" data-tab="netlog">8 · Network Log</button>
+  <button role="tab" aria-selected="false" data-tab="report">9 · Report</button>
+  <button role="tab" aria-selected="false" data-tab="compare">Compare</button>
+  <button role="tab" aria-selected="false" data-tab="methodology">Methodology</button>
+</nav>
+
+<main>
+
+<!-- ============ ALWAYS-VISIBLE ASSESSMENT GAUGE ============ -->
+<div class="card" id="gauge-card">
+  <div style="display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap">
+    <div>
+      <div class="small">OVERALL SCORE</div>
+      <div class="scorebig" id="score-num">—</div>
+    </div>
+    <div style="flex:1;min-width:280px">
+      <div class="gauge-wrap">
+        <div class="gauge-bands" aria-hidden="true">
+          <div class="band b1">0–39 High concern</div>
+          <div class="band b2">40–64 Low conf.</div>
+          <div class="band b3">65–84 Moderate</div>
+          <div class="band b4">85–100 High</div>
+        </div>
+        <div style="position:relative;height:0"><div class="gauge-needle" id="gauge-needle" style="left:0%"></div></div>
+      </div>
+      <div class="small" id="score-verdict" style="margin-top:.7rem;font-weight:600"></div>
+    </div>
+  </div>
+  <div class="subscores">
+    <div class="ss"><div class="ssv" id="ss-completeness">—</div><div class="ssl">Evidence completeness</div></div>
+    <div class="ss"><div class="ssv" id="ss-quality">—</div><div class="ssl">Source quality</div></div>
+    <div class="ss"><div class="ssv" id="ss-consistency">—</div><div class="ssl">Consistency</div></div>
+    <div class="ss"><div class="ssv" id="ss-severity">—</div><div class="ssl">Red flag severity</div></div>
+    <div class="ss"><div class="ssv" id="ss-auto">—</div><div class="ssl">Automation coverage</div></div>
+    <div class="ss"><div class="ssv" id="ss-manual">—</div><div class="ssl">Manual dependency</div></div>
+  </div>
+</div>
+
+<!-- ============ TAB 1: INTAKE ============ -->
+<section class="tabpanel active" id="panel-intake" role="tabpanel">
+  <h2>Business intake</h2>
+  <p class="lede">Enter the business as it presents itself. Everything entered here is treated as an <strong>unverified claim by the business</strong> until corroborated by a source. Fields drive automated queries — name, website, and jurisdiction matter most.</p>
+  <div class="card">
+    <div class="grid3">
+      <label class="fld">Legal business name<input id="in-legalName" data-bind="legalName"></label>
+      <label class="fld">Trade name / DBA<input id="in-dba" data-bind="dba"></label>
+      <label class="fld">Website URL<input id="in-website" data-bind="website" placeholder="https://example.com"></label>
+      <label class="fld">Physical address<input id="in-physAddr" data-bind="physAddr"></label>
+      <label class="fld">Mailing address<input id="in-mailAddr" data-bind="mailAddr"></label>
+      <label class="fld">Phone number<input id="in-phone" data-bind="phone"></label>
+      <label class="fld">Email address<input id="in-email" data-bind="email"></label>
+      <label class="fld">Owner / principals (public)<input id="in-principals" data-bind="principals"></label>
+      <label class="fld">State / jurisdiction of registration
+        <select id="in-jurisdiction" data-bind="jurisdiction"><option value="">— select —</option></select>
+      </label>
+      <label class="fld">Industry / NAICS code<input id="in-naics" data-bind="naics"></label>
+      <label class="fld">Claimed years in business<input id="in-years" data-bind="years" inputmode="numeric"></label>
+      <label class="fld">Claimed number of employees<input id="in-employees" data-bind="employees" inputmode="numeric"></label>
+      <label class="fld">Claimed licenses<input id="in-licenses" data-bind="licenses"></label>
+      <label class="fld">Claimed certifications<input id="in-certs" data-bind="certs"></label>
+      <label class="fld">Tax ID / EIN status
+        <select id="in-einStatus" data-bind="einStatus">
+          <option value="">— unknown —</option>
+          <option>Business states it has an EIN (not collected)</option>
+          <option>Business provided EIN (stored elsewhere, not in this tool)</option>
+          <option>Business could not state EIN status</option>
+        </select>
+      </label>
+    </div>
+    <label class="fld" style="margin-top:.6rem">Notes<textarea id="in-notes" data-bind="notes"></textarea></label>
+    <p class="small" style="margin-top:.4rem">Do not enter full sensitive identifiers (EIN, SSN, bank data) into this tool. Record only status.</p>
+  </div>
+  <div class="btnrow">
+    <button class="btn" id="btn-goto-checks">Continue to source checks →</button>
+    <button class="btn sec" id="btn-save-json">Save case (JSON)</button>
+    <button class="btn sec" id="btn-load-json">Import case (JSON)</button>
+    <button class="btn warn" id="btn-reset">Clear / reset case</button>
+    <input type="file" id="file-load-json" accept=".json,application/json" hidden>
+  </div>
+</section>
+
+<!-- ============ TAB 2: SOURCE CHECKS ============ -->
+<section class="tabpanel" id="panel-checks" role="tabpanel">
+  <h2>Automated source checks</h2>
+  <p class="lede">Each connector states what it queries, where, and with what data before anything is sent. Failed or CORS-blocked checks fall back to a manual-entry link. Nothing runs without your action. API keys are held in this page's local storage only.</p>
+  <div class="note" id="ext-off-note" hidden>External calls are <strong>disabled</strong> by the header toggle. Connectors will record a "skipped" result; use manual entry instead.</div>
+  <div class="card">
+    <div class="grid3">
+      <label class="fld">SAM.gov API key (optional, runtime only)<input id="key-sam" type="password" autocomplete="off" placeholder="Stored locally only"></label>
+      <label class="fld">&nbsp;<button class="btn" id="btn-run-all" style="width:100%">▶ Run all automated checks</button></label>
+      <label class="fld">&nbsp;<button class="btn sec" id="btn-rerun-all" style="width:100%">↻ Re-run (preserve prior results)</button></label>
+    </div>
+  </div>
+  <div id="connector-list"></div>
+</section>
+
+<!-- ============ TAB 3: MANUAL EVIDENCE ============ -->
+<section class="tabpanel" id="panel-evidence" role="tabpanel">
+  <h2>Manual evidence entry</h2>
+  <p class="lede">Use this when a source is inaccessible, blocked, rate-limited, or has no API — or to record contact attempts, map evidence, storefront observation, or review-pattern analysis. Every entry feeds the score and the source log.</p>
+  <div class="card">
+    <div class="grid3">
+      <label class="fld">Category
+        <select id="ev-category"></select>
+      </label>
+      <label class="fld">Source title<input id="ev-title" placeholder="e.g., Virginia SCC Clerk's Information System"></label>
+      <label class="fld">Source URL<input id="ev-url" placeholder="https://"></label>
+      <label class="fld">Source class
+        <select id="ev-class">
+          <option value="official">Official government / regulator</option>
+          <option value="nonofficial">Non-official public source</option>
+          <option value="analyst">Analyst direct observation</option>
+          <option value="claimed">Unverified claim by business</option>
+          <option value="failed">Source check failed / unavailable</option>
+        </select>
+      </label>
+      <label class="fld">Effect on legitimacy
+        <select id="ev-direction">
+          <option value="supports">Supports</option>
+          <option value="weakens">Weakens</option>
+          <option value="neutral">Neutral / context</option>
+        </select>
+      </label>
+      <label class="fld">Strength
+        <select id="ev-strength">
+          <option value="strong">Strong</option>
+          <option value="moderate" selected>Moderate</option>
+          <option value="weak">Weak</option>
+        </select>
+      </label>
+    </div>
+    <label class="fld" style="margin-top:.5rem">Evidence summary<textarea id="ev-summary" placeholder="What the source shows, in plain language."></textarea></label>
+    <div class="btnrow"><button class="btn" id="btn-add-evidence">Add evidence</button></div>
+  </div>
+  <h3>Evidence on file</h3>
+  <div class="card" style="overflow-x:auto"><table id="evidence-table">
+    <thead><tr><th>Category</th><th>Source</th><th>Class</th><th>Effect</th><th>Strength</th><th>Summary</th><th>Entry</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</section>
+
+<!-- ============ TAB 4: IDENTITY CONSISTENCY ============ -->
+<section class="tabpanel" id="panel-consistency" role="tabpanel">
+  <h2>Identity consistency</h2>
+  <p class="lede">Compare what each source reported for the same field. Mark each field Consistent, Inconsistent, or Unknown. Inconsistencies lower the consistency sub-score, reduce the identity-consistency category, and surface in the report. Add the conflicting values so the report is self-explanatory.</p>
+  <div class="card" style="overflow-x:auto"><table id="consistency-table">
+    <thead><tr><th style="width:18%">Field</th><th style="width:16%">Status</th><th>Values observed across sources (free text)</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</section>
+
+<!-- ============ TAB 5: RED FLAGS ============ -->
+<section class="tabpanel" id="panel-flags" role="tabpanel">
+  <h2>Red flags</h2>
+  <p class="lede">Flags are penalties, not verdicts. Each one needs a severity, a source, and an explanation. Connector-detected flags are marked AUTO; everything else is analyst judgment and should say why.</p>
+  <div class="card">
+    <div class="grid3">
+      <label class="fld">Flag type<select id="fl-type"></select></label>
+      <label class="fld">Severity
+        <select id="fl-severity">
+          <option value="low">Low (−2 default)</option>
+          <option value="medium" selected>Medium (−5 default)</option>
+          <option value="high">High (−10 default)</option>
+          <option value="critical">Critical (−20 default)</option>
+        </select>
+      </label>
+      <label class="fld">Source<input id="fl-source" placeholder="Which source supports this flag"></label>
+    </div>
+    <label class="fld" style="margin-top:.5rem">Explanation<textarea id="fl-explain"></textarea></label>
+    <label class="fld" style="margin-top:.5rem">Analyst note (optional)<textarea id="fl-note"></textarea></label>
+    <div class="btnrow"><button class="btn" id="btn-add-flag">Add red flag</button></div>
+  </div>
+  <h3>Active red flags</h3>
+  <div class="card" style="overflow-x:auto"><table id="flags-table">
+    <thead><tr><th>Flag</th><th>Severity</th><th>Penalty</th><th>Source</th><th>Explanation</th><th>Note</th><th>Origin</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</section>
+
+<!-- ============ TAB 6: SOURCE LOG ============ -->
+<section class="tabpanel" id="panel-sourcelog" role="tabpanel">
+  <h2>Source log</h2>
+  <p class="lede">Every automated query and every manual evidence entry lands here with retrieval time, query, reliability, and effect. Export as CSV for the case file.</p>
+  <div class="btnrow"><button class="btn sec" id="btn-export-csv">Export source log (.csv)</button></div>
+  <div class="card" style="overflow-x:auto"><table id="sourcelog-table">
+    <thead><tr><th>Title</th><th>Type</th><th>URL</th><th>Accessed</th><th>Query</th><th>Evidence summary</th><th>Reliability</th><th>Effect</th><th>Mode</th><th>Raw preview</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</section>
+
+<!-- ============ TAB 7: SCORING SETTINGS ============ -->
+<section class="tabpanel" id="panel-scoring" role="tabpanel">
+  <h2>Scoring settings</h2>
+  <p class="lede">Category weights should sum to 100. Adjust only with documented justification — the report records any deviation from defaults. Plain-language reminder: the overall score is "how strongly the open-source record, taken together, supports the conclusion that this business actually exists and operates" — it is not a fraud probability.</p>
+  <div class="card">
+    <h3>Category weights (points available)</h3>
+    <div class="grid3" id="weights-grid"></div>
+    <div class="small" id="weights-sum" style="margin-top:.5rem"></div>
+    <h3>Red-flag penalties (points subtracted)</h3>
+    <div class="grid3" id="penalty-grid"></div>
+    <h3>Justification for any change from defaults</h3>
+    <label class="fld"><textarea id="scoring-justification" data-bind-settings="justification" placeholder="Required if weights or penalties differ from defaults."></textarea></label>
+    <div class="btnrow"><button class="btn sec" id="btn-reset-scoring">Restore default weights</button></div>
+  </div>
+</section>
+
+<!-- ============ TAB 8: NETWORK LOG ============ -->
+<section class="tabpanel" id="panel-netlog" role="tabpanel">
+  <h2>Network activity log</h2>
+  <p class="lede">Every external request this page attempts — endpoint, time, what was sent, and outcome. If it is not in this log, this application did not send it. The application makes zero requests at page load.</p>
+  <div class="btnrow"><button class="btn warn" id="btn-clear-storage">Clear all locally stored data (case + keys)</button></div>
+  <div class="card" style="overflow-x:auto"><table id="netlog-table">
+    <thead><tr><th>Time (local)</th><th>Connector</th><th>Method</th><th>Endpoint</th><th>Data sent</th><th>Outcome</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</section>
+
+<!-- ============ TAB 9: REPORT ============ -->
+<section class="tabpanel" id="panel-report" role="tabpanel">
+  <h2>Assessment report</h2>
+  <div class="btnrow no-print">
+    <button class="btn" id="btn-gen-report">Generate report</button>
+    <button class="btn sec" id="btn-print">Print / save as PDF</button>
+    <button class="btn sec" id="btn-export-txt">Export summary (.txt)</button>
+    <button class="btn sec" id="btn-export-html">Export full report (.html)</button>
+  </div>
+  <div id="report-out"><p class="small">Press "Generate report" to build the structured assessment from the current case.</p></div>
+</section>
+
+<!-- ============ COMPARE ============ -->
+<section class="tabpanel" id="panel-compare" role="tabpanel">
+  <h2>Side-by-side comparison</h2>
+  <p class="lede">Load a previously saved case JSON to compare against the current case. Comparison is read-only; the loaded case is not modified.</p>
+  <div class="btnrow">
+    <button class="btn sec" id="btn-load-compare">Load comparison case (JSON)</button>
+    <input type="file" id="file-load-compare" accept=".json,application/json" hidden>
+  </div>
+  <div class="card" style="overflow-x:auto"><table id="compare-table"><tbody><tr><td class="small">No comparison case loaded.</td></tr></tbody></table></div>
+</section>
+
+<!-- ============ METHODOLOGY ============ -->
+<section class="tabpanel methodology" id="panel-methodology" role="tabpanel">
+  <h2>Methodology</h2>
+  <h3>What this tool does</h3>
+  <p>It collects open-source evidence about a business — from automated queries of public endpoints, from public datasets you import, and from evidence you enter by hand — and converts that evidence into a transparent, adjustable 0–100 confidence assessment with a full source log.</p>
+  <h3>What this tool does not do</h3>
+  <ul>
+    <li>It does not prove a business is real or fraudulent. It estimates how strongly the open-source record supports operational legitimacy.</li>
+    <li>It does not access anything behind logins, paywalls, CAPTCHAs, or robots restrictions, and it does not bypass rate limits.</li>
+    <li>It does not collect or transmit sensitive identifiers such as full EINs.</li>
+    <li>It does not run hidden network calls, telemetry, or analytics. The Network Log is the complete record.</li>
+  </ul>
+  <h3>How external source checks work</h3>
+  <p>Each connector is a small, documented module: source name, endpoint, query built from your intake fields, parser, reliability rating, and error handling. Browsers enforce Cross-Origin Resource Sharing (CORS); many government sites block direct browser requests. When a connector fails for any reason — CORS, timeout, rate limit, outage — it records a FAILED result in the source log and presents a direct link so you can run the same check by hand and enter the result as manual evidence. A failed check is treated as "unknown," never as evidence against the business.</p>
+  <h3>How manual evidence entry works</h3>
+  <p>A manual entry carries the same fields as an automated one — source, URL, retrieval time, summary, reliability class, and effect — plus your strength judgment. Manual entries are marked MANUAL in the log and reduce the automation-coverage sub-score, which the report discloses.</p>
+  <h3>How scoring works</h3>
+  <p>Nine categories carry weights summing to 100 (defaults: registration 20, licensing 15, physical presence 15, website/domain 10, contactability 10, reputation 10, procurement 10, identity consistency 10 — totaling 100; sanctions/exclusions findings act through red-flag penalties rather than category points). Within a category, supporting evidence earns credit scaled by strength (strong 1.0, moderate 0.6, weak 0.3) and by source class (official ×1.0, non-official ×0.7, analyst observation ×0.6, business self-claim ×0.2). Weakening evidence subtracts credit. Category credit is capped at 1.0 and multiplied by the category weight. Red-flag penalties are then subtracted, and the result is clamped to 0–100. Plain language: a single strong official source can nearly fill a category; a stack of self-claims cannot.</p>
+  <h3>How source reliability is weighted, and why official sources count more</h3>
+  <p>Government registries, licensing boards, and sanctions lists are maintained under legal duty, with identity controls and correction mechanisms. Directories, reviews, and social media can be created by anyone in minutes, including by the subject. The multipliers above encode that asymmetry. Self-claims by the business receive minimal credit because they are the thing being tested.</p>
+  <h3>Why registration does not equal operational legitimacy</h3>
+  <p>Registering an entity costs little and proves only that paperwork was filed. Shell companies, dormant entities, and hijacked registrations are all "registered." Registration is strong evidence the entity exists on paper; operating evidence — premises, contactability, customers, contracts, regulatory activity — must come from other categories. That is why registration carries 20 points, not 50.</p>
+  <h3>Why one source is rarely enough</h3>
+  <p>Any single source can be stale, spoofed, mismatched (wrong entity with a similar name), or wrong. Confidence comes from independent sources agreeing — which is exactly what the identity-consistency category measures. Treat single-source conclusions as unconfirmed.</p>
+  <h3>How to interpret failed source checks</h3>
+  <p>A failed check means "we could not look," not "it is not there." The tool scores it as missing evidence (lower completeness), never as a negative indicator — with one exception: if a failure prevents verifying a claim the business itself makes (a license, a federal contract), the analyst may raise the "external source errors prevent verification of key claims" flag, because the claim remains unsupported.</p>
+  <h3>Limitations of open-source verification</h3>
+  <ul>
+    <li>Coverage is uneven across jurisdictions; many registries have no API and some have no online search.</li>
+    <li>Name matching is fuzzy; similar names can pull the wrong entity. Confirm identifiers before relying on a match.</li>
+    <li>Open sources lag reality; a dissolved business can look active for months.</li>
+    <li>Sophisticated fraud invests in exactly the signals this tool measures. A high score lowers, but never eliminates, risk.</li>
+    <li>Browser-based checks are constrained by CORS; automation coverage will rarely be 100%.</li>
+  </ul>
+  <h3>Recommended analyst workflow</h3>
+  <ol>
+    <li>Enter business name and known identifiers.</li>
+    <li>Run automated source checks.</li>
+    <li>Review source results.</li>
+    <li>Add manual evidence where automated checks fail.</li>
+    <li>Resolve identity inconsistencies.</li>
+    <li>Review red flags.</li>
+    <li>Adjust scoring only if justified — and record the justification.</li>
+    <li>Generate the final report.</li>
+    <li>Export the case file and source log.</li>
+  </ol>
+</section>
+
+</main>
+<footer class="appfoot">OSV-BLA v1.0 · OPEN SOURCE ASSESSMENT · Single-file application · No CDNs · No telemetry · All external calls logged in Network Activity Log</footer>
+<script>
+"use strict";
+/* =====================================================================
+   OSV-BLA application script. Sections:
+   1. State & persistence   2. Constants (categories, flags, links)
+   3. Connectors (ALL external calls live here — search "EXTERNAL CALL")
+   4. Scoring engine        5. UI rendering        6. Exports & report
+   ===================================================================== */
+
+/* ---------- 1. STATE & PERSISTENCE ---------- */
+const DEFAULT_WEIGHTS = { registration:20, licensing:15, physical:15, website:10, contact:10, reputation:10, procurement:10, consistency:10 };
+const DEFAULT_PENALTIES = { low:2, medium:5, high:10, critical:20 };
+const FRESH_CASE = () => ({
+  meta:{ created:new Date().toISOString(), tool:"OSV-BLA v1.0" },
+  intake:{ legalName:"",dba:"",website:"",physAddr:"",mailAddr:"",phone:"",email:"",principals:"",jurisdiction:"",naics:"",years:"",employees:"",licenses:"",certs:"",einStatus:"",notes:"" },
+  evidence:[],            // {id,cat,title,url,cls,direction,strength,summary,mode,time,query,raw}
+  redFlags:[],            // {id,type,severity,source,explain,note,origin,time}
+  sourceLog:[],           // {title,type,url,time,query,summary,reliability,effect,mode,raw}
+  netLog:[],              // {time,connector,method,endpoint,sent,outcome}
+  consistency:{},         // field -> {status:'consistent'|'inconsistent'|'unknown', values:''}
+  settings:{ weights:{...DEFAULT_WEIGHTS}, penalties:{...DEFAULT_PENALTIES}, justification:"" },
+  connectorRuns:{}        // connectorId -> [ {time, outcome, summaryText} ]  (history preserved on re-run)
+});
+let CASE = FRESH_CASE();
+let COMPARE_CASE = null;
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const now = () => new Date().toISOString();
+const uid = () => Math.random().toString(36).slice(2,10);
+
+function autosave(){
+  if(!$("#autosave-toggle").checked) return;
+  try{ localStorage.setItem("osvbla_case", JSON.stringify(CASE)); }catch(e){ console.warn("Autosave failed", e); }
+}
+function touch(){ computeScores(); renderAll(); autosave(); }
+
+/* ---------- 2. CONSTANTS ---------- */
+const CATEGORIES = [
+  {id:"registration", label:"Government business registration"},
+  {id:"licensing",    label:"Licensing & regulatory records"},
+  {id:"sanctions",    label:"Sanctions / exclusions / debarment"},
+  {id:"procurement",  label:"Procurement & government contracting"},
+  {id:"website",      label:"Website & domain evidence"},
+  {id:"physical",     label:"Address & physical presence"},
+  {id:"contact",      label:"Phone & email contactability"},
+  {id:"reputation",   label:"Public reputation & activity"},
+  {id:"consistency",  label:"Identity consistency"}
+];
+const FLAG_TYPES = [
+  "No official registration found where expected",
+  "Registration inactive or dissolved",
+  "Claimed license could not be verified",
+  "License expired, suspended, or revoked",
+  "Address appears to be mailbox / virtual office / unrelated location",
+  "Website created recently",
+  "Website content appears copied, generic, or AI-generated",
+  "Contact details inconsistent across sources",
+  "No phone number or only unverifiable contact method",
+  "Claims major contracts or certifications without source support",
+  "Reviews appear fake or clustered in time",
+  "Appears on sanctions / exclusions / debarment / enforcement list",
+  "Principals linked to adverse public records",
+  "Multiple businesses share address or phone with unclear relationship",
+  "Business name mimics a known legitimate company",
+  "External source errors prevent verification of key claims",
+  "Other (analyst-defined)"
+];
+const CONSISTENCY_FIELDS = [
+  "Business name","Trade name / DBA","Physical address","Mailing address","Phone number",
+  "Email / domain","Ownership / principals","Industry","Claimed certifications","Claimed contract history"
+];
+const RELIABILITY_LABEL = { official:"High (official)", nonofficial:"Medium (non-official)", analyst:"Medium (direct observation)", claimed:"Low (self-claim)", failed:"N/A (failed)" };
+// Manual-lookup directory: official state business registry search pages (no API or CORS-blocked).
+const REGISTRY_LINKS = {
+  "VA":"https://cis.scc.virginia.gov/EntitySearch/Index", "MD":"https://egov.maryland.gov/BusinessExpress/EntitySearch",
+  "DC":"https://os.dc.gov/service/business-filings", "DE":"https://icis.corp.delaware.gov/Ecorp/EntitySearch/NameSearch.aspx",
+  "CA":"https://bizfileonline.sos.ca.gov/search/business", "NY":"https://apps.dos.ny.gov/publicInquiry/",
+  "TX":"https://mycpa.cpa.state.tx.us/coa/", "FL":"https://search.sunbiz.org/Inquiry/CorporationSearch/ByName",
+  "PA":"https://file.dos.pa.gov/search/business", "GA":"https://ecorp.sos.ga.gov/BusinessSearch",
+  "NC":"https://www.sosnc.gov/online_services/search/by_title/_Business_Registration",
+  "OH":"https://businesssearch.ohiosos.gov/", "IL":"https://apps.ilsos.gov/corporatellc/",
+  "WA":"https://ccfs.sos.wa.gov/", "CO":"https://www.sos.state.co.us/biz/BusinessEntityCriteriaExt.do",
+  "AZ":"https://ecorp.azcc.gov/EntitySearch/Index", "NJ":"https://www.njportal.com/DOR/BusinessNameSearch/Search/BusinessName",
+  "OTHER":"" };
+const US_STATES = ["AL","AK","AZ","AR","CA","CO","CT","DC","DE","FL","GA","HI","IA","ID","IL","IN","KS","KY","LA","MA","MD","ME","MI","MN","MO","MS","MT","NC","ND","NE","NH","NJ","NM","NV","NY","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VA","VT","WA","WI","WV","WY","Non-US / Other"];
+
+/* ---------- 3. CONNECTORS ----------
+   Every connector: id, name, mode(auto|key|manual|file), category, reliability class,
+   describe(intake) -> what will be queried, run(intake) -> result object,
+   manualLink(intake) -> fallback URL.
+   ALL external network calls are inside run() and pass through netFetch(),
+   which enforces the external-calls toggle, a 12s timeout, and full logging. */
+
+function netLogEntry(entry){ CASE.netLog.push(entry); renderNetLog(); autosave(); }
+
+async function netFetch(connectorName, url, opts={}, sentDesc=""){
+  /* ============ EXTERNAL CALL gateway — the ONLY place fetch() is invoked ============ */
+  if(!$("#ext-toggle").checked){
+    netLogEntry({time:now(),connector:connectorName,method:opts.method||"GET",endpoint:url,sent:sentDesc,outcome:"SKIPPED — external calls disabled"});
+    throw Object.assign(new Error("External calls disabled"),{kind:"disabled"});
+  }
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), 12000); // timeout handling
+  const entry = {time:now(),connector:connectorName,method:opts.method||"GET",endpoint:url,sent:sentDesc,outcome:"pending"};
+  netLogEntry(entry);
+  try{
+    const res = await fetch(url, {...opts, signal:ctrl.signal, mode:"cors", credentials:"omit", referrerPolicy:"no-referrer"});
+    clearTimeout(t);
+    entry.outcome = res.ok ? `OK ${res.status}` : `HTTP ${res.status}`;
+    if(res.status===429) entry.outcome += " (rate-limited — wait before re-running)";
+    renderNetLog();
+    return res;
+  }catch(err){
+    clearTimeout(t);
+    entry.outcome = err.name==="AbortError" ? "TIMEOUT (12s)" : "FAILED (likely CORS or network) — use manual fallback";
+    renderNetLog();
+    throw err;
+  }
+}
+
+function recordSource({title,type,url,query,summary,reliability,effect,mode,raw}){
+  CASE.sourceLog.push({title,type,url,time:now(),query:query||"",summary:summary||"",reliability,effect,mode,raw:(raw||"").slice(0,600)});
+}
+function addEvidenceItem(cat, o){
+  CASE.evidence.push({id:uid(),cat,title:o.title,url:o.url||"",cls:o.cls,direction:o.direction,strength:o.strength||"moderate",summary:o.summary,mode:o.mode||"manual",time:now()});
+  recordSource({title:o.title,type:CATEGORIES.find(c=>c.id===cat)?.label||cat,url:o.url||"",query:o.query||"",summary:o.summary,reliability:RELIABILITY_LABEL[o.cls],effect:o.direction,mode:o.mode==="auto"?"Automated":"Manual",raw:o.raw||""});
+}
+function addAutoFlag(type, severity, source, explain){
+  if(CASE.redFlags.some(f=>f.type===type && f.origin==="AUTO")) return; // de-dupe
+  CASE.redFlags.push({id:uid(),type,severity,source,explain,note:"",origin:"AUTO",time:now()});
+}
+
+const CONNECTORS = [
+{
+  id:"samEntity", name:"SAM.gov Entity Registration", mode:"key", category:"registration", cls:"official",
+  describe:i=>`GET api.sam.gov/entity-information/v3/entities?legalBusinessName=${i.legalName||"(name)"} — sends business name + your API key.`,
+  manualLink:()=> "https://sam.gov/search/",
+  async run(i){
+    const key = $("#key-sam").value.trim();
+    if(!i.legalName) return {outcome:"skipped", text:"No legal name entered."};
+    if(!key) return {outcome:"manual", text:"No SAM.gov API key provided. Use the manual link (free public search) and enter results as evidence."};
+    /* EXTERNAL CALL: SAM.gov Entity Management API (official U.S. government source). */
+    const url = `https://api.sam.gov/entity-information/v3/entities?api_key=${encodeURIComponent(key)}&legalBusinessName=${encodeURIComponent(i.legalName)}&includeSections=entityRegistration`;
+    const res = await netFetch(this.name, url, {}, "legalBusinessName + API key");
+    if(!res.ok) return {outcome:"failed", text:`SAM.gov returned HTTP ${res.status}. Fall back to manual search.`};
+    const data = await res.json();
+    const n = data.totalRecords ?? 0;
+    if(n===0){
+      return {outcome:"none", text:"No SAM.gov entity registration found for that exact legal name. Absence is only negative if the business claims federal contracting status.", raw:JSON.stringify(data).slice(0,500)};
+    }
+    const e = data.entityData?.[0]?.entityRegistration || {};
+    const summary = `SAM.gov registration found. Status: ${e.registrationStatus||"?"} · UEI: ${e.ueiSAM||"?"} · CAGE: ${e.cageCode||"?"} · Expires: ${e.registrationExpirationDate||"?"}`;
+    addEvidenceItem("procurement", {title:"SAM.gov entity registration",url:"https://sam.gov/search/",cls:"official",direction:"supports",strength:e.registrationStatus==="Active"?"strong":"moderate",summary,mode:"auto",query:i.legalName,raw:JSON.stringify(e)});
+    return {outcome:"found", text:summary, raw:JSON.stringify(e).slice(0,500)};
+  }
+},
+{
+  id:"samExclusions", name:"SAM.gov Exclusions (debarment)", mode:"key", category:"sanctions", cls:"official",
+  describe:i=>`GET api.sam.gov/entity-information/v4/exclusions?exclusionName=${i.legalName||"(name)"} — sends business name + your API key.`,
+  manualLink:()=> "https://sam.gov/search/?index=ex",
+  async run(i){
+    const key = $("#key-sam").value.trim();
+    if(!i.legalName) return {outcome:"skipped", text:"No legal name entered."};
+    if(!key) return {outcome:"manual", text:"No API key. Search exclusions manually at the link and record the result."};
+    /* EXTERNAL CALL: SAM.gov Exclusions API (official U.S. government source). */
+    const url = `https://api.sam.gov/entity-information/v4/exclusions?api_key=${encodeURIComponent(key)}&exclusionName=${encodeURIComponent(i.legalName)}`;
+    const res = await netFetch(this.name, url, {}, "exclusionName + API key");
+    if(!res.ok) return {outcome:"failed", text:`HTTP ${res.status}. Fall back to manual search.`};
+    const data = await res.json();
+    const n = data.totalRecords ?? 0;
+    if(n>0){
+      addAutoFlag("Appears on sanctions / exclusions / debarment / enforcement list","critical","SAM.gov Exclusions API",`${n} exclusion record(s) returned for name match — confirm identity before concluding.`);
+      addEvidenceItem("sanctions",{title:"SAM.gov exclusions match",url:"https://sam.gov/search/?index=ex",cls:"official",direction:"weakens",strength:"strong",summary:`${n} possible exclusion record(s); identity confirmation required.`,mode:"auto",query:i.legalName,raw:JSON.stringify(data).slice(0,400)});
+      return {outcome:"flag", text:`${n} possible exclusion record(s) found. CRITICAL flag added pending identity confirmation.`};
+    }
+    addEvidenceItem("sanctions",{title:"SAM.gov exclusions — no match",url:"https://sam.gov/search/?index=ex",cls:"official",direction:"supports",strength:"weak",summary:"No exclusion records matched the legal name.",mode:"auto",query:i.legalName});
+    return {outcome:"clear", text:"No exclusion records matched the legal name."};
+  }
+},
+{
+  id:"usaspending", name:"USAspending.gov Federal Awards", mode:"auto", category:"procurement", cls:"official",
+  describe:i=>`POST api.usaspending.gov/api/v2/search/spending_by_award/ — sends recipient name "${i.legalName||"(name)"}" only. Public API, no key.`,
+  manualLink:i=> "https://www.usaspending.gov/search",
+  async run(i){
+    if(!i.legalName) return {outcome:"skipped", text:"No legal name entered."};
+    /* EXTERNAL CALL: USAspending.gov public API (official Treasury source, CORS-enabled). */
+    const body = { filters:{ recipient_search_text:[i.legalName], award_type_codes:["A","B","C","D"] }, fields:["Award ID","Recipient Name","Award Amount","Awarding Agency","Start Date"], limit:5 };
+    const res = await netFetch(this.name, "https://api.usaspending.gov/api/v2/search/spending_by_award/", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}, "recipient name");
+    if(!res.ok) return {outcome:"failed", text:`HTTP ${res.status}. Use manual link.`};
+    const data = await res.json();
+    const rows = data.results||[];
+    if(rows.length===0) return {outcome:"none", text:"No federal contract awards matched. Not negative unless the business claims federal contracts — if it does, raise the unverified-claims flag."};
+    const summary = `${rows.length}+ federal award record(s). Top: ${rows[0]["Recipient Name"]} — $${Number(rows[0]["Award Amount"]||0).toLocaleString()} (${rows[0]["Awarding Agency"]||"?"})`;
+    addEvidenceItem("procurement",{title:"USAspending.gov award history",url:"https://www.usaspending.gov/search",cls:"official",direction:"supports",strength:"strong",summary,mode:"auto",query:i.legalName,raw:JSON.stringify(rows).slice(0,500)});
+    return {outcome:"found", text:summary, raw:JSON.stringify(rows[0])};
+  }
+},
+{
+  id:"rdap", name:"Domain Registration (RDAP)", mode:"auto", category:"website", cls:"nonofficial",
+  describe:i=>`GET rdap.org/domain/${domainOf(i.website)||"(domain)"} — sends domain name only. RDAP is the registry-operated successor to WHOIS.`,
+  manualLink:i=> "https://lookup.icann.org/en/lookup",
+  async run(i){
+    const dom = domainOf(i.website);
+    if(!dom) return {outcome:"skipped", text:"No website URL entered."};
+    /* EXTERNAL CALL: rdap.org bootstrap redirect to the authoritative registry RDAP server. */
+    const res = await netFetch(this.name, `https://rdap.org/domain/${encodeURIComponent(dom)}`, {}, "domain name");
+    if(res.status===404) {
+      addAutoFlag("Website created recently","high","RDAP","Domain not found in registry RDAP — domain may not exist or may be brand new/unregistered.");
+      return {outcome:"flag", text:"Domain NOT FOUND in registry data. HIGH flag added — verify the URL."};
+    }
+    if(!res.ok) return {outcome:"failed", text:`HTTP ${res.status}. Use manual ICANN lookup.`};
+    const data = await res.json();
+    const reg = (data.events||[]).find(e=>e.eventAction==="registration");
+    const regDate = reg ? reg.eventDate.slice(0,10) : null;
+    let ageNote = "registration date unavailable";
+    if(regDate){
+      const ageDays = Math.floor((Date.now()-new Date(regDate))/86400000);
+      ageNote = `registered ${regDate} (~${Math.floor(ageDays/365)}y ${Math.floor((ageDays%365)/30)}m old)`;
+      if(ageDays < 365){
+        addAutoFlag("Website created recently","medium","Registry RDAP",`Domain ${dom} registered ${regDate} — under one year old.`);
+      }
+      const claimedYears = parseInt(i.years||"0",10);
+      if(claimedYears>0 && ageDays/365 < claimedYears-2){
+        addAutoFlag("Contact details inconsistent across sources","medium","Registry RDAP",`Domain age (~${Math.floor(ageDays/365)}y) is much younger than claimed years in business (${claimedYears}). Not conclusive — businesses change domains — but record it.`);
+      }
+    }
+    const registrar = (data.entities||[]).find(e=>(e.roles||[]).includes("registrar"));
+    const regName = registrar?.vcardArray?.[1]?.find(x=>x[0]==="fn")?.[3] || "unknown registrar";
+    const summary = `Domain ${dom}: ${ageNote}; registrar: ${regName}; status: ${(data.status||[]).join(", ")||"n/a"}.`;
+    addEvidenceItem("website",{title:"Registry RDAP domain record",url:`https://rdap.org/domain/${dom}`,cls:"nonofficial",direction:"supports",strength:regDate && (Date.now()-new Date(regDate))/86400000>1095 ? "moderate":"weak",summary,mode:"auto",query:dom,raw:JSON.stringify({events:data.events,status:data.status}).slice(0,500)});
+    return {outcome:"found", text:summary};
+  }
+},
+{
+  id:"sitecheck", name:"Website Reachability (limited)", mode:"auto", category:"website", cls:"analyst",
+  describe:i=>`HEAD ${i.website||"(url)"} in no-cors mode — sends nothing but the request itself. Browser CORS limits this to a reachable/unreachable signal; content review stays manual.`,
+  manualLink:i=> i.website||"",
+  async run(i){
+    if(!i.website) return {outcome:"skipped", text:"No website URL entered."};
+    let url = i.website.startsWith("http")?i.website:"https://"+i.website;
+    if(!$("#ext-toggle").checked){ netLogEntry({time:now(),connector:this.name,method:"HEAD",endpoint:url,sent:"(request only)",outcome:"SKIPPED — external calls disabled"}); return {outcome:"skipped",text:"External calls disabled."}; }
+    const entry={time:now(),connector:this.name,method:"HEAD",endpoint:url,sent:"(request only)",outcome:"pending"}; netLogEntry(entry);
+    try{
+      /* EXTERNAL CALL: opaque no-cors probe of the business's own website. */
+      const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(),12000);
+      await fetch(url,{method:"HEAD",mode:"no-cors",credentials:"omit",referrerPolicy:"no-referrer",signal:ctrl.signal});
+      clearTimeout(t); entry.outcome="Reachable (opaque response)"; renderNetLog();
+      addEvidenceItem("website",{title:"Website reachability probe",url,cls:"analyst",direction:"supports",strength:"weak",summary:"Site responded to a browser request. Content quality, SSL details, and contact-info matching must be reviewed manually.",mode:"auto",query:url});
+      return {outcome:"found", text:"Site is reachable. Open it and record content findings (about/terms/contact pages, templated content, SSL padlock) as manual evidence."};
+    }catch(err){
+      entry.outcome = err.name==="AbortError"?"TIMEOUT":"Unreachable or blocked"; renderNetLog();
+      return {outcome:"failed", text:"Site did not respond to a browser probe. Verify manually — this can be a network artifact, not proof the site is down."};
+    }
+  }
+},
+{
+  id:"stateRegistry", name:"State Business Registry", mode:"manual", category:"registration", cls:"official",
+  describe:i=>`Most state registries have no public API and block cross-origin requests. Use the official search link for ${i.jurisdiction||"the selected jurisdiction"} and enter the result below.`,
+  manualLink:i=> REGISTRY_LINKS[i.jurisdiction] || "https://www.nass.org/business-services/corporate-registration",
+  async run(){ return {outcome:"manual", text:"Manual-only connector. Open the official registry, search the legal name, then record: registration found?, status, registration date, registered agent, office address, entity type."}; }
+},
+{
+  id:"licensing", name:"Licensing Authority Check", mode:"manual", category:"licensing", cls:"official",
+  describe:()=>"Licensing databases are jurisdiction- and industry-specific with no common API. Identify the issuing authority for the claimed license type and verify directly. Distinguish: license not required / required but not found / unknown.",
+  manualLink:i=> i.jurisdiction && REGISTRY_LINKS[i.jurisdiction] ? "" : "",
+  async run(){ return {outcome:"manual", text:"Manual-only connector. Record: required license identified?, found?, status, issuing authority, public license number, expiration, disciplinary or enforcement actions."}; }
+},
+{
+  id:"ofac", name:"OFAC SDN List (file import)", mode:"file", category:"sanctions", cls:"official",
+  describe:()=>"No external call. Download the SDN list (sdn.csv) from the U.S. Treasury OFAC site separately, then import it here. Matching runs entirely in your browser. Online alternative: sanctionssearch.ofac.treas.gov (manual).",
+  manualLink:()=> "https://sanctionssearch.ofac.treas.gov/",
+  async run(){ return {outcome:"manual", text:"Use the Import SDN CSV button on this connector, or search manually at the link."}; },
+  fileHandler(file, i){
+    const reader = new FileReader();
+    reader.onerror = ()=> setConnResult("ofac", {outcome:"failed", text:"Could not read the file."});
+    reader.onload = ()=>{
+      try{
+        const text = String(reader.result);
+        const name = (i.legalName||"").toLowerCase().trim();
+        const dba = (i.dba||"").toLowerCase().trim();
+        if(!name){ setConnResult("ofac",{outcome:"skipped",text:"Enter a legal name first."}); return; }
+        const lines = text.split(/\r?\n/);
+        const hits = lines.filter(l=>{ const ll=l.toLowerCase(); return (name && ll.includes(name)) || (dba && dba.length>3 && ll.includes(dba)); }).slice(0,5);
+        netLogEntry({time:now(),connector:"OFAC SDN (local file)",method:"LOCAL",endpoint:"(imported file: "+file.name+")",sent:"nothing — local matching",outcome:hits.length?`${hits.length} name match(es)`:"no matches"});
+        if(hits.length){
+          addAutoFlag("Appears on sanctions / exclusions / debarment / enforcement list","critical","OFAC SDN list (imported)",`Name substring matched ${hits.length} SDN row(s). Substring matching over-matches — confirm identity manually before relying on this.`);
+          addEvidenceItem("sanctions",{title:"OFAC SDN list — possible match",url:"https://sanctionssearch.ofac.treas.gov/",cls:"official",direction:"weakens",strength:"strong",summary:`Possible SDN name match (${hits.length}). Identity confirmation required.`,mode:"auto",query:name,raw:hits.join(" | ").slice(0,400)});
+          setConnResult("ofac",{outcome:"flag",text:`${hits.length} possible SDN match(es). CRITICAL flag added — confirm identity (common-name collisions are frequent).`,raw:hits.join("\n")});
+        }else{
+          addEvidenceItem("sanctions",{title:"OFAC SDN list — no match",url:"https://sanctionssearch.ofac.treas.gov/",cls:"official",direction:"supports",strength:"weak",summary:`No SDN name match in imported file ${file.name}.`,mode:"auto",query:name});
+          setConnResult("ofac",{outcome:"clear",text:"No SDN name matches in the imported file."});
+        }
+        touch();
+      }catch(e){ setConnResult("ofac",{outcome:"failed",text:"File parse error: "+e.message}); }
+    };
+    reader.readAsText(file);
+  }
+},
+{
+  id:"dataset", name:"Public Dataset Import (generic)", mode:"file", category:"registration", cls:"official",
+  describe:()=>"No external call. Import any official public dataset you downloaded separately (CSV or JSON) — state registry bulk data, debarment lists, license rosters. The tool searches it locally for the business name and shows matching rows for you to record as evidence.",
+  manualLink:()=>"",
+  async run(){ return {outcome:"manual", text:"Use the Import dataset button on this connector."}; },
+  fileHandler(file, i){
+    const reader = new FileReader();
+    reader.onerror = ()=> setConnResult("dataset",{outcome:"failed", text:"Could not read the file."});
+    reader.onload = ()=>{
+      try{
+        const text = String(reader.result);
+        const name=(i.legalName||"").toLowerCase().trim();
+        if(!name){ setConnResult("dataset",{outcome:"skipped",text:"Enter a legal name first."}); return; }
+        let hits=[];
+        if(file.name.toLowerCase().endsWith(".json")){
+          const data = JSON.parse(text); // bad JSON -> caught below with clear error
+          const arr = Array.isArray(data)?data:(data.results||data.data||[]);
+          hits = arr.filter(r=>JSON.stringify(r).toLowerCase().includes(name)).slice(0,5).map(r=>JSON.stringify(r));
+        }else{
+          hits = text.split(/\r?\n/).filter(l=>l.toLowerCase().includes(name)).slice(0,5);
+        }
+        netLogEntry({time:now(),connector:"Dataset import (local file)",method:"LOCAL",endpoint:"(imported file: "+file.name+")",sent:"nothing — local matching",outcome:hits.length?`${hits.length} match(es)`:"no matches"});
+        setConnResult("dataset",{outcome:hits.length?"found":"none",text:hits.length?`${hits.length} row(s) matched "${name}" in ${file.name}. Review below and record as manual evidence with the dataset's official source URL.`:`No rows matched "${name}" in ${file.name}.`,raw:hits.join("\n")});
+      }catch(e){ setConnResult("dataset",{outcome:"failed",text:"Could not parse file ("+e.message+"). Check that it is valid CSV or JSON."}); }
+    };
+    reader.readAsText(file);
+  }
+}
+];
+
+function domainOf(u){
+  if(!u) return "";
+  try{ return new URL(u.startsWith("http")?u:"https://"+u).hostname.replace(/^www\./,""); }catch{ return ""; }
+}
+
+const CONN_RESULTS = {}; // connectorId -> latest {outcome,text,raw}
+function setConnResult(id, r){
+  CONN_RESULTS[id]=r;
+  (CASE.connectorRuns[id] ||= []).push({time:now(), outcome:r.outcome, text:r.text});
+  renderConnectors();
+}
+async function runConnector(c){
+  setConnResult(c.id,{outcome:"running",text:"Running…"});
+  try{
+    const r = await c.run(CASE.intake);
+    setConnResult(c.id, r);
+    if(["failed"].includes(r.outcome)){
+      recordSource({title:c.name,type:CATEGORIES.find(x=>x.id===c.category)?.label||c.category,url:c.manualLink(CASE.intake)||"",query:CASE.intake.legalName,summary:"CHECK FAILED: "+r.text,reliability:"N/A (failed)",effect:"neutral",mode:"Automated",raw:""});
+    }
+  }catch(err){
+    const kind = err.kind==="disabled" ? "Skipped — external calls disabled." : "Failed ("+(err.name==="AbortError"?"timeout":"likely CORS/network")+"). Use the manual fallback link.";
+    setConnResult(c.id,{outcome: err.kind==="disabled"?"skipped":"failed", text:kind});
+    if(err.kind!=="disabled") recordSource({title:c.name,type:c.category,url:c.manualLink(CASE.intake)||"",query:CASE.intake.legalName,summary:"CHECK FAILED: "+kind,reliability:"N/A (failed)",effect:"neutral",mode:"Automated",raw:String(err).slice(0,200)});
+  }
+  touch();
+}
+async function runAll(){
+  for(const c of CONNECTORS){ if(c.mode==="auto"||c.mode==="key"){ await runConnector(c); } else { setConnResult(c.id, await c.run(CASE.intake)); } }
+  touch();
+}
+
+/* ---------- 4. SCORING ENGINE ---------- */
+const CLS_MULT = { official:1.0, nonofficial:0.7, analyst:0.6, claimed:0.2, failed:0 };
+const STR_MULT = { strong:1.0, moderate:0.6, weak:0.3 };
+let SCORES = {};
+
+function computeScores(){
+  const W = CASE.settings.weights, P = CASE.settings.penalties;
+  // Category attainment from evidence
+  const cat = {}; CATEGORIES.forEach(c=>cat[c.id]={credit:0, hasAny:false, weightedQuality:0, qualityN:0});
+  for(const e of CASE.evidence){
+    const c = cat[e.cat]; if(!c) continue;
+    c.hasAny = true;
+    const v = (CLS_MULT[e.cls]||0)*(STR_MULT[e.strength]||0);
+    if(e.direction==="supports"){ c.credit += v; c.weightedQuality += CLS_MULT[e.cls]||0; c.qualityN++; }
+    else if(e.direction==="weakens"){ c.credit -= v; }
+  }
+  // Identity consistency category driven by the consistency matrix
+  const consVals = CONSISTENCY_FIELDS.map(f=>CASE.consistency[f]?.status||"unknown");
+  const nCons = consVals.filter(v=>v==="consistent").length;
+  const nIncons = consVals.filter(v=>v==="inconsistent").length;
+  const nKnown = nCons+nIncons;
+  const consistencyRatio = nKnown ? nCons/nKnown : 0;
+  cat.consistency.credit = Math.max(cat.consistency.credit, consistencyRatio) ;
+  if(nKnown>0) cat.consistency.hasAny = true;
+  // Base points (sanctions category has no weight: it acts through flags; supporting "no match" evidence
+  // is informational and lifts completeness only)
+  let pts = 0;
+  for(const c of CATEGORIES){
+    if(!(c.id in W)) continue;
+    pts += W[c.id]*Math.max(0,Math.min(1,cat[c.id].credit));
+  }
+  // Red flag penalties
+  let penalty = 0;
+  for(const f of CASE.redFlags) penalty += P[f.severity]||0;
+  const overall = Math.max(0, Math.min(100, Math.round(pts - penalty)));
+  // Sub-scores
+  const checked = CATEGORIES.filter(c=>cat[c.id].hasAny).length;
+  const completeness = Math.round(100*checked/CATEGORIES.length);
+  const qN = CASE.evidence.filter(e=>e.direction==="supports").length;
+  const quality = qN? Math.round(100*CASE.evidence.filter(e=>e.direction==="supports").reduce((s,e)=>s+(CLS_MULT[e.cls]||0),0)/qN) : 0;
+  const consistency = nKnown? Math.round(100*consistencyRatio) : 0;
+  const severity = Math.min(100, Math.round(penalty*2)); // 0–100 display scale: 50 pts of penalty = 100
+  const auto = CASE.evidence.length? Math.round(100*CASE.evidence.filter(e=>e.mode==="auto").length/CASE.evidence.length) : 0;
+  SCORES = {overall, pts:Math.round(pts), penalty, completeness, quality, consistency, severity, auto, manual:100-auto, nIncons, byCat:cat};
+}
+function verdict(score){
+  if(score>=85) return ["High confidence the business is real","ok"];
+  if(score>=65) return ["Moderate confidence the business is real","info"];
+  if(score>=40) return ["Low confidence / insufficient evidence — more evidence required","warn"];
+  return ["High concern / potentially suspicious — requires further review","bad"];
+}
+
+/* ---------- 5. UI RENDERING ---------- */
+function renderGauge(){
+  const s = SCORES.overall ?? 0;
+  $("#score-num").textContent = CASE.evidence.length||CASE.redFlags.length ? s : "—";
+  $("#gauge-needle").style.left = s+"%";
+  const [v,cls] = verdict(s);
+  const el = $("#score-verdict");
+  el.innerHTML = (CASE.evidence.length||CASE.redFlags.length) ? `<span class="pill ${cls}">${esc(v)}</span> <span class="small">(${SCORES.pts} evidence points − ${SCORES.penalty} flag penalties)</span>` : `<span class="small">No evidence recorded yet.</span>`;
+  $("#ss-completeness").textContent = SCORES.completeness+"%";
+  $("#ss-quality").textContent = SCORES.quality+"%";
+  $("#ss-consistency").textContent = SCORES.consistency+"%";
+  $("#ss-severity").textContent = SCORES.severity+"%";
+  $("#ss-auto").textContent = SCORES.auto+"%";
+  $("#ss-manual").textContent = SCORES.manual+"%";
+}
+function renderConnectors(){
+  const wrap = $("#connector-list"); wrap.innerHTML="";
+  const modeLabel = {auto:"AUTOMATED", key:"API KEY REQUIRED", manual:"MANUAL ONLY", file:"LOCAL FILE IMPORT"};
+  for(const c of CONNECTORS){
+    const r = CONN_RESULTS[c.id];
+    const link = c.manualLink(CASE.intake);
+    const runs = CASE.connectorRuns[c.id]||[];
+    const div = document.createElement("div");
+    div.className = "conn "+(c.mode==="auto"?"auto":c.mode==="key"?"keyreq":c.mode==="file"?"fileimp":"manual");
+    div.innerHTML = `
+      <div class="connhead">
+        <strong>${esc(c.name)}</strong>
+        <span class="pill gray">${modeLabel[c.mode]}</span>
+        <span class="pill info">${esc(CATEGORIES.find(x=>x.id===c.category)?.label||c.category)}</span>
+        <span class="pill ${c.cls==="official"?"ok":"gray"}">${esc(RELIABILITY_LABEL[c.cls])}</span>
+        <span class="spacer"></span>
+        ${c.mode!=="manual"&&c.mode!=="file" ? `<button class="btn" data-run="${c.id}">Run</button>`:""}
+        ${c.mode==="file" ? `<button class="btn" data-file="${c.id}">Import file…</button>`:""}
+        ${link?`<a class="btn sec" style="text-decoration:none" href="${esc(link)}" target="_blank" rel="noopener noreferrer">Manual lookup ↗</a>`:""}
+      </div>
+      <div class="connbody">${esc(c.describe(CASE.intake))}</div>
+      ${r?`<div class="connres"><b>${esc(String(r.outcome).toUpperCase())}</b> — ${esc(r.text)}${r.raw?`\n--- raw preview ---\n${esc(r.raw)}`:""}</div>`:""}
+      ${runs.length>1?`<details><summary>Run history (${runs.length})</summary><div class="connres">${runs.map(x=>esc(x.time)+" · "+esc(x.outcome)+" · "+esc(x.text)).join("\n")}</div></details>`:""}`;
+    wrap.appendChild(div);
+  }
+  $$("#connector-list [data-run]").forEach(b=>b.onclick=()=>runConnector(CONNECTORS.find(c=>c.id===b.dataset.run)));
+  $$("#connector-list [data-file]").forEach(b=>b.onclick=()=>{
+    const inp=document.createElement("input"); inp.type="file"; inp.accept=".csv,.json,.txt,.xml";
+    inp.onchange=()=>{ if(inp.files[0]) CONNECTORS.find(c=>c.id===b.dataset.file).fileHandler(inp.files[0], CASE.intake); };
+    inp.click();
+  });
+}
+function renderEvidence(){
+  const tb = $("#evidence-table tbody"); tb.innerHTML="";
+  for(const e of CASE.evidence){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${esc(CATEGORIES.find(c=>c.id===e.cat)?.label||e.cat)}</td>
+      <td>${esc(e.title)}${e.url?` <a href="${esc(e.url)}" target="_blank" rel="noopener noreferrer">↗</a>`:""}</td>
+      <td><span class="evtag ${esc(e.cls)}">${esc(e.cls)}</span></td>
+      <td><span class="pill ${e.direction==="supports"?"ok":e.direction==="weakens"?"bad":"gray"}">${esc(e.direction)}</span></td>
+      <td>${esc(e.strength)}</td><td>${esc(e.summary)}</td>
+      <td><span class="pill ${e.mode==="auto"?"info":"gray"}">${e.mode==="auto"?"AUTO":"MANUAL"}</span></td>
+      <td><button class="btn warn" data-del="${e.id}" aria-label="Delete evidence">✕</button></td>`;
+    tb.appendChild(tr);
+  }
+  $$("#evidence-table [data-del]").forEach(b=>b.onclick=()=>{ CASE.evidence=CASE.evidence.filter(x=>x.id!==b.dataset.del); touch(); });
+}
+function renderConsistency(){
+  const tb=$("#consistency-table tbody"); tb.innerHTML="";
+  for(const f of CONSISTENCY_FIELDS){
+    const st = CASE.consistency[f]||{status:"unknown",values:""};
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${esc(f)}</td>
+      <td><select data-cons="${esc(f)}" aria-label="Consistency status for ${esc(f)}">
+        <option value="unknown"${st.status==="unknown"?" selected":""}>Unknown</option>
+        <option value="consistent"${st.status==="consistent"?" selected":""}>Consistent</option>
+        <option value="inconsistent"${st.status==="inconsistent"?" selected":""}>Inconsistent</option>
+      </select></td>
+      <td><input data-consv="${esc(f)}" value="${esc(st.values)}" aria-label="Observed values for ${esc(f)}" style="width:100%"></td>`;
+    tb.appendChild(tr);
+  }
+  $$("#consistency-table [data-cons]").forEach(s=>s.onchange=()=>{ (CASE.consistency[s.dataset.cons] ||= {values:""}).status=s.value;
+    if(s.value==="inconsistent"){ addAutoFlag("Contact details inconsistent across sources","medium","Identity consistency matrix",`Field "${s.dataset.cons}" marked inconsistent across sources.`); }
+    touch(); });
+  $$("#consistency-table [data-consv]").forEach(inp=>inp.onchange=()=>{ (CASE.consistency[inp.dataset.consv] ||= {status:"unknown"}).values=inp.value; autosave(); });
+}
+function renderFlags(){
+  const tb=$("#flags-table tbody"); tb.innerHTML="";
+  const P=CASE.settings.penalties;
+  for(const f of CASE.redFlags){
+    const tr=document.createElement("tr"); tr.className="flagrow";
+    tr.innerHTML=`<td>${esc(f.type)}</td>
+      <td><span class="pill ${f.severity==="critical"||f.severity==="high"?"bad":f.severity==="medium"?"warn":"gray"}">${esc(f.severity)}</span></td>
+      <td class="mono">−${P[f.severity]||0}</td>
+      <td>${esc(f.source)}</td><td>${esc(f.explain)}</td><td>${esc(f.note)}</td>
+      <td><span class="pill ${f.origin==="AUTO"?"info":"gray"}">${esc(f.origin)}</span></td>
+      <td><button class="btn warn" data-delf="${f.id}" aria-label="Delete flag">✕</button></td>`;
+    tb.appendChild(tr);
+  }
+  $$("#flags-table [data-delf]").forEach(b=>b.onclick=()=>{ CASE.redFlags=CASE.redFlags.filter(x=>x.id!==b.dataset.delf); touch(); });
+}
+function renderSourceLog(){
+  const tb=$("#sourcelog-table tbody"); tb.innerHTML="";
+  for(const s of CASE.sourceLog){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${esc(s.title)}</td><td>${esc(s.type)}</td>
+      <td class="mono">${s.url?`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.url.slice(0,48))}${s.url.length>48?"…":""}</a>`:""}</td>
+      <td class="mono">${esc(s.time)}</td><td class="mono">${esc(s.query)}</td><td>${esc(s.summary)}</td>
+      <td>${esc(s.reliability)}</td>
+      <td><span class="pill ${s.effect==="supports"?"ok":s.effect==="weakens"?"bad":"gray"}">${esc(s.effect)}</span></td>
+      <td>${esc(s.mode)}</td><td class="mono">${esc((s.raw||"").slice(0,120))}</td>`;
+    tb.appendChild(tr);
+  }
+}
+function renderNetLog(){
+  const tb=$("#netlog-table tbody"); if(!tb) return; tb.innerHTML="";
+  for(const n of CASE.netLog){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td class="mono">${esc(n.time)}</td><td>${esc(n.connector)}</td><td class="mono">${esc(n.method)}</td><td class="mono">${esc(n.endpoint)}</td><td>${esc(n.sent)}</td><td>${esc(n.outcome)}</td>`;
+    tb.appendChild(tr);
+  }
+}
+function renderScoring(){
+  const wg=$("#weights-grid"); wg.innerHTML="";
+  for(const c of CATEGORIES.filter(c=>c.id in CASE.settings.weights)){
+    const l=document.createElement("label"); l.className="fld";
+    l.innerHTML=`${esc(c.label)}<input type="number" min="0" max="100" data-w="${c.id}" value="${CASE.settings.weights[c.id]}">`;
+    wg.appendChild(l);
+  }
+  const pg=$("#penalty-grid"); pg.innerHTML="";
+  for(const sev of ["low","medium","high","critical"]){
+    const l=document.createElement("label"); l.className="fld";
+    l.innerHTML=`${sev} severity<input type="number" min="0" max="100" data-p="${sev}" value="${CASE.settings.penalties[sev]}">`;
+    pg.appendChild(l);
+  }
+  const sum=Object.values(CASE.settings.weights).reduce((a,b)=>a+Number(b||0),0);
+  $("#weights-sum").innerHTML=`Weights sum: <b>${sum}</b> ${sum===100?'<span class="pill ok">OK</span>':'<span class="pill warn">should equal 100</span>'}`;
+  $$("#weights-grid [data-w]").forEach(i=>i.onchange=()=>{ CASE.settings.weights[i.dataset.w]=Math.max(0,Number(i.value)||0); touch(); });
+  $$("#penalty-grid [data-p]").forEach(i=>i.onchange=()=>{ CASE.settings.penalties[i.dataset.p]=Math.max(0,Number(i.value)||0); touch(); });
+  $("#scoring-justification").value = CASE.settings.justification||"";
+}
+function renderIntake(){
+  $$("#panel-intake [data-bind]").forEach(el=>{ el.value = CASE.intake[el.dataset.bind] ?? ""; });
+}
+function renderCompare(){
+  const tb=$("#compare-table tbody");
+  if(!COMPARE_CASE){ tb.innerHTML=`<tr><td class="small">No comparison case loaded.</td></tr>`; return; }
+  const a=CASE, b=COMPARE_CASE;
+  const sb = scoreSnapshot(b);
+  const sa = SCORES;
+  const row=(l,x,y)=>`<tr><th>${esc(l)}</th><td>${esc(String(x))}</td><td>${esc(String(y))}</td></tr>`;
+  tb.innerHTML = `<tr><th></th><th>Current: ${esc(a.intake.legalName||"(unnamed)")}</th><th>Loaded: ${esc(b.intake.legalName||"(unnamed)")}</th></tr>`+
+    row("Overall score", sa.overall??"—", sb.overall)+
+    row("Verdict", verdict(sa.overall??0)[0], verdict(sb.overall)[0])+
+    row("Evidence items", a.evidence.length, b.evidence.length)+
+    row("Red flags", a.redFlags.length, b.redFlags.length)+
+    row("Evidence completeness", (sa.completeness??0)+"%", sb.completeness+"%")+
+    row("Source quality", (sa.quality??0)+"%", sb.quality+"%")+
+    row("Automation coverage", (sa.auto??0)+"%", sb.auto+"%")+
+    row("Jurisdiction", a.intake.jurisdiction||"—", b.intake.jurisdiction||"—")+
+    row("Website", a.intake.website||"—", b.intake.website||"—");
+}
+function scoreSnapshot(c){ // score an arbitrary case object without mutating globals
+  const saved = CASE; CASE = c; computeScores(); const s = {...SCORES}; CASE = saved; computeScores(); return s;
+}
+function renderAll(){ renderGauge(); renderConnectors(); renderEvidence(); renderConsistency(); renderFlags(); renderSourceLog(); renderNetLog(); renderScoring(); renderCompare(); }
+
+/* ---------- 6. EXPORTS & REPORT ---------- */
+function download(filename, text, type="text/plain"){
+  const blob=new Blob([text],{type}); const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function csvEscape(v){ v=String(v??""); return /[",\n\r]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+function exportCSV(){
+  const head=["Title","Type","URL","Accessed","Query","Evidence summary","Reliability","Effect","Mode","Raw preview"];
+  const rows=CASE.sourceLog.map(s=>[s.title,s.type,s.url,s.time,s.query,s.summary,s.reliability,s.effect,s.mode,s.raw]);
+  download(`source_log_${(CASE.intake.legalName||"case").replace(/\W+/g,"_")}.csv`, [head,...rows].map(r=>r.map(csvEscape).join(",")).join("\r\n"), "text/csv");
+}
+function buildReportHTML(){
+  computeScores();
+  const i=CASE.intake, s=SCORES, [v,_]=verdict(s.overall);
+  const stamp=now();
+  const defaultsChanged = JSON.stringify(CASE.settings.weights)!==JSON.stringify(DEFAULT_WEIGHTS)||JSON.stringify(CASE.settings.penalties)!==JSON.stringify(DEFAULT_PENALTIES);
+  const evBy = cls => CASE.evidence.filter(e=>e.cls===cls);
+  const failedChecks = CASE.sourceLog.filter(x=>String(x.summary).startsWith("CHECK FAILED"));
+  const gaps = CATEGORIES.filter(c=>!CASE.evidence.some(e=>e.cat===c.id)).map(c=>c.label);
+  const incons = CONSISTENCY_FIELDS.filter(f=>CASE.consistency[f]?.status==="inconsistent");
+  const keyEv = CASE.evidence.filter(e=>e.direction==="supports"&&(e.cls==="official"||e.strength==="strong"));
+  const followups=[];
+  if(gaps.length) followups.push("Collect evidence for unchecked categories: "+gaps.join("; ")+".");
+  if(failedChecks.length) followups.push("Re-attempt or manually replace "+failedChecks.length+" failed source check(s).");
+  if(incons.length) followups.push("Resolve identity inconsistencies: "+incons.join("; ")+".");
+  if(CASE.redFlags.some(f=>f.severity==="critical")) followups.push("Confirm identity behind any critical list match before relying on it (name collisions are common).");
+  if(s.auto<50 && CASE.evidence.length) followups.push("Automation coverage is low ("+s.auto+"%); spot-check manual entries against their source URLs.");
+  if(!followups.length) followups.push("No outstanding follow-ups identified by the tool; apply analyst judgment.");
+  const evTable = list => list.length? `<table><tr><th>Category</th><th>Source</th><th>Effect</th><th>Strength</th><th>Summary</th></tr>${list.map(e=>`<tr><td>${esc(CATEGORIES.find(c=>c.id===e.cat)?.label||e.cat)}</td><td>${esc(e.title)}</td><td>${esc(e.direction)}</td><td>${esc(e.strength)}</td><td>${esc(e.summary)}</td></tr>`).join("")}</table>` : "<p>None recorded.</p>";
+  return `
+  <div class="stamp">OPEN SOURCE ASSESSMENT · OSV-BLA v1.0 · Generated ${esc(stamp)}</div>
+  <h1>Business Legitimacy Assessment: ${esc(i.legalName||"(unnamed business)")}</h1>
+  <h2>Executive summary</h2>
+  <p><b>Confidence rating: ${esc(v)}.</b> Overall score <b>${s.overall}/100</b> (${s.pts} evidence points earned, ${s.penalty} points of red-flag penalty). Evidence completeness ${s.completeness}% across ${CATEGORIES.length} categories; source quality ${s.quality}%; identity consistency ${s.consistency}%; automation coverage ${s.auto}% (manual dependency ${s.manual}%). ${CASE.redFlags.length} red flag(s) on file. This is an evidence-based confidence assessment, not proof; see scoring appendix.</p>
+  <h2>Subject as presented (unverified claims by the business)</h2>
+  <table>${Object.entries({"Legal name":i.legalName,"DBA":i.dba,"Website":i.website,"Physical address":i.physAddr,"Mailing address":i.mailAddr,"Phone":i.phone,"Email":i.email,"Principals":i.principals,"Jurisdiction":i.jurisdiction,"NAICS":i.naics,"Claimed years":i.years,"Claimed employees":i.employees,"Claimed licenses":i.licenses,"Claimed certifications":i.certs,"EIN status":i.einStatus}).filter(([k,v])=>v).map(([k,v])=>`<tr><th style="width:200px">${esc(k)}</th><td>${esc(v)}</td></tr>`).join("")}</table>
+  <h2>Key supporting evidence</h2>${evTable(keyEv)}
+  <h2>Key gaps</h2>${gaps.length?`<ul>${gaps.map(g=>`<li>${esc(g)}: no evidence collected.</li>`).join("")}</ul>`:"<p>All categories have at least one evidence item.</p>"}
+  <h2>Red flags</h2>
+  ${CASE.redFlags.length?`<table><tr><th>Flag</th><th>Severity</th><th>Penalty</th><th>Source</th><th>Explanation</th><th>Origin</th></tr>${CASE.redFlags.map(f=>`<tr><td>${esc(f.type)}</td><td>${esc(f.severity)}</td><td>−${CASE.settings.penalties[f.severity]||0}</td><td>${esc(f.source)}</td><td>${esc(f.explain)}${f.note?" — Note: "+esc(f.note):""}</td><td>${esc(f.origin)}</td></tr>`).join("")}</table>`:"<p>No red flags recorded.</p>"}
+  <h2>Identity inconsistencies</h2>
+  ${incons.length?`<ul>${incons.map(f=>`<li><b>${esc(f)}</b>: ${esc(CASE.consistency[f]?.values||"(values not recorded)")}</li>`).join("")}</ul>`:"<p>No fields marked inconsistent."+(s.consistency===0?" (Consistency review not yet performed.)":"")+"</p>"}
+  <h2>Evidence by verification class</h2>
+  <h3 style="font-size:.9rem">Verified — official sources</h3>${evTable(evBy("official"))}
+  <h3 style="font-size:.9rem">Non-official public sources</h3>${evTable(evBy("nonofficial"))}
+  <h3 style="font-size:.9rem">Analyst direct observation</h3>${evTable(evBy("analyst"))}
+  <h3 style="font-size:.9rem">Unverified self-claims by the business</h3>${evTable(evBy("claimed"))}
+  <h3 style="font-size:.9rem">Failed / unavailable source checks</h3>
+  ${failedChecks.length?`<ul>${failedChecks.map(f=>`<li>${esc(f.title)} (${esc(f.time)}): ${esc(f.summary)}</li>`).join("")}</ul>`:"<p>None.</p>"}
+  <h2>Recommended follow-up checks</h2><ul>${followups.map(f=>`<li>${esc(f)}</li>`).join("")}</ul>
+  <h2>Source table</h2>
+  <table><tr><th>Title</th><th>Type</th><th>URL</th><th>Accessed</th><th>Reliability</th><th>Effect</th><th>Mode</th></tr>
+  ${CASE.sourceLog.map(x=>`<tr><td>${esc(x.title)}</td><td>${esc(x.type)}</td><td>${esc(x.url)}</td><td>${esc(x.time)}</td><td>${esc(x.reliability)}</td><td>${esc(x.effect)}</td><td>${esc(x.mode)}</td></tr>`).join("")}</table>
+  <h2>Analyst notes</h2><p>${esc(i.notes||"None.")}</p>
+  <h2>Appendix — scoring logic</h2>
+  <p>Score = Σ (category weight × capped category credit) − Σ red-flag penalties, clamped to 0–100. Category credit per item = strength multiplier (strong 1.0 / moderate 0.6 / weak 0.3) × source-class multiplier (official 1.0 / non-official 0.7 / analyst 0.6 / self-claim 0.2); weakening items subtract. Bands: 85–100 high confidence; 65–84 moderate; 40–64 low / more evidence required; 0–39 high concern.</p>
+  <table><tr><th>Category</th><th>Weight</th><th>Credit (capped)</th><th>Points</th></tr>
+  ${CATEGORIES.filter(c=>c.id in CASE.settings.weights).map(c=>{const cr=Math.max(0,Math.min(1,s.byCat[c.id].credit));return `<tr><td>${esc(c.label)}</td><td>${CASE.settings.weights[c.id]}</td><td>${cr.toFixed(2)}</td><td>${(CASE.settings.weights[c.id]*cr).toFixed(1)}</td></tr>`;}).join("")}
+  <tr><th colspan="3">Red-flag penalty</th><td>−${s.penalty}</td></tr><tr><th colspan="3">Overall</th><td><b>${s.overall}</b></td></tr></table>
+  ${defaultsChanged?`<p><b>Scoring deviates from defaults.</b> Justification recorded: ${esc(CASE.settings.justification||"(none provided — should be documented)")}</p>`:"<p>Default weights and penalties were used.</p>"}
+  <div class="stamp">Date/time of assessment: ${esc(stamp)} · Produced with OSV-BLA single-file workbench · All source retrievals logged</div>`;
+}
+function exportTXT(){
+  computeScores(); const [v]=verdict(SCORES.overall);
+  const lines=[
+    "OPEN SOURCE ASSESSMENT — BUSINESS LEGITIMACY SUMMARY",
+    "Business: "+(CASE.intake.legalName||"(unnamed)"),
+    "Generated: "+now(),
+    "Confidence rating: "+v,
+    "Overall score: "+SCORES.overall+"/100 ("+SCORES.pts+" pts earned − "+SCORES.penalty+" penalties)",
+    "Evidence completeness: "+SCORES.completeness+"% | Source quality: "+SCORES.quality+"% | Consistency: "+SCORES.consistency+"%",
+    "Automation coverage: "+SCORES.auto+"% | Manual dependency: "+SCORES.manual+"%",
+    "Red flags ("+CASE.redFlags.length+"):",
+    ...CASE.redFlags.map(f=>"  - ["+f.severity.toUpperCase()+"] "+f.type+" — "+f.explain+" (source: "+f.source+")"),
+    "Evidence items: "+CASE.evidence.length+" ("+CASE.evidence.filter(e=>e.cls==="official").length+" official)",
+    "Sources logged: "+CASE.sourceLog.length,
+    "",
+    "This is an evidence-based confidence assessment, not proof of legitimacy."
+  ];
+  download(`assessment_summary_${(CASE.intake.legalName||"case").replace(/\W+/g,"_")}.txt`, lines.join("\r\n"));
+}
+function exportFullHTML(){
+  const body=buildReportHTML();
+  const css=document.querySelector("style").textContent;
+  download(`assessment_report_${(CASE.intake.legalName||"case").replace(/\W+/g,"_")}.html`,
+    `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Assessment report</title><style>${css}</style></head><body><main><div id="report-out">${body}</div></main></body></html>`,"text/html");
+}
+
+/* ---------- INIT & EVENT WIRING ---------- */
+function init(){
+  // populate selects
+  const js=$("#in-jurisdiction"); US_STATES.forEach(s=>{const o=document.createElement("option");o.value=s==="Non-US / Other"?"OTHER":s;o.textContent=s;js.appendChild(o);});
+  const ec=$("#ev-category"); CATEGORIES.forEach(c=>{const o=document.createElement("option");o.value=c.id;o.textContent=c.label;ec.appendChild(o);});
+  const ft=$("#fl-type"); FLAG_TYPES.forEach(t=>{const o=document.createElement("option");o.textContent=t;ft.appendChild(o);});
+  // tabs
+  $$("nav.tabs button").forEach(b=>b.onclick=()=>{
+    $$("nav.tabs button").forEach(x=>x.setAttribute("aria-selected","false"));
+    b.setAttribute("aria-selected","true");
+    $$("section.tabpanel").forEach(p=>p.classList.remove("active"));
+    $("#panel-"+b.dataset.tab).classList.add("active");
+  });
+  // intake binding with light validation
+  $$("#panel-intake [data-bind]").forEach(el=>el.addEventListener("change",()=>{
+    let v=el.value.trim();
+    if(el.dataset.bind==="website" && v && !/^https?:\/\//.test(v)) v="https://"+v;
+    if((el.dataset.bind==="years"||el.dataset.bind==="employees") && v && !/^\d+$/.test(v)){ alert("Please enter a whole number."); el.value=""; return; }
+    CASE.intake[el.dataset.bind]=v; el.value=v; touch();
+  }));
+  $("#btn-goto-checks").onclick=()=>$$("nav.tabs button")[1].click();
+  // checks
+  $("#btn-run-all").onclick=runAll;
+  $("#btn-rerun-all").onclick=runAll; // prior results preserved automatically in connectorRuns history
+  $("#ext-toggle").onchange=()=>{ $("#ext-off-note").hidden=$("#ext-toggle").checked; };
+  // evidence
+  $("#btn-add-evidence").onclick=()=>{
+    const title=$("#ev-title").value.trim(), summary=$("#ev-summary").value.trim();
+    if(!title||!summary){ alert("Source title and evidence summary are required."); return; }
+    let url=$("#ev-url").value.trim(); if(url&&!/^https?:\/\//.test(url)) url="https://"+url;
+    addEvidenceItem($("#ev-category").value,{title,url,cls:$("#ev-class").value,direction:$("#ev-direction").value,strength:$("#ev-strength").value,summary,mode:"manual"});
+    $("#ev-title").value=$("#ev-url").value=$("#ev-summary").value="";
+    touch();
+  };
+  // flags
+  $("#btn-add-flag").onclick=()=>{
+    const explain=$("#fl-explain").value.trim();
+    if(!explain){ alert("An explanation is required for every red flag."); return; }
+    CASE.redFlags.push({id:uid(),type:$("#fl-type").value,severity:$("#fl-severity").value,source:$("#fl-source").value.trim()||"Analyst judgment",explain,note:$("#fl-note").value.trim(),origin:"MANUAL",time:now()});
+    $("#fl-source").value=$("#fl-explain").value=$("#fl-note").value="";
+    touch();
+  };
+  // scoring
+  $("#btn-reset-scoring").onclick=()=>{ CASE.settings.weights={...DEFAULT_WEIGHTS}; CASE.settings.penalties={...DEFAULT_PENALTIES}; touch(); };
+  $("#scoring-justification").onchange=e=>{ CASE.settings.justification=e.target.value; autosave(); };
+  // exports / case mgmt
+  $("#btn-save-json").onclick=()=>download(`case_${(CASE.intake.legalName||"unnamed").replace(/\W+/g,"_")}.json`, JSON.stringify(CASE,null,2), "application/json");
+  $("#btn-load-json").onclick=()=>$("#file-load-json").click();
+  $("#file-load-json").onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{
+        const data=JSON.parse(String(r.result));
+        if(!data.intake||!Array.isArray(data.evidence)) throw new Error("File is valid JSON but not an OSV-BLA case (missing intake/evidence).");
+        CASE={...FRESH_CASE(),...data, settings:{...FRESH_CASE().settings, ...(data.settings||{})}};
+        renderIntake(); touch();
+      }catch(err){ alert("Import failed: "+err.message); } };
+    r.onerror=()=>alert("Could not read file.");
+    r.readAsText(f); e.target.value="";
+  };
+  $("#btn-reset").onclick=()=>{ if(confirm("Clear the entire case? Unsaved work will be lost.")){ CASE=FRESH_CASE(); for(const k in CONN_RESULTS) delete CONN_RESULTS[k]; renderIntake(); touch(); } };
+  $("#btn-clear-storage").onclick=()=>{ if(confirm("Clear all locally stored data, including autosaved case and any API keys?")){ try{localStorage.removeItem("osvbla_case");}catch{} $("#key-sam").value=""; alert("Local storage cleared. The in-memory case is untouched; use Clear/reset to discard it too."); } };
+  $("#btn-export-csv").onclick=exportCSV;
+  $("#btn-gen-report").onclick=()=>{ $("#report-out").innerHTML=buildReportHTML(); };
+  $("#btn-print").onclick=()=>{ $("#report-out").innerHTML=buildReportHTML(); window.print(); };
+  $("#btn-export-txt").onclick=exportTXT;
+  $("#btn-export-html").onclick=exportFullHTML;
+  // compare
+  $("#btn-load-compare").onclick=()=>$("#file-load-compare").click();
+  $("#file-load-compare").onchange=e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{
+        const data=JSON.parse(String(r.result));
+        if(!data.intake) throw new Error("Not an OSV-BLA case file.");
+        COMPARE_CASE={...FRESH_CASE(),...data, settings:{...FRESH_CASE().settings, ...(data.settings||{})}};
+        renderCompare();
+      }catch(err){ alert("Comparison import failed: "+err.message); } };
+    r.readAsText(f); e.target.value="";
+  };
+  // restore autosave if present (no network involved)
+  try{ const saved=localStorage.getItem("osvbla_case");
+    if(saved){ const data=JSON.parse(saved); if(data.intake){ CASE={...FRESH_CASE(),...data, settings:{...FRESH_CASE().settings, ...(data.settings||{})}}; $("#autosave-toggle").checked=true; } }
+  }catch{}
+  renderIntake(); computeScores(); renderAll();
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

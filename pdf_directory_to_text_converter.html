@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Secure PDF Directory to Text Converter</title>
+<style>
+:root{--bg:#0f172a;--panel:#111827;--panel2:#1f2937;--text:#e5e7eb;--muted:#9ca3af;--accent:#38bdf8;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;--border:#334155}*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(135deg,#020617,#111827 55%,#0f172a);color:var(--text);min-height:100vh}.wrap{max-width:1180px;margin:0 auto;padding:26px}h1{margin:0 0 8px;font-size:clamp(24px,4vw,42px)}p{color:var(--muted);line-height:1.5}.grid{display:grid;grid-template-columns:1fr;gap:16px}@media(min-width:900px){.grid{grid-template-columns:1.1fr .9fr}}.card{background:rgba(17,24,39,.88);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.25)}.drop{border:2px dashed #475569;border-radius:18px;padding:28px;text-align:center;background:rgba(15,23,42,.65);transition:.2s}.drop.drag{border-color:var(--accent);background:rgba(56,189,248,.08)}button,.fileLabel{appearance:none;border:0;border-radius:12px;background:var(--accent);color:#001018;font-weight:800;padding:12px 16px;cursor:pointer;display:inline-flex;gap:8px;align-items:center;margin:4px}button.secondary{background:#334155;color:var(--text)}button.danger{background:var(--bad);color:white}button:disabled{opacity:.5;cursor:not-allowed}.fileLabel input{display:none}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.stat{background:#0b1220;border:1px solid var(--border);border-radius:14px;padding:12px;min-width:140px}.stat b{display:block;font-size:24px}.small{font-size:13px;color:var(--muted)}progress{width:100%;height:14px;accent-color:var(--accent)}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}th,td{border-bottom:1px solid var(--border);padding:9px;text-align:left;vertical-align:top}th{color:#cbd5e1;background:#0b1220;position:sticky;top:0}.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}.log{height:180px;overflow:auto;background:#050816;border:1px solid var(--border);border-radius:12px;padding:10px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;color:#cbd5e1;white-space:pre-wrap}.opts label{display:block;margin:8px 0;color:#d1d5db}.opts input[type=text]{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#020617;color:var(--text)}.pill{display:inline-block;padding:3px 8px;border-radius:999px;background:#0b1220;border:1px solid var(--border);color:#cbd5e1;font-size:12px}.note{border-left:4px solid var(--warn);padding:10px 12px;background:rgba(245,158,11,.08);border-radius:10px;color:#fde68a}</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Secure PDF Directory to Text Converter</h1>
+  <p>Runs locally in the browser with no server calls and no external libraries. Select a folder of PDFs, convert each PDF to a text file, then save all outputs individually or as one combined text file.</p>
+  <div class="grid">
+    <section class="card">
+      <div id="drop" class="drop">
+        <h2>Select PDF Files or a Directory</h2>
+        <p>Best option: use Chrome or Edge and choose a whole folder. Subfolders are included.</p>
+        <div class="row" style="justify-content:center">
+          <label class="fileLabel">Choose PDF Files<input id="fileInput" type="file" accept="application/pdf,.pdf" multiple></label>
+          <label class="fileLabel">Choose Directory<input id="dirInput" type="file" accept="application/pdf,.pdf" webkitdirectory directory multiple></label>
+          <button id="clearBtn" class="secondary">Clear</button>
+        </div>
+        <p class="small"><span class="pill">Offline</span> <span class="pill">No install</span> <span class="pill">Folder mode</span> <span class="pill">Batch export</span></p>
+      </div>
+      <div style="margin-top:16px" class="opts">
+        <label><input id="recursive" type="checkbox" checked> Include subfolders when a directory is selected</label>
+        <label><input id="oneFile" type="checkbox"> Also create one combined output file</label>
+        <label><input id="cleanText" type="checkbox" checked> Clean spacing and line breaks</label>
+        <label>Output file suffix<input id="suffix" type="text" value=".txt"></label>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button id="convertBtn" disabled>Convert PDFs</button>
+        <button id="downloadZipBtn" class="secondary" disabled>Download All as HTML Bundle</button>
+        <button id="combinedBtn" class="secondary" disabled>Download Combined TXT</button>
+      </div>
+      <p class="note">For strongest text extraction in a locked-down environment, use PDFs that contain selectable text. Scanned-image PDFs need OCR software; a browser-only offline HTML file cannot reliably OCR images without a large embedded OCR engine.</p>
+    </section>
+    <section class="card">
+      <h2>Progress</h2>
+      <progress id="progress" value="0" max="100"></progress>
+      <div class="row" style="margin-top:12px">
+        <div class="stat"><b id="count">0</b><span class="small">PDFs loaded</span></div>
+        <div class="stat"><b id="done">0</b><span class="small">Converted</span></div>
+        <div class="stat"><b id="fail">0</b><span class="small">Warnings / failed</span></div>
+      </div>
+      <h3>Log</h3><div id="log" class="log"></div>
+    </section>
+  </div>
+  <section class="card" style="margin-top:16px">
+    <h2>Files</h2>
+    <div style="max-height:420px;overflow:auto"><table><thead><tr><th>PDF</th><th>Status</th><th>Text chars</th><th>Action</th></tr></thead><tbody id="tbody"></tbody></table></div>
+  </section>
+</div>
+<script>
+'use strict';
+const state={files:[],results:[],running:false};
+const $=id=>document.getElementById(id);
+const log=m=>{const el=$('log');el.textContent+=`[${new Date().toLocaleTimeString()}] ${m}\n`;el.scrollTop=el.scrollHeight};
+const enc=new TextEncoder();
+function update(){ $('count').textContent=state.files.length; $('done').textContent=state.results.filter(r=>r.status==='ok').length; $('fail').textContent=state.results.filter(r=>r.status!=='ok').length; $('convertBtn').disabled=!state.files.length||state.running; $('combinedBtn').disabled=!state.results.length; $('downloadZipBtn').disabled=!state.results.length; $('progress').value=state.files.length?Math.round((state.results.length/state.files.length)*100):0; render(); }
+function render(){const tb=$('tbody');tb.innerHTML='';state.files.forEach((f,i)=>{const r=state.results.find(x=>x.index===i);const tr=document.createElement('tr');const st=r?r.status:'queued';const cls=st==='ok'?'ok':st==='queued'?'':'warn';tr.innerHTML=`<td>${escapeHtml(f.webkitRelativePath||f.name)}</td><td class="${cls}">${escapeHtml(r?r.message:'Queued')}</td><td>${r?Number(r.text.length).toLocaleString():''}</td><td></td>`;const td=tr.lastChild;if(r){const b=document.createElement('button');b.className='secondary';b.textContent='Download TXT';b.onclick=()=>downloadText(outputName(f),r.text);td.appendChild(b)}tb.appendChild(tr)})}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function outputName(file){let name=(file.webkitRelativePath||file.name).split('/').pop().replace(/\.pdf$/i,'');let suf=$('suffix').value||'.txt';if(!suf.startsWith('.'))suf='.'+suf;return name+suf}
+function addFiles(list){const files=[...list].filter(f=>/\.pdf$/i.test(f.name));state.files=files;state.results=[];log(`Loaded ${files.length} PDF file(s).`);update();}
+$('fileInput').onchange=e=>addFiles(e.target.files);$('dirInput').onchange=e=>addFiles(e.target.files);$('clearBtn').onclick=()=>{state.files=[];state.results=[];$('fileInput').value='';$('dirInput').value='';$('log').textContent='';update()};
+const drop=$('drop');['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
+$('convertBtn').onclick=async()=>{state.running=true;state.results=[];update();for(let i=0;i<state.files.length;i++){const f=state.files[i];try{log(`Converting ${f.webkitRelativePath||f.name}`);let text=await extractPdfText(f);if($('cleanText').checked)text=cleanExtractedText(text);let msg=text.trim()? 'Converted':'No selectable text found; scanned PDF or unsupported encoding';state.results.push({index:i,file:f,status:text.trim()?'ok':'warn',message:msg,text});}catch(err){state.results.push({index:i,file:f,status:'warn',message:'Failed: '+err.message,text:''});log(`Warning: ${f.name}: ${err.message}`)}update();await new Promise(r=>setTimeout(r,0));}state.running=false;log('Finished.');update();};
+$('combinedBtn').onclick=()=>{const parts=state.results.map(r=>`===== ${r.file.webkitRelativePath||r.file.name} =====\n\n${r.text}\n\n`);downloadText('combined_pdf_text_output.txt',parts.join('\n'));};
+$('downloadZipBtn').onclick=()=>downloadBundle();
+function downloadText(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function downloadBundle(){let html='<!doctype html><meta charset="utf-8"><title>PDF Text Output Bundle</title><style>body{font-family:system-ui;margin:30px}pre{white-space:pre-wrap;border:1px solid #ccc;padding:12px}</style><h1>PDF Text Output Bundle</h1>';for(const r of state.results){html+=`<h2>${escapeHtml(r.file.webkitRelativePath||r.file.name)}</h2><p>${escapeHtml(r.message)}</p><pre>${escapeHtml(r.text)}</pre>`}const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download='pdf_text_output_bundle.html';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+async function extractPdfText(file){const buf=await file.arrayBuffer();const bytes=new Uint8Array(buf);const latin=bytesToLatin1(bytes);const streamTexts=[];let pos=0;while(true){const si=latin.indexOf('stream',pos);if(si<0)break;let dataStart=si+6;if(latin[dataStart]==='\r'&&latin[dataStart+1]==='\n')dataStart+=2;else if(latin[dataStart]==='\n'||latin[dataStart]==='\r')dataStart+=1;const ei=latin.indexOf('endstream',dataStart);if(ei<0)break;const dictStart=Math.max(0,latin.lastIndexOf('<<',si));const dictEnd=latin.lastIndexOf('>>',si);const dict=dictStart>=0&&dictEnd>dictStart?latin.slice(dictStart,dictEnd+2):'';let raw=bytes.slice(dataStart,ei);let content='';if(/\/FlateDecode/.test(dict)){content=await inflateToLatin1(raw).catch(()=> '')}else{content=bytesToLatin1(raw)}if(content && /(BT|Tj|TJ|Tf|Td|Tm)/.test(content))streamTexts.push(parseTextOperators(content));pos=ei+9;}let text=streamTexts.join('\n');if(!text.trim()) text=parseWholePdfFallback(latin);return text;}
+function bytesToLatin1(arr){let s='';const chunk=0x8000;for(let i=0;i<arr.length;i+=chunk)s+=String.fromCharCode(...arr.subarray(i,i+chunk));return s}
+async function inflateToLatin1(raw){if('DecompressionStream' in window){const ds=new DecompressionStream('deflate');const stream=new Blob([raw]).stream().pipeThrough(ds);const ab=await new Response(stream).arrayBuffer();return bytesToLatin1(new Uint8Array(ab));}throw new Error('Deflate decompression is not available in this browser');}
+function parseTextOperators(s){let out=[];let i=0;while(i<s.length){const c=s[i];if(c==='('){const res=readPdfString(s,i);i=res.end;let j=i;while(/\s/.test(s[j]||''))j++;if(s.slice(j,j+2)==='Tj'||s.slice(j,j+1)==="'"||s.slice(j,j+1)==='"'){out.push(decodePdfString(res.value));i=j+2;continue}out.push(decodePdfString(res.value));continue}if(c==='['){const end=s.indexOf(']',i+1);if(end>i){const arr=s.slice(i+1,end);let m;const re=/\((?:\\.|[^\\)])*\)/g;let line='';while((m=re.exec(arr))){line+=decodePdfString(readPdfString(m[0],0).value)}if(line)out.push(line);i=end+1;continue}}if(s.slice(i,i+2)==='Td'||s.slice(i,i+2)==='TD'||s.slice(i,i+2)==='T*')out.push('\n');i++;}return out.join(' ')}
+function readPdfString(s,start){let i=start+1,depth=1,val='';while(i<s.length&&depth>0){let ch=s[i++];if(ch==='\\'){val+=ch+(s[i++]||'');continue}if(ch==='('){depth++;val+=ch;continue}if(ch===')'){depth--;if(depth===0)break;val+=ch;continue}val+=ch}return{value:val,end:i}}
+function decodePdfString(v){return v.replace(/\\([nrtbf()\\])/g,(m,c)=>({n:'\n',r:'\r',t:'\t',b:'\b',f:'\f','(':'(',')':')','\\':'\\'}[c]||c)).replace(/\\([0-7]{1,3})/g,(m,o)=>String.fromCharCode(parseInt(o,8))).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'')}
+function parseWholePdfFallback(s){const out=[];let m;const re=/\((?:\\.|[^\\)]){2,}\)\s*(?:Tj|'|")/g;while((m=re.exec(s))){out.push(decodePdfString(readPdfString(m[0],0).value))}return out.join('\n')}
+function cleanExtractedText(t){return t.replace(/\r/g,'\n').replace(/[ \t]+/g,' ').replace(/ ?\n ?/g,'\n').replace(/\n{3,}/g,'\n\n').trim()+ (t.trim()? '\n':'')}
+update();
+</script>
+</body>
+</html>

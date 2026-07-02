@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Secure Offline Python-Compatible Workbench v4.2 Visualization Advisor + Session Restore</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: blob:; connect-src 'none'; img-src 'self' data: blob:; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none';" />
+<style>
+:root{--bg:#07101f;--panel:#101b31;--panel2:#162440;--text:#eef5ff;--muted:#aebbd2;--line:#30425f;--accent:#79a9ff;--good:#77e096;--warn:#ffd36a;--bad:#ff8e8e;--code:#07111f;}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#070d19,#0c172b 45%,#09111f);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif} 
+header{padding:20px 24px;border-bottom:1px solid var(--line);background:rgba(16,27,49,.96);position:sticky;top:0;z-index:4;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+h1{margin:0 0 5px;font-size:1.35rem}.sub{color:var(--muted);font-size:.92rem;line-height:1.35}.wrap{display:grid;grid-template-columns:370px minmax(0,1fr);gap:16px;max-width:1680px;margin:0 auto;padding:16px}.stack{display:flex;flex-direction:column;gap:12px}.card{background:rgba(16,27,49,.94);border:1px solid var(--line);border-radius:15px;padding:14px;box-shadow:0 12px 30px rgba(0,0,0,.16)}
+.card h2{font-size:1rem;margin:0 0 10px}.small{color:var(--muted);font-size:.83rem;line-height:1.38}.tiny{color:var(--muted);font-size:.76rem}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.main{display:grid;grid-template-rows:auto auto 1fr;gap:12px} 
+button{border:1px solid #3b527c;background:#23375f;color:var(--text);padding:9px 11px;border-radius:10px;cursor:pointer;font-weight:700;font-size:.88rem}button:hover{background:#2d4778}button.primary{background:#1d62c7;border-color:#4388ff}button.good{background:#197341;border-color:#36aa66}button.bad{background:#79313a;border-color:#b24d59}button.warn{background:#71540e;border-color:#c39423}
+input,select{width:100%;background:#0b1528;border:1px solid #334a73;color:var(--text);border-radius:10px;padding:9px}textarea{width:100%;min-height:390px;background:var(--code);color:#edf5ff;border:1px solid #354c75;border-radius:12px;padding:12px;font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace;font-size:13px;line-height:1.45;resize:vertical;tab-size:4}pre{white-space:pre-wrap;word-break:break-word;background:var(--code);border:1px solid #354c75;border-radius:12px;padding:12px;margin:0;min-height:235px;max-height:520px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Consolas,Monaco,monospace;font-size:13px;line-height:1.45}
+canvas{width:100%;height:300px;background:#07111f;border:1px solid #354c75;border-radius:12px}.notice{border-left:4px solid var(--warn);background:#251e0f;color:#ffe6a3;padding:10px;border-radius:10px}.ok{border-left:4px solid var(--good);background:#0e2418;color:#cdfedb;padding:10px;border-radius:10px}.errbox{border-left:4px solid var(--bad);background:#2a1217;color:#ffd3d3;padding:10px;border-radius:10px}.badge{display:inline-flex;align-items:center;padding:5px 8px;border:1px solid #3b527c;border-radius:999px;background:#1c2c4d;color:#dce9ff;font-size:.77rem;font-weight:700}.badge.good{border-color:#2b8750;color:#c9ffd8}.badge.warn{border-color:#9b7520;color:#ffe8a2}.badge.bad{border-color:#97414b;color:#ffd1d1}.pillbox{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.kbd{font-family:ui-monospace,Consolas,monospace;background:#081224;border:1px solid #32486f;border-radius:6px;padding:2px 5px;color:#e6efff}table{border-collapse:collapse;width:100%;font-size:.82rem}th,td{border:1px solid #314769;padding:6px 8px;text-align:left}th{background:#1b2c4e;position:sticky;top:0}td{background:#0c172b}.tablewrap{overflow:auto;max-height:390px;border:1px solid #314769;border-radius:12px}.recommendation{background:#0b182d;border:1px solid #39547f;border-radius:12px;padding:10px;margin-top:10px}.recommendation b{color:#eef5ff}.recommendation pre{min-height:78px;max-height:190px;margin-top:8px;font-size:12px}.recscore{height:7px;background:#0a1324;border:1px solid #314769;border-radius:999px;overflow:hidden;margin:7px 0}.recscore span{display:block;height:100%;background:linear-gradient(90deg,#77e096,#79a9ff)}.exportgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}hr{border:0;border-top:1px solid var(--line);margin:12px 0}@media(max-width:960px){.wrap,.grid2,.grid3,.exportgrid{grid-template-columns:1fr}header{position:static}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Secure Offline Python-Compatible Workbench v4.2 Visualization Advisor + Session Restore</h1>
+  <div class="sub">Single-file HTML. No CDN, no internet, no installation. Runs a practical Python subset through an embedded interpreter with pandas/NumPy/SciPy/Matplotlib-like libraries implemented locally in JavaScript. v4.2 adds an automatic visualization advisor, one-click recommended chart insertion/drawing, expanded chart/graph exports, and portable JSON session save/restore so work can resume later while preserving the broad offline visualization suite: statistical, time-series, risk/Monte Carlo, ML diagnostics, network/graph, map-style, intelligence/security, engineering, financial, dashboard, and 3D-style canvas charts.</div>
+</header>
+<div class="wrap">
+  <aside class="stack">
+    <section class="card">
+      <h2>Runtime Reality</h2>
+      <div class="notice small"><b>Honest constraint:</b> this is not full CPython. A plain browser with no local runtime cannot execute native Python packages. This file instead embeds a Python-compatible interpreter for common analytics scripts: functions, imports, variables, loops, if/else, comprehensions, f-strings, dataframe work, statistics, Monte Carlo, and plotting.</div>
+      <div class="pillbox"><span class="badge good">Offline</span><span class="badge good">Single file</span><span class="badge good">No external calls</span><span class="badge warn">Python subset</span><span class="badge bad">Not native CPython</span></div>
+    </section>
+    <section class="card">
+      <h2>Import Data</h2>
+      <input id="fileInput" type="file" accept=".csv,.tsv,.json,.txt,.md" />
+      <div class="row" style="margin-top:8px"><button id="loadSample">Load Sample</button><button id="clearData" class="bad">Clear Data</button></div>
+      <div id="dataStatus" class="small" style="margin-top:10px">No file loaded.</div>
+      <div class="small" style="margin-top:8px">CSV/TSV/JSON load as a dataframe. TXT/Markdown load as line-level rows plus text analytics.</div>
+      <div id="vizAdvisor" class="recommendation small">
+        <b>Visualization recommendation</b>
+        <div id="vizRecommendationText" style="margin-top:6px">Upload or process data to get an automatic chart suggestion.</div>
+        <div class="recscore"><span id="vizScoreBar" style="width:0%"></span></div>
+        <div id="vizRecommendationWhy" class="tiny"></div>
+        <pre id="vizRecommendationCode"></pre>
+        <div class="row" style="margin-top:8px">
+          <button id="drawRecommended" class="good">Draw Recommended</button>
+          <button id="insertRecommended">Insert Script</button>
+          <button id="copyRecommended">Copy Script</button>
+        </div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Python Features + Visualization Advisor</h2>
+      <div class="small">
+        <div><span class="kbd">def f(x, y=2):</span> with <span class="kbd">return</span>, recursion, keyword args, <span class="kbd">break</span>/<span class="kbd">continue</span></div>
+        <div><span class="kbd">[x*2 for x in a if x&gt;0]</span>, dict comprehensions, <span class="kbd">f"m={m:.2f}"</span>, ternary</div>
+        <div><span class="kbd">a, b = 1, 2</span>, <span class="kbd">for k, v in d.items():</span>, <span class="kbd">not in</span>, <span class="kbd">is</span></div>
+        <div>String/list/dict methods, <span class="kbd">sorted(key=...)</span>, <span class="kbd">enumerate</span>, <span class="kbd">zip</span>, negative slicing</div>
+        <div><span class="kbd">df.merge()</span>, <span class="kbd">apply()</span>, <span class="kbd">rolling()</span>, <span class="kbd">iloc</span>, <span class="kbd">np.where()</span>, <span class="kbd">cumsum()</span>, <span class="kbd">clip()</span></div>
+        <div><span class="kbd">stats.t</span>/<span class="kbd">binom</span>/<span class="kbd">poisson</span>/<span class="kbd">lognorm</span>, <span class="kbd">linregress</span>, <span class="kbd">random.seed()</span>, <span class="kbd">lhs()</span>, <span class="kbd">monte_carlo(fn, n)</span></div>
+        <div><span class="kbd">plt.corr_heatmap()</span>, <span class="kbd">boxplot()</span>, <span class="kbd">risk_matrix()</span>, <span class="kbd">network()</span>, <span class="kbd">gauge()</span>, <span class="kbd">surface3d()</span>, and 90+ offline chart aliases</div>
+      </div>
+    </section>
+    <section class="card">
+      <h2>Examples</h2>
+      <select id="examples">
+        <option value="">Choose an example...</option>
+        <option value="pybasic">Python-style basics</option>
+        <option value="funcs">Functions (def/return)</option>
+        <option value="compr">Comprehensions</option>
+        <option value="fstr">f-strings</option>
+        <option value="strings">Strings, lists, dicts</option>
+        <option value="dfcalc">DataFrame calculation</option>
+        <option value="filter">Boolean filter + sort</option>
+        <option value="loopif">Loop + if/else</option>
+        <option value="group">GroupBy analysis</option>
+        <option value="numpy">NumPy-like operations</option>
+        <option value="scipy">SciPy-like stats</option>
+        <option value="dist">Distributions + tests</option>
+        <option value="monte">Monte Carlo simulation</option>
+        <option value="mc2">Custom Monte Carlo + LHS</option>
+        <option value="plots">Matplotlib-like plots</option>
+        <option value="vizstats">Visualization suite: stats</option>
+        <option value="vizrisk">Visualization suite: risk/Monte Carlo</option>
+        <option value="vizml">Visualization suite: ML/network</option>
+        <option value="vizdomain">Visualization suite: security/engineering/finance</option>
+        <option value="text">Text analysis</option>
+      </select>
+      <div class="row" style="margin-top:8px"><button id="insertExample">Insert</button><button id="appendExample">Append</button></div>
+    </section>
+    <section class="card">
+      <h2>Export</h2>
+      <div class="exportgrid">
+        <button data-export="txt">TXT</button><button data-export="md">Markdown</button>
+        <button data-export="html">HTML</button><button data-export="csv">CSV</button>
+        <button data-export="json">JSON</button><button id="exportChart">Chart PNG</button>
+        <button id="exportChartSvg">Chart SVG</button><button id="exportChartHtml">Chart HTML</button>
+        <button id="exportChartJson">Chart JSON</button><button id="exportChartMd">Chart Markdown</button>
+      </div>
+      <div class="tiny" style="margin-top:8px">Chart exports preserve the visible graph as a data URI; JSON also saves the chart caption, recommendation, and draw metadata.</div>
+    </section>
+    <section class="card">
+      <h2>Session State</h2>
+      <input id="sessionFileInput" type="file" accept=".json,application/json" style="display:none" />
+      <div class="exportgrid">
+        <button id="exportSessionJson" class="good">Export Session JSON</button><button id="importSessionJson">Import Session JSON</button>
+        <button id="saveBrowserSession">Save in Browser</button><button id="restoreBrowserSession">Restore Browser Save</button>
+        <button id="clearBrowserSession" class="bad">Clear Browser Save</button>
+      </div>
+      <div id="sessionStatus" class="tiny" style="margin-top:8px">No session saved or restored in this page load.</div>
+      <div class="tiny" style="margin-top:8px">Session JSON stores the script, loaded data, output log, recommendation, chart metadata, chart image, and selected example so progress can resume later.</div>
+    </section>
+  </aside>
+  <main class="main">
+    <section class="card">
+      <h2>Python-Compatible Script</h2>
+      <textarea id="script" spellcheck="false">import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+import random
+
+random.seed(42)
+
+df["Risk"] = df["Probability"] * df["Impact"]
+high = [r for r in df["Risk"].tolist() if r &gt; 15]
+print(f"High-risk rows: {len(high)} of {df.shape[0]}")
+
+def classify(risk):
+    if risk &gt; 25:
+        return "severe"
+    elif risk &gt; 15:
+        return "elevated"
+    else:
+        return "routine"
+
+df["Tier"] = df["Risk"].apply(classify)
+print(df.groupby("Tier").count())
+
+def simulate(i):
+    prob = max(0, random.gauss(0.22, 0.09))
+    impact = random.uniform(10, 130)
+    return prob * impact
+
+result = monte_carlo(simulate, 20000)
+print(f"Simulated mean {result['mean']:.2f} | low/high estimate (P05/P95): {result['p05']:.2f} / {result['p95']:.2f}")
+plt.hist(df["Risk"], bins=12)
+plt.show()</textarea>
+      <div class="row" style="margin-top:10px"><button id="runBtn" class="primary">Run Script</button><button id="clearOut">Clear Output</button><button id="copyOut">Copy Output</button></div>
+    </section>
+    <section class="grid2">
+      <div class="card"><h2>Output</h2><pre id="output"></pre></div>
+      <div class="card"><h2>Chart</h2><canvas id="chart" width="1100" height="460"></canvas><div class="tiny" id="chartCaption">No chart drawn yet.</div></div>
+    </section>
+    <section class="card"><h2>Data Preview</h2><div class="tablewrap"><table id="preview"><thead></thead><tbody></tbody></table></div></section>
+  </main>
+</div>
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const out = $('output');
+const chart = $('chart');
+const ctx = chart.getContext('2d');
+const state = { rows: [], text: '', filename: '', logs: [], lastResult: null, chartData: null, recommendation: null, lastScript: '', restoredFrom: '', savedAt: '' };
+let env = Object.create(null);
+
+// ---------- Control-flow signals ----------
+class ReturnSignal{ constructor(v){ this.value=v; this.message="'return' outside function"; } }
+class BreakSignal{ constructor(){ this.message="'break' outside loop"; } }
+class ContinueSignal{ constructor(){ this.message="'continue' outside loop"; } }
+
+// ---------- Seedable RNG (mulberry32) ----------
+let rng = Math.random;
+function setSeed(n){ let a=(Number(n)>>>0)||1; rng=function(){ a|=0; a=(a+0x6D2B79F5)|0; let t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+
+function round(x,n=6){ return Number.isFinite(x) ? Number(x.toFixed(n)) : x; }
+function escapeHtml(s){ return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function sanitizeFilename(s){ return (s || 'workbench').replace(/[^a-z0-9._-]+/gi,'_').slice(0,80); }
+function download(name,mime,content){ const blob=new Blob([content],{type:mime}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(url); a.remove();},1200); }
+function log(...items){ const line = items.map(formatValue).join(' '); state.logs.push(line); out.textContent += line + '\n'; out.scrollTop = out.scrollHeight; }
+function error(msg){ log('ERROR:', msg); }
+function formatValue(v){
+  if(v===true) return 'True'; if(v===false) return 'False'; if(v===null||v===undefined) return 'None';
+  if(v instanceof DataFrame || v instanceof Series) return v.toString();
+  if(v instanceof GroupBy) return '[GroupBy object]';
+  if(v instanceof Rolling) return '[Rolling window='+v.w+']';
+  if(v instanceof Indexer) return '[Indexer '+v.kind+']';
+  if(Array.isArray(v)){ if(v.length && typeof v[0]==='object' && v[0]!==null && !Array.isArray(v[0])) return tableString(v); return '['+v.map(x=>typeof x==='number'?round(x):Array.isArray(x)?formatValue(x):JSON.stringify(x)).join(', ')+']'; }
+  if(typeof v==='function') return '[function '+(v.__pyName||v.name||'anonymous')+']';
+  if(v && typeof v === 'object') return JSON.stringify(v, null, 2);
+  return String(v);
+}
+function coerce(x){ if(x==null) return ''; const s=String(x).trim(); if(s==='') return ''; if(/^[-+]?\d+(\.\d+)?([eE][-+]?\d+)?$/.test(s)) return Number(s); if(/^(true|false)$/i.test(s)) return /^true$/i.test(s); return s; }
+function isNumber(v){ return typeof v==='number' && Number.isFinite(v); }
+function nums(arr){ if(arr instanceof Series) arr=arr.data; return (arr||[]).map(Number).filter(Number.isFinite); }
+function unique(a){ return [...new Set(a)]; }
+function columns(rows){ return rows.length ? unique(rows.flatMap(r=>Object.keys(r))) : []; }
+function colValues(rows,c){ return rows.map(r=>r[c]).filter(v=>v!=='' && v!=null); }
+function numCol(rows,c){ return nums(colValues(rows,c)); }
+function isTruthy(v){ if(v instanceof Series) return v.data.some(Boolean); if(Array.isArray(v)) return v.length>0; if(v && typeof v==='object' && !(v instanceof DataFrame)) return Object.keys(v).length>0; if(v instanceof DataFrame) return v.rows.length>0; return !!v; }
+function unwrap(v){ return v instanceof Series ? v.data : v; }
+function toArray(v){ return v instanceof Series ? v.data.slice() : Array.isArray(v) ? v.slice() : [v]; }
+function toIterable(v){ if(v instanceof Series) return v.data.slice(); if(Array.isArray(v)) return v.slice(); if(typeof v==='string') return v.split(''); if(v instanceof DataFrame) return v.columns(); if(v && typeof v==='object') return Object.keys(v); return [v]; }
+function alignBinary(a,b,fn){
+  if(a instanceof Series || b instanceof Series || Array.isArray(a) || Array.isArray(b)){
+    const aa = toArray(a), bb = toArray(b), n = Math.max(aa.length, bb.length);
+    const out=[]; for(let i=0;i<n;i++){ out.push(fn(aa.length===1?aa[0]:aa[i], bb.length===1?bb[0]:bb[i])); }
+    return new Series(out, a instanceof Series ? a.name : (b instanceof Series ? b.name : 'array'));
+  }
+  return fn(a,b);
+}
+function applyBinary(a,op,b){
+  if(op==='and') return isTruthy(a) && isTruthy(b); if(op==='or') return isTruthy(a) || isTruthy(b);
+  if(op==='in'){
+    if(b instanceof Series) return b.data.some(x=>x===a || String(x)===String(a));
+    if(Array.isArray(b)) return b.some(x=>x===a || String(x)===String(a));
+    if(b instanceof DataFrame) return b.columns().includes(a);
+    if(b && typeof b==='object') return String(a) in b;
+    return String(b).includes(String(a));
+  }
+  if(op==='+' && Array.isArray(a) && Array.isArray(b)) return a.concat(b);
+  return alignBinary(a,b,(x,y)=>{
+    const nx=Number(x), ny=Number(y);
+    switch(op){
+      case '+': return (isNumber(nx) && isNumber(ny) && x!=='' && y!=='' && typeof x!=='boolean' && typeof y!=='boolean' && !(typeof x==='string'&&typeof y==='string')) ? nx+ny : (typeof x==='boolean'||typeof y==='boolean') ? Number(x)+Number(y) : String(x)+String(y);
+      case '-': return nx-ny; case '*': return (typeof x==='string'&&isNumber(ny))?x.repeat(Math.max(0,Math.floor(ny))):nx*ny; case '/': return nx/ny; case '//': return Math.floor(nx/ny); case '%': return ((nx%ny)+ny)%ny===nx%ny||!Number.isFinite(nx%ny)?nx%ny:nx%ny; case '**': return nx**ny;
+      case '>': return x>y; case '>=': return x>=y; case '<': return x<y; case '<=': return x<=y; case '==': return String(x)==String(y); case '!=': return String(x)!=String(y);
+      default: throw new Error('Unsupported operator '+op);
+    }
+  });
+}
+
+// File parsing
+function detectDelimiter(text){ const sample=text.split(/\r?\n/).slice(0,8).join('\n'); const candidates=[',','\t',';','|']; return candidates.map(d=>[d,(sample.match(new RegExp(d==='\t'?'\\t':'\\'+d,'g'))||[]).length]).sort((a,b)=>b[1]-a[1])[0][0] || ','; }
+function parseDelimited(text, delimiter){ delimiter=delimiter||detectDelimiter(text); const rows=[]; let row=[], field='', q=false; for(let i=0;i<text.length;i++){ const c=text[i], n=text[i+1]; if(q){ if(c==='"' && n==='"'){field+='"'; i++;} else if(c==='"'){q=false;} else field+=c; } else { if(c==='"') q=true; else if(c===delimiter){row.push(field); field='';} else if(c==='\n'){row.push(field); rows.push(row); row=[]; field='';} else if(c==='\r'){} else field+=c; }} if(field!=='' || row.length){row.push(field); rows.push(row);} while(rows.length && rows[rows.length-1].every(x=>String(x).trim()==='')) rows.pop(); if(!rows.length) return []; const headers=rows[0].map((h,i)=>String(h||('col_'+(i+1))).trim() || 'col_'+(i+1)); return rows.slice(1).filter(r=>r.some(x=>String(x).trim()!=='')).map(r=>{ const o={}; headers.forEach((h,i)=>o[h]=coerce(r[i]??'')); return o; }); }
+function toCSV(rows){ if(!rows || !rows.length) return ''; const cols=columns(rows); const esc=v=>{ const s=v==null?'':String(v); return /[",\n\r]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }; return [cols.map(esc).join(','), ...rows.map(r=>cols.map(c=>esc(r[c])).join(','))].join('\n'); }
+
+// Statistics core
+const stat = {
+  sum:a=>nums(a).reduce((s,x)=>s+x,0),
+  mean:a=>{a=nums(a);return a.length?stat.sum(a)/a.length:NaN;},
+  median:a=>{a=nums(a).sort((x,y)=>x-y); if(!a.length)return NaN; const m=Math.floor(a.length/2); return a.length%2?a[m]:(a[m-1]+a[m])/2;},
+  min:a=>{a=nums(a);return a.length?Math.min(...a):NaN;}, max:a=>{a=nums(a);return a.length?Math.max(...a):NaN;},
+  variance:a=>{a=nums(a); if(a.length<2)return NaN; const m=stat.mean(a); return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1);}, std:a=>Math.sqrt(stat.variance(a)),
+  quantile:(a,q)=>{a=nums(a).sort((x,y)=>x-y); if(!a.length)return NaN; const pos=(a.length-1)*q, lo=Math.floor(pos), hi=Math.ceil(pos); return lo===hi?a[lo]:a[lo]+(a[hi]-a[lo])*(pos-lo);},
+  corr:(a,b)=>{a=nums(a);b=nums(b);const n=Math.min(a.length,b.length);if(n<2)return NaN; a=a.slice(0,n);b=b.slice(0,n); const ma=stat.mean(a),mb=stat.mean(b); let num=0,da=0,db=0; for(let i=0;i<n;i++){const xa=a[i]-ma, xb=b[i]-mb; num+=xa*xb; da+=xa*xa; db+=xb*xb;} return num/Math.sqrt(da*db);},
+  histogram:(a,bins=10)=>{a=nums(a); if(!a.length)return []; const min=Math.min(...a), max=Math.max(...a), w=(max-min)/bins||1; const out=Array.from({length:bins},(_,i)=>({bin:i,start:min+i*w,end:min+(i+1)*w,count:0})); a.forEach(x=>{let k=Math.floor((x-min)/w); if(k>=bins)k=bins-1; if(k<0)k=0; out[k].count++;}); return out;},
+  linreg:(x,y)=>{x=nums(x);y=nums(y);const n=Math.min(x.length,y.length);x=x.slice(0,n);y=y.slice(0,n);const mx=stat.mean(x),my=stat.mean(y);let sxy=0,sxx=0,syy=0;for(let i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)**2;syy+=(y[i]-my)**2;} const slope=sxy/sxx, intercept=my-slope*mx, r=sxy/Math.sqrt(sxx*syy); return {n,slope:round(slope),intercept:round(intercept),r:round(r),r2:round(r*r)};},
+  normalPdf:(x,mu=0,sigma=1)=>Math.exp(-0.5*((x-mu)/sigma)**2)/(sigma*Math.sqrt(2*Math.PI)), normalCdf:(x,mu=0,sigma=1)=>0.5*(1+erf((x-mu)/(sigma*Math.sqrt(2)))), normalInv:(p,mu=0,sigma=1)=>mu+sigma*invNorm(p),
+  randomNormal:(mu=0,sigma=1)=>{let u=0,v=0; while(u===0)u=rng(); while(v===0)v=rng(); return mu+sigma*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}, randomUniform:(min=0,max=1)=>min+(max-min)*rng(),
+  tTest:(a,b)=>{a=nums(a);b=nums(b);const ma=stat.mean(a),mb=stat.mean(b),va=stat.variance(a),vb=stat.variance(b),se=Math.sqrt(va/a.length+vb/b.length); const t=(ma-mb)/se; const df=((va/a.length+vb/b.length)**2)/(((va/a.length)**2)/(a.length-1)+((vb/b.length)**2)/(b.length-1)); const p=2*(1-tCdf(Math.abs(t),df)); return {mean_a:round(ma),mean_b:round(mb),t:round(t),df:round(df),p_value:round(p)};},
+  chiSquare:(observed,expected)=>{observed=nums(observed);expected=nums(expected);const n=Math.min(observed.length,expected.length);let chi=0;for(let i=0;i<n;i++){if(expected[i])chi+=(observed[i]-expected[i])**2/expected[i];}return {chi_square:round(chi),df:n-1};}
+};
+function erf(x){const sign=x>=0?1:-1;x=Math.abs(x);const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911,t=1/(1+p*x);const y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);return sign*y;}
+function invNorm(p){ if(p<=0||p>=1)return NaN; const a=[-39.6968302866538,220.946098424521,-275.928510446969,138.357751867269,-30.6647980661472,2.50662827745924], b=[-54.4760987982241,161.585836858041,-155.698979859887,66.8013118877197,-13.2806815528857], c=[-0.00778489400243029,-0.322396458041136,-2.40075827716184,-2.54973253934373,4.37466414146497,2.93816398269878], d=[0.00778469570904146,0.32246712907004,2.445134137143,3.75440866190742], pl=.02425, ph=1-pl; let q,r; if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);} if(p>ph){q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);} q=p-.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+
+// Special functions for expanded distributions
+function gammaln(x){ const g=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5]; let y=x, tmp=x+5.5; tmp-=(x+0.5)*Math.log(tmp); let ser=1.000000000190015; for(let j=0;j<6;j++) ser+=g[j]/++y; return -tmp+Math.log(2.5066282746310005*ser/x); }
+function betacf(a,b,x){ const MAXIT=300,EPS=3e-12,FPMIN=1e-300; const qab=a+b,qap=a+1,qam=a-1; let c=1,d=1-qab*x/qap; if(Math.abs(d)<FPMIN)d=FPMIN; d=1/d; let h=d; for(let m=1;m<=MAXIT;m++){ const m2=2*m; let aa=m*(b-m)*x/((qam+m2)*(a+m2)); d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN; c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN; d=1/d; h*=d*c; aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2)); d=1+aa*d; if(Math.abs(d)<FPMIN)d=FPMIN; c=1+aa/c; if(Math.abs(c)<FPMIN)c=FPMIN; d=1/d; const del=d*c; h*=del; if(Math.abs(del-1)<EPS)break; } return h; }
+function betainc(a,b,x){ if(x<=0)return 0; if(x>=1)return 1; const bt=Math.exp(gammaln(a+b)-gammaln(a)-gammaln(b)+a*Math.log(x)+b*Math.log(1-x)); return x<(a+1)/(a+b+2) ? bt*betacf(a,b,x)/a : 1-bt*betacf(b,a,1-x)/b; }
+function tCdf(t,df){ if(!Number.isFinite(t)||!(df>0)) return NaN; const x=df/(df+t*t); const p=0.5*betainc(df/2,0.5,x); return t>0?1-p:p; }
+function tPdf(t,df){ return Math.exp(gammaln((df+1)/2)-gammaln(df/2))/Math.sqrt(df*Math.PI)*Math.pow(1+t*t/df,-(df+1)/2); }
+function tPpf(p,df){ if(p<=0||p>=1)return NaN; let lo=-200,hi=200; for(let i=0;i<200;i++){ const mid=(lo+hi)/2; if(tCdf(mid,df)<p)lo=mid;else hi=mid; } return (lo+hi)/2; }
+function logChoose(n,k){ return gammaln(n+1)-gammaln(k+1)-gammaln(n-k+1); }
+function poissonRvs(mu){ if(mu>30) return Math.max(0,Math.round(stat.randomNormal(mu,Math.sqrt(mu)))); const L=Math.exp(-mu); let k=0,pr=1; do{k++;pr*=rng();}while(pr>L); return k-1; }
+
+class Series{
+  constructor(data,name=''){ this.data=(data||[]).slice(); this.name=name; }
+  mean(){return stat.mean(this.data)} median(){return stat.median(this.data)} std(){return stat.std(this.data)} var(){return stat.variance(this.data)} variance(){return stat.variance(this.data)} sum(){return stat.sum(this.data)} min(){return stat.min(this.data)} max(){return stat.max(this.data)} count(){return this.data.filter(v=>v!==''&&v!=null).length} quantile(q){return stat.quantile(this.data,q)} percentile(p){return stat.quantile(this.data,p/100)}
+  unique(){return unique(this.data)} tolist(){return this.data.slice()} to_list(){return this.data.slice()} astype(t){ if(String(t).includes('float')||String(t).includes('int')||String(t).includes('number')) return new Series(this.data.map(Number),this.name); return new Series(this.data.map(String),this.name); }
+  fillna(v){return new Series(this.data.map(x=>(x===''||x==null||Number.isNaN(x))?v:x),this.name)} isnull(){return new Series(this.data.map(x=>x===''||x==null||Number.isNaN(x)),this.name)} notnull(){return new Series(this.data.map(x=>!(x===''||x==null||Number.isNaN(x))),this.name)}
+  value_counts(){ const m=new Map(); this.data.forEach(x=>m.set(x,(m.get(x)||0)+1)); return new DataFrame([...m.entries()].sort((a,b)=>b[1]-a[1]).map(([value,count])=>({value,count}))); }
+  describe(){return {name:this.name,count:this.count(),mean:round(this.mean()),std:round(this.std()),min:round(this.min()),q25:round(this.quantile(.25)),median:round(this.median()),q75:round(this.quantile(.75)),max:round(this.max())};}
+  apply(fn){ if(typeof fn!=='function') throw new Error('apply requires a function'); return new Series(this.data.map(v=>fn(v)),this.name); }
+  map(fn){ return this.apply(fn); }
+  round(n=2){ return new Series(this.data.map(v=>{const x=Number(v); return (v!==''&&Number.isFinite(x))?round(x,n):v;}),this.name); }
+  abs(){ return new Series(this.data.map(v=>Math.abs(Number(v))),this.name); }
+  cumsum(){ let s=0; return new Series(this.data.map(v=>round(s+=Number(v)||0,10)),this.name); }
+  diff(){ return new Series(this.data.map((v,i)=>i===0?null:round(Number(v)-Number(this.data[i-1]),10)),this.name); }
+  clip(lo,hi){ return new Series(this.data.map(v=>Math.min(Number(hi),Math.max(Number(lo),Number(v)))),this.name); }
+  rolling(w){ return new Rolling(this,w); }
+  sort_values(ascending=true){ const asc=ascending!==false && String(ascending).toLowerCase()!=='false'; const d=this.data.slice().sort((a,b)=>{const x=Number(a),y=Number(b); const v=(Number.isFinite(x)&&Number.isFinite(y))?x-y:String(a).localeCompare(String(b)); return asc?v:-v;}); return new Series(d,this.name); }
+  nlargest(n=5){ return new Series(nums(this.data).sort((a,b)=>b-a).slice(0,Number(n)||5),this.name); }
+  nsmallest(n=5){ return new Series(nums(this.data).sort((a,b)=>a-b).slice(0,Number(n)||5),this.name); }
+  head(n=5){ return new Series(this.data.slice(0,Number(n)||5),this.name); }
+  tail(n=5){ return new Series(this.data.slice(-(Number(n)||5)),this.name); }
+  toString(){return 'Series '+(this.name||'')+' ['+this.data.slice(0,40).map(x=>typeof x==='number'?round(x):JSON.stringify(x)).join(', ')+(this.data.length>40?', ...':'')+']';}
+}
+class Rolling{
+  constructor(series,w){ this.s=series; this.w=Math.max(1,Math.floor(Number(w))||1); }
+  _agg(f){ const d=this.s.data.map(Number); const out=d.map((_,i)=> i+1<this.w ? null : round(f(d.slice(i+1-this.w,i+1)),10)); return new Series(out,this.s.name); }
+  mean(){return this._agg(stat.mean)} sum(){return this._agg(stat.sum)} std(){return this._agg(stat.std)} min(){return this._agg(stat.min)} max(){return this._agg(stat.max)} median(){return this._agg(stat.median)}
+}
+class Indexer{ constructor(df,kind){ this.df=df; this.kind=kind; } }
+class DataFrame{
+  constructor(rows){ this.rows=Array.isArray(rows)?rows.map(r=>Object.assign({},r)):[]; }
+  columns(){return columns(this.rows)} shape(){return [this.rows.length,this.columns().length]} head(n=5){return new DataFrame(this.rows.slice(0,Number(n)||5))} tail(n=5){return new DataFrame(this.rows.slice(-(Number(n)||5)))} copy(){return new DataFrame(this.rows)}
+  info(){const fields={};this.columns().forEach(c=>{const vals=colValues(this.rows,c);fields[c]={non_null:vals.length,numeric:numCol(this.rows,c).length,sample:vals[0]};}); return {rows:this.rows.length,columns:this.columns().length,fields};}
+  describe(){const result=[];this.columns().forEach(c=>{const a=numCol(this.rows,c); if(a.length){result.push({column:c,count:a.length,mean:round(stat.mean(a)),std:round(stat.std(a)),min:round(stat.min(a)),q25:round(stat.quantile(a,.25)),median:round(stat.median(a)),q75:round(stat.quantile(a,.75)),max:round(stat.max(a))});}}); return new DataFrame(result);}
+  getColumn(c){return new Series(this.rows.map(r=>r[c]),c)} setColumn(c,values){ if(values instanceof Series) values=values.data; if(!Array.isArray(values)) values=Array.from({length:this.rows.length},()=>values); this.rows.forEach((r,i)=>r[c]=values[i]); return this; }
+  getItem(key){ if(key instanceof Series) return new DataFrame(this.rows.filter((r,i)=>!!key.data[i])); if(Array.isArray(key)) return this.select(key); return this.getColumn(key); }
+  select(cols){cols=Array.isArray(cols)?cols:[cols];return new DataFrame(this.rows.map(r=>Object.fromEntries(cols.map(c=>[c,r[c]]))))}
+  filter(col,op,value){return this.query(String(col)+' '+op+' '+JSON.stringify(value));}
+  query(q){ const m=String(q).match(/^\s*([A-Za-z0-9_ .-]+)\s*(==|!=|>=|<=|>|<|contains)\s*(.+?)\s*$/); if(!m) throw new Error('query supports: Column > value, Column == "text", Column contains "text"'); const col=m[1].trim(),op=m[2]; let value=coerce(m[3].replace(/^['"]|['"]$/g,'')); return new DataFrame(this.rows.filter(r=>{const a=r[col], b=value; switch(op){case '>':return a>b;case '>=':return a>=b;case '<':return a<b;case '<=':return a<=b;case '==':return String(a)==String(b);case '!=':return String(a)!=String(b);case 'contains':return String(a).toLowerCase().includes(String(b).toLowerCase());}}));}
+  sort_values(col,ascending=true){const asc=ascending!==false && String(ascending).toLowerCase()!=='false'; return new DataFrame(this.rows.slice().sort((a,b)=>{const x=a[col],y=b[col]; const v=(isNumber(x)&&isNumber(y))?x-y:String(x).localeCompare(String(y)); return asc?v:-v;}));}
+  sort(col,direction='asc'){return this.sort_values(col,!String(direction).toLowerCase().startsWith('desc'))}
+  groupby(col){return new GroupBy(this,col)} group_by(col){return this.groupby(col)} pivot(indexCol,valueCol,agg='sum'){return this.groupby(indexCol).agg(valueCol,agg)}
+  corr(a,b){return stat.corr(this.getColumn(a),this.getColumn(b))} regression(x,y){return stat.linreg(this.getColumn(x),this.getColumn(y))}
+  value_counts(col){return this.getColumn(col).value_counts()} to_csv(){return toCSV(this.rows)} toCSV(){return toCSV(this.rows)}
+  apply(fn,axis=1){ if(typeof fn!=='function') throw new Error('apply requires a function'); return new Series(this.rows.map(r=>fn(Object.assign({},r))),'apply'); }
+  merge(other,on,how='inner'){ if(!(other instanceof DataFrame)) throw new Error('merge requires another DataFrame'); if(!on) throw new Error('merge requires the join column: merge(other, "Key")'); const idx=new Map(); other.rows.forEach(r=>{ const k=String(r[on]); if(!idx.has(k))idx.set(k,[]); idx.get(k).push(r); }); const rows=[]; const leftHow=String(how).toLowerCase()==='left'; this.rows.forEach(r=>{ const matches=idx.get(String(r[on])); if(matches){ matches.forEach(m=>{ const merged=Object.assign({},r); Object.keys(m).forEach(c=>{ if(c===on)return; merged[(c in r)?c+'_y':c]=m[c]; }); rows.push(merged); }); } else if(leftHow){ rows.push(Object.assign({},r)); } }); return new DataFrame(rows); }
+  fillna(v){ const bad=x=>x===''||x==null||(typeof x==='number'&&Number.isNaN(x)); return new DataFrame(this.rows.map(r=>{ const o={}; Object.keys(r).forEach(c=>o[c]=bad(r[c])?v:r[c]); return o; })); }
+  dropna(col){ const bad=x=>x===''||x==null||(typeof x==='number'&&Number.isNaN(x)); const cols=this.columns(); return new DataFrame(this.rows.filter(r=>col? !bad(r[col]) : cols.every(c=>!bad(r[c])))); }
+  rename(mapping){ const map=(mapping&&mapping.columns)?mapping.columns:(mapping||{}); return new DataFrame(this.rows.map(r=>{ const o={}; Object.keys(r).forEach(c=>o[map[c]!==undefined?map[c]:c]=r[c]); return o; })); }
+  drop_duplicates(col){ const seen=new Set(); const rows=[]; this.rows.forEach(r=>{ const k=col!=null?String(r[col]):JSON.stringify(r); if(!seen.has(k)){seen.add(k); rows.push(r);} }); return new DataFrame(rows); }
+  reset_index(){ return new DataFrame(this.rows); }
+  nlargest(n,col){ return this.sort_values(col,false).head(n); }
+  nsmallest(n,col){ return this.sort_values(col,true).head(n); }
+  sample(n=5){ const rows=this.rows.slice(); for(let i=rows.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [rows[i],rows[j]]=[rows[j],rows[i]]; } return new DataFrame(rows.slice(0,Number(n)||5)); }
+  toString(){return tableString(this.rows)}
+}
+class GroupBy{
+  constructor(df,col){this.df=df;this.col=col;}
+  groups(){const m=new Map();this.df.rows.forEach(r=>{const k=r[this.col]; if(!m.has(k))m.set(k,[]); m.get(k).push(r);}); return m;}
+  agg(valueCol='*',agg='count'){ const rows=[]; this.groups().forEach((rs,k)=>{let val; if(agg==='count'||valueCol==='*') val=rs.length; else if(stat[agg]) val=stat[agg](rs.map(r=>r[valueCol])); else val=rs.length; rows.push({[this.col]:k,[agg+'_'+valueCol]:round(val)});}); return new DataFrame(rows); }
+  count(){return this.agg('*','count')} mean(col){return this.agg(col,'mean')} sum(col){return this.agg(col,'sum')} median(col){return this.agg(col,'median')} min(col){return this.agg(col,'min')} max(col){return this.agg(col,'max')} describe(col){ const rows=[]; this.groups().forEach((rs,k)=>{const s=new Series(rs.map(r=>r[col]),col).describe(); rows.push(Object.assign({[this.col]:k},s));}); return new DataFrame(rows); }
+}
+function tableString(rows){ if(!rows||!rows.length)return '(empty table)'; const cols=columns(rows).slice(0,24), data=rows.slice(0,60); const widths=cols.map(c=>Math.min(28,Math.max(String(c).length,...data.map(r=>String(r[c]??'').length)))); const head=cols.map((c,i)=>String(c).padEnd(widths[i])).join(' | '), sep=widths.map(w=>'-'.repeat(w)).join('-+-'), body=data.map(r=>cols.map((c,i)=>String(r[c]??'').slice(0,widths[i]).padEnd(widths[i])).join(' | ')).join('\n'); return head+'\n'+sep+'\n'+body+(rows.length>data.length?'\n... '+(rows.length-data.length)+' more rows':''); }
+function currentDF(){ return env && env.df instanceof DataFrame ? env.df : new DataFrame(state.rows); }
+
+// Library facades
+function ew1(f){ return x=>(Array.isArray(x)||x instanceof Series)?toArray(x).map(v=>f(Number(v))):f(Number(x)); }
+function pickAt(v,i){ return (Array.isArray(v)||v instanceof Series)?toArray(v)[i]:v; }
+const np = {
+  array:x=>new Series(toArray(x),''), asarray:x=>new Series(toArray(x),''), mean:x=>stat.mean(x), median:x=>stat.median(x), std:x=>stat.std(x), var:x=>stat.variance(x), sum:x=>stat.sum(x), min:x=>stat.min(x), max:x=>stat.max(x), percentile:(x,p)=>stat.quantile(x,p/100), quantile:(x,q)=>stat.quantile(x,q), corrcoef:(a,b)=>stat.corr(a,b),
+  arange:(start,stop,step=1)=>{ if(stop==null){stop=start;start=0;} const out=[]; for(let x=start; step>=0?x<stop:x>stop; x+=step) out.push(x); return out; }, linspace:(start,end,n=50)=>Array.from({length:n},(_,i)=>n===1?start:start+(end-start)*i/(n-1)), zeros:n=>Array.from({length:n},()=>0), ones:n=>Array.from({length:n},()=>1), dot:(a,b)=>nums(a).reduce((s,x,i)=>s+x*(Number(toArray(b)[i])||0),0),
+  abs:ew1(Math.abs), sqrt:ew1(Math.sqrt), exp:ew1(Math.exp), log:ew1(Math.log), log10:ew1(Math.log10), log2:ew1(Math.log2), floor:ew1(Math.floor), ceil:ew1(Math.ceil), sign:ew1(Math.sign),
+  round:function npround(x,n=0){ return (Array.isArray(x)||x instanceof Series)?toArray(x).map(v=>round(Number(v),n)):round(Number(x),n); },
+  power:(a,b)=>applyBinary(a,'**',b),
+  cumsum:x=>{let s=0;return toArray(x).map(v=>round(s+=Number(v)||0,10));},
+  cumprod:x=>{let s=1;return toArray(x).map(v=>s*=Number(v)||0);},
+  diff:x=>{const a=toArray(x).map(Number);return a.slice(1).map((v,i)=>round(v-a[i],10));},
+  clip:(x,lo,hi)=>{const f=v=>Math.min(Number(hi),Math.max(Number(lo),Number(v)));return (Array.isArray(x)||x instanceof Series)?toArray(x).map(f):f(x);},
+  where:(cond,a,b)=>toArray(cond).map((v,i)=>isTruthy(v)?pickAt(a,i):pickAt(b,i)),
+  argmax:x=>{const a=toArray(x).map(Number);let k=-1;a.forEach((v,i)=>{if(k<0||v>a[k])k=i;});return k;},
+  argmin:x=>{const a=toArray(x).map(Number);let k=-1;a.forEach((v,i)=>{if(k<0||v<a[k])k=i;});return k;},
+  unique:x=>unique(toArray(x)),
+  sort:x=>toArray(x).map(Number).sort((a,b)=>a-b),
+  prod:x=>nums(x).reduce((s,v)=>s*v,1),
+  random:{
+    normal:function normal(mu=0,sigma=1,size=null){ return size?Array.from({length:size},()=>stat.randomNormal(mu,sigma)):stat.randomNormal(mu,sigma); },
+    uniform:function uniform(min=0,max=1,size=null){ return size?Array.from({length:size},()=>stat.randomUniform(min,max)):stat.randomUniform(min,max); },
+    choice:function choice(arr,size=null){ const a=toArray(arr); return size?Array.from({length:size},()=>a[Math.floor(rng()*a.length)]):a[Math.floor(rng()*a.length)]; },
+    seed:function seed(n){ setSeed(n); return null; },
+    randint:function randint(low,high,size=null){ const one=()=>Math.floor(low+rng()*(high-low)); return size?Array.from({length:size},one):one(); },
+    exponential:function exponential(scale=1,size=null){ const one=()=>-scale*Math.log(1-rng()); return size?Array.from({length:size},one):one(); },
+    poisson:function poisson(lam=1,size=null){ return size?Array.from({length:size},()=>poissonRvs(lam)):poissonRvs(lam); },
+    lognormal:function lognormal(mean=0,sigma=1,size=null){ const one=()=>Math.exp(stat.randomNormal(mean,sigma)); return size?Array.from({length:size},one):one(); }
+  }
+};
+const pd = { DataFrame:x=>new DataFrame(Array.isArray(x)?x:[]), read_csv:()=>currentDF(), read_json:()=>currentDF(), concat:frames=>new DataFrame(frames.flatMap(f=>f.rows||[])), Series:(x,name)=>new Series(toArray(x),name||'') };
+const scipyStats = {
+  norm:{pdf:stat.normalPdf,cdf:stat.normalCdf,ppf:stat.normalInv,rvs:(mu=0,sigma=1,size=1)=>np.random.normal(mu,sigma,size)},
+  t:{pdf:(x,df)=>round(tPdf(x,df),8), cdf:(x,df)=>round(tCdf(x,df),8), ppf:(p,df)=>round(tPpf(p,df),8),
+     rvs:(df,size=null)=>{ const one=()=>{ let s=0; for(let i=0;i<df;i++){ const z=stat.randomNormal(0,1); s+=z*z; } return stat.randomNormal(0,1)/Math.sqrt(s/df); }; return size?Array.from({length:size},one):one(); }},
+  binom:{
+    pmf:(k,n,p)=>{k=Math.round(k); if(k<0||k>n)return 0; if(p<=0)return k===0?1:0; if(p>=1)return k===n?1:0; return round(Math.exp(logChoose(n,k)+k*Math.log(p)+(n-k)*Math.log(1-p)),10);},
+    cdf:(k,n,p)=>{k=Math.floor(k); if(k<0)return 0; if(k>=n)return 1; let s=0; for(let i=0;i<=k;i++) s+=Math.exp(logChoose(n,i)+i*Math.log(p)+(n-i)*Math.log(1-p)); return round(Math.min(1,s),10);},
+    rvs:(n,p,size=null)=>{ const one=()=>{let c=0;for(let i=0;i<n;i++) if(rng()<p)c++; return c;}; return size?Array.from({length:size},one):one(); }
+  },
+  poisson:{
+    pmf:(k,mu)=>{k=Math.round(k); if(k<0)return 0; return round(Math.exp(-mu+k*Math.log(mu)-gammaln(k+1)),10);},
+    cdf:(k,mu)=>{k=Math.floor(k); if(k<0)return 0; let s=0; for(let i=0;i<=k;i++) s+=Math.exp(-mu+i*Math.log(mu)-gammaln(i+1)); return round(Math.min(1,s),10);},
+    rvs:(mu,size=null)=>size?Array.from({length:size},()=>poissonRvs(mu)):poissonRvs(mu)
+  },
+  uniform:{pdf:(x,loc=0,scale=1)=>(x>=loc&&x<=loc+scale)?1/scale:0, cdf:(x,loc=0,scale=1)=>Math.max(0,Math.min(1,(x-loc)/scale)), ppf:(p,loc=0,scale=1)=>loc+p*scale, rvs:(loc=0,scale=1,size=null)=>{const one=()=>loc+scale*rng(); return size?Array.from({length:size},one):one();}},
+  expon:{pdf:(x,scale=1)=>x<0?0:Math.exp(-x/scale)/scale, cdf:(x,scale=1)=>x<0?0:1-Math.exp(-x/scale), ppf:(p,scale=1)=>-scale*Math.log(1-p), rvs:(scale=1,size=null)=>{const one=()=>-scale*Math.log(1-rng()); return size?Array.from({length:size},one):one();}},
+  lognorm:{pdf:(x,s,scale=1)=>x<=0?0:round(stat.normalPdf(Math.log(x/scale),0,s)/x,10), cdf:(x,s,scale=1)=>x<=0?0:round(stat.normalCdf(Math.log(x/scale),0,s),10), ppf:(p,s,scale=1)=>round(scale*Math.exp(s*invNorm(p)),10), rvs:(s,scale=1,size=null)=>{const one=()=>scale*Math.exp(stat.randomNormal(0,s)); return size?Array.from({length:size},one):one();}},
+  ttest_ind:(a,b)=>stat.tTest(a,b),
+  pearsonr:(a,b)=>{ const r=stat.corr(a,b); const n=Math.min(nums(a).length,nums(b).length); const t=r*Math.sqrt((n-2)/Math.max(1e-12,1-r*r)); const p=2*(1-tCdf(Math.abs(t),n-2)); return [round(r),round(p)]; },
+  chi_square:stat.chiSquare, chisquare:stat.chiSquare,
+  mannwhitneyu:(a,b)=>{ a=nums(a); b=nums(b); const n1=a.length,n2=b.length; if(!n1||!n2) throw new Error('mannwhitneyu requires two non-empty samples'); const all=a.map(v=>({v,g:0})).concat(b.map(v=>({v,g:1}))).sort((p,q)=>p.v-q.v); const ranks=new Array(all.length); let i=0; while(i<all.length){ let j=i; while(j+1<all.length && all[j+1].v===all[i].v) j++; const r=(i+j+2)/2; for(let k=i;k<=j;k++) ranks[k]=r; i=j+1; } let R1=0; all.forEach((o,k)=>{ if(o.g===0) R1+=ranks[k]; }); const U1=R1-n1*(n1+1)/2, U2=n1*n2-U1, U=Math.min(U1,U2); const mu=n1*n2/2, sigma=Math.sqrt(n1*n2*(n1+n2+1)/12); const z=sigma?(U-mu)/sigma:0; const p=2*stat.normalCdf(-Math.abs(z)); return {U:round(U),z:round(z),p_value:round(p)}; },
+  linregress:(x,y)=>{ const lr=stat.linreg(x,y); const n=lr.n; const t=lr.r*Math.sqrt((n-2)/Math.max(1e-12,1-lr.r*lr.r)); const p=2*(1-tCdf(Math.abs(t),n-2)); const stderr=t?Math.abs(lr.slope/t):NaN; return {slope:lr.slope,intercept:lr.intercept,rvalue:lr.r,pvalue:round(p),stderr:round(stderr),n:n}; },
+  percentileofscore:(a,score)=>{ a=nums(a); if(!a.length) return NaN; const below=a.filter(x=>x<score).length, equal=a.filter(x=>x===score).length; return round(100*(below+0.5*equal)/a.length,4); }
+};
+const mathlib = Object.assign({}, Math, {mean:stat.mean, median:stat.median, std:stat.std, pi:Math.PI, e:Math.E, inf:Infinity, nan:NaN, factorial:n=>{n=Math.floor(n); let r=1; for(let i=2;i<=n;i++) r*=i; return r;}, gcd:(a,b)=>{a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a;}, isclose:(a,b,tol=1e-9)=>Math.abs(a-b)<=tol*Math.max(Math.abs(a),Math.abs(b),1)});
+const randomlib = {
+  seed:function seed(n){ setSeed(n); return null; },
+  random:()=>rng(),
+  uniform:function uniform(a,b){ return stat.randomUniform(a,b); },
+  randint:function randint(a,b){ return Math.floor(a+rng()*(b-a+1)); },
+  choice:function choice(arr){ const a=toArray(arr); if(!a.length) throw new Error('choice from empty sequence'); return a[Math.floor(rng()*a.length)]; },
+  sample:function sample(arr,k){ const a=toArray(arr); k=Math.min(Number(k)||0,a.length); const idx=a.map((_,i)=>i); const outArr=[]; for(let i=0;i<k;i++){ const j=i+Math.floor(rng()*(idx.length-i)); [idx[i],idx[j]]=[idx[j],idx[i]]; outArr.push(a[idx[i]]); } return outArr; },
+  shuffle:function shuffle(arr){ if(!Array.isArray(arr)) throw new Error('shuffle requires a list'); for(let i=arr.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return null; },
+  gauss:function gauss(mu=0,sigma=1){ return stat.randomNormal(mu,sigma); },
+  normalvariate:function normalvariate(mu=0,sigma=1){ return stat.randomNormal(mu,sigma); },
+  expovariate:function expovariate(lambd=1){ return -Math.log(1-rng())/lambd; },
+  lognormvariate:function lognormvariate(mu=0,sigma=1){ return Math.exp(stat.randomNormal(mu,sigma)); },
+  triangular:function triangular(low=0,high=1,mode=null){ if(mode==null) mode=(low+high)/2; const u=rng(), c=(mode-low)/(high-low); return u<c ? low+Math.sqrt(u*(high-low)*(mode-low)) : high-Math.sqrt((1-u)*(high-low)*(high-mode)); }
+};
+
+// Plotting + Visualization Suite v4
+function finitePairs(x,y){ const xs=toArray(x), ys=toArray(y); const out=[]; for(let i=0;i<Math.min(xs.length,ys.length);i++){ const a=Number(xs[i]), b=Number(ys[i]); if(Number.isFinite(a)&&Number.isFinite(b)) out.push({x:a,y:b,label:String(i)}); } return out; }
+function ext(a){ a=nums(a); if(!a.length) return {min:0,max:1}; let min=Math.min(...a), max=Math.max(...a); if(min===max){min-=1;max+=1;} return {min,max}; }
+function scale(v,min,max,a,b){ return a+(Number(v)-min)/(max-min||1)*(b-a); }
+function chartFrame(title){ baseChart(title); return {x0:64,y0:chart.height-70,w:chart.width-120,h:chart.height-120}; }
+function drawAxesTicks(e,minX,maxX,minY,maxY){ ctx.fillStyle='#aebbd2'; ctx.font='13px system-ui'; for(let i=0;i<=4;i++){ const x=e.x0+i*e.w/4,y=e.y0-i*e.h/4; ctx.fillText(round(minX+(maxX-minX)*i/4,2),x-12,e.y0+22); ctx.fillText(round(minY+(maxY-minY)*i/4,2),14,y+4); ctx.strokeStyle='rgba(255,255,255,.08)'; ctx.beginPath(); ctx.moveTo(e.x0,y); ctx.lineTo(e.x0+e.w,y); ctx.stroke(); }}
+function setCaption(t){ $('chartCaption').textContent=String(t); }
+function drawPoints(pts,title='Scatter'){ const e=chartFrame(title); if(!pts.length)return null; const ex=ext(pts.map(p=>p.x)), ey=ext(pts.map(p=>p.y)); drawAxesTicks(e,ex.min,ex.max,ey.min,ey.max); ctx.fillStyle='#ff8e8e'; pts.forEach(p=>{const x=scale(p.x,ex.min,ex.max,e.x0,e.x0+e.w), y=scale(p.y,ey.min,ey.max,e.y0,e.y0-e.h); ctx.beginPath(); ctx.arc(x,y,3.8,0,Math.PI*2); ctx.fill();}); setCaption(title+': '+pts.length+' points.'); rememberChart(title,{points:pts}); return null; }
+function drawMatrix(mat,labels,title){ const e=chartFrame(title); const n=mat.length; if(!n)return null; const cell=Math.min(e.w,e.h)/n, x0=e.x0+(e.w-cell*n)/2, y0=e.y0-e.h+(e.h-cell*n)/2; const vals=mat.flat().map(Number).filter(Number.isFinite), mn=Math.min(...vals,-1), mx=Math.max(...vals,1); for(let r=0;r<n;r++)for(let c=0;c<n;c++){ const v=Number(mat[r][c])||0, t=(v-mn)/(mx-mn||1); ctx.fillStyle='rgba('+Math.round(80+140*t)+','+Math.round(120+80*t)+','+Math.round(255-120*t)+',.9)'; ctx.fillRect(x0+c*cell,y0+r*cell,cell-1,cell-1); ctx.fillStyle='#eef5ff'; ctx.font='12px system-ui'; if(cell>34)ctx.fillText(round(v,2),x0+c*cell+5,y0+r*cell+cell/2); } ctx.fillStyle='#aebbd2'; ctx.font='12px system-ui'; labels.slice(0,n).forEach((l,i)=>{ctx.fillText(String(l).slice(0,10),x0+i*cell+2,y0+n*cell+14);ctx.fillText(String(l).slice(0,10),x0-52,y0+i*cell+cell/2);}); setCaption(title+' ('+n+' × '+n+').'); rememberChart(title,{matrix:mat,labels}); return null; }
+function drawBoxes(groups,labels,title){ const e=chartFrame(title); groups=groups.map(nums).filter(a=>a.length); if(!groups.length)return null; labels=labels||groups.map((_,i)=>'G'+(i+1)); const all=groups.flat(), ey=ext(all); drawAxesTicks(e,0,groups.length,ey.min,ey.max); const bw=e.w/groups.length*.45; ctx.strokeStyle='#79a9ff';ctx.lineWidth=3;ctx.fillStyle='rgba(121,169,255,.25)'; groups.forEach((a,i)=>{a=a.slice().sort((x,y)=>x-y); const q1=stat.quantile(a,.25), med=stat.quantile(a,.5), q3=stat.quantile(a,.75), lo=stat.min(a), hi=stat.max(a), x=e.x0+(i+.5)*e.w/groups.length; const y=v=>scale(v,ey.min,ey.max,e.y0,e.y0-e.h); ctx.beginPath();ctx.moveTo(x,y(lo));ctx.lineTo(x,y(hi));ctx.stroke(); ctx.fillRect(x-bw/2,y(q3),bw,y(q1)-y(q3));ctx.strokeRect(x-bw/2,y(q3),bw,y(q1)-y(q3)); ctx.beginPath();ctx.moveTo(x-bw/2,y(med));ctx.lineTo(x+bw/2,y(med));ctx.stroke(); ctx.fillStyle='#aebbd2';ctx.font='12px system-ui';ctx.fillText(String(labels[i]).slice(0,12),x-bw/2,e.y0+22);ctx.fillStyle='rgba(121,169,255,.25)'; }); setCaption(title+': '+groups.length+' groups.'); rememberChart(title,{groups,labels}); return null; }
+function drawDensity(arr,title='Density'){ const a=nums(arr); const e=chartFrame(title); if(!a.length)return null; const ex=ext(a), bins=stat.histogram(a,40), max=Math.max(...bins.map(b=>b.count),1); ctx.strokeStyle='#77e096';ctx.lineWidth=3;ctx.beginPath(); bins.forEach((b,i)=>{const x=scale((b.start+b.end)/2,ex.min,ex.max,e.x0,e.x0+e.w), y=e.y0-(b.count/max)*e.h; if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);}); ctx.stroke(); drawAxesTicks(e,ex.min,ex.max,0,max); setCaption(title+': smoothed histogram density approximation.'); rememberChart(title,{values:a}); return null; }
+function drawLineSeries(series,labels,title){ const e=chartFrame(title); series=series.map(toArray).map(a=>a.map(Number)); const n=Math.max(...series.map(a=>a.length),1), all=series.flat().filter(Number.isFinite), ey=ext(all); drawAxesTicks(e,0,n-1,ey.min,ey.max); const colors=['#ffd36a','#79a9ff','#77e096','#ff8e8e','#d6a4ff','#95f1ff']; series.forEach((a,k)=>{ctx.strokeStyle=colors[k%colors.length];ctx.lineWidth=3;ctx.beginPath();a.forEach((v,i)=>{const x=scale(i,0,n-1,e.x0,e.x0+e.w),y=scale(v,ey.min,ey.max,e.y0,e.y0-e.h); if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);});ctx.stroke();ctx.fillStyle=colors[k%colors.length];ctx.fillText((labels&&labels[k])||('S'+(k+1)),e.x0+10,e.y0-e.h+22+k*18);}); setCaption(title+': '+series.length+' series.'); rememberChart(title,{series,labels}); return null; }
+function drawDiagram(nodes,edges,title){ const e=chartFrame(title); nodes=toArray(nodes); if(!nodes.length) nodes=['Start','Step 1','Step 2','End']; const n=nodes.length, cx=e.x0+e.w/2, cy=e.y0-e.h/2, r=Math.min(e.w,e.h)*.38; const pos={}; nodes.forEach((node,i)=>{const ang=-Math.PI/2+2*Math.PI*i/n; pos[node]={x:cx+r*Math.cos(ang),y:cy+r*Math.sin(ang)};}); ctx.strokeStyle='#aebbd2';ctx.lineWidth=2; (edges||[]).forEach(ed=>{const a=Array.isArray(ed)?ed[0]:ed.from,b=Array.isArray(ed)?ed[1]:ed.to; if(pos[a]&&pos[b]){ctx.beginPath();ctx.moveTo(pos[a].x,pos[a].y);ctx.lineTo(pos[b].x,pos[b].y);ctx.stroke();}}); nodes.forEach(node=>{const p=pos[node];ctx.fillStyle='#1d62c7';ctx.strokeStyle='#79a9ff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,28,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#eef5ff';ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText(String(node).slice(0,12),p.x,p.y+4);});ctx.textAlign='left'; setCaption(title+': '+nodes.length+' nodes.'); rememberChart(title,{nodes,edges}); return null; }
+function drawTreemap(items,title){ const e=chartFrame(title); items=items||[]; if(items instanceof DataFrame) items=items.rows; if(!Array.isArray(items)||!items.length) items=[{name:'A',value:40},{name:'B',value:25},{name:'C',value:20},{name:'D',value:15}]; const total=items.reduce((s,it)=>s+Number(it.value||it[1]||1),0)||1; let x=e.x0,y=e.y0-e.h,w=e.w,h=e.h; items.forEach((it,i)=>{const v=Number(it.value||it[1]||1), area=v/total*e.w*e.h; const ww=i%2===0?Math.min(w,area/h):w, hh=i%2?Math.min(h,area/w):h; ctx.fillStyle='rgba(121,169,255,'+(0.35+0.5*(i/items.length))+')';ctx.fillRect(x,y,ww,hh);ctx.strokeStyle='#07111f';ctx.strokeRect(x,y,ww,hh);ctx.fillStyle='#eef5ff';ctx.font='13px system-ui';ctx.fillText(String(it.name||it[0]||('Item '+(i+1))).slice(0,18),x+6,y+18); if(i%2===0){y+=hh;h-=hh;}else{x+=ww;w-=ww;}}); setCaption(title+': '+items.length+' blocks.'); rememberChart(title,{items}); return null; }
+function drawGauge(value=50,min=0,max=100,title='Gauge'){ const e=chartFrame(title), cx=e.x0+e.w/2, cy=e.y0-30, r=Math.min(e.w,e.h)*.42; ctx.lineWidth=24;ctx.strokeStyle='#30425f';ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,0);ctx.stroke(); const t=(value-min)/(max-min||1);ctx.strokeStyle='#77e096';ctx.beginPath();ctx.arc(cx,cy,r,Math.PI,Math.PI+Math.PI*Math.max(0,Math.min(1,t)));ctx.stroke();ctx.fillStyle='#eef5ff';ctx.font='34px system-ui';ctx.textAlign='center';ctx.fillText(round(value,2),cx,cy-35);ctx.textAlign='left';setCaption(title+': '+round(value,2)+' of '+max+'.'); rememberChart(title,{value,min,max}); return null;}
+const plt = {
+ hist:(x,bins=10)=>drawHist(stat.histogram(x,Number(bins)||10),'Histogram'), scatter:(x,y)=>drawPoints(finitePairs(x,y),'Scatter'), plot:(x,y=null)=>{ if(y==null){y=x;x=np.arange(toArray(y).length);} return drawLineSeries([y],['Line'],'Line'); }, bar:(labels,values)=>drawBar(toArray(labels),toArray(values),'Bar'), show:()=>null, title:t=>{ setCaption(t); return null; }, clf:()=>clearChart(), clear:()=>clearChart(),
+ boxplot:(groups,labels=null)=>drawBoxes(Array.isArray(groups)&&Array.isArray(groups[0])?groups:[groups],labels,'Box-and-whisker'), violin:(groups,labels=null)=>drawBoxes(Array.isArray(groups)&&Array.isArray(groups[0])?groups:[groups],labels,'Violin / distribution summary'), density:(x)=>drawDensity(x,'Density / KDE'), kde:(x)=>drawDensity(x,'KDE'), cdf:(x)=>{const a=nums(x).sort((p,q)=>p-q);return drawLineSeries([a.map((_,i)=>(i+1)/a.length)],['CDF'],'Cumulative distribution');}, ecdf:(x)=>plt.cdf(x), qqplot:(x)=>{const a=nums(x).sort((p,q)=>p-q), n=a.length;return drawPoints(a.map((v,i)=>({x:stat.normalInv((i+.5)/n),y:v})),'QQ plot');}, probplot:(x)=>plt.qqplot(x), hexbin:(x,y)=>drawPoints(finitePairs(x,y),'Hexbin-style density'), pairplot:(cols=null)=>{const dfc=currentDF(), cs=cols||dfc.columns().filter(c=>numCol(dfc.rows,c).length).slice(0,4); const mat=cs.map(a=>cs.map(b=> a===b?1:stat.corr(dfc.getColumn(a),dfc.getColumn(b)))); return drawMatrix(mat,cs,'Pair/correlation plot');}, corr_heatmap:(cols=null)=>{const dfc=currentDF(), cs=cols||dfc.columns().filter(c=>numCol(dfc.rows,c).length).slice(0,12); return drawMatrix(cs.map(a=>cs.map(b=>stat.corr(dfc.getColumn(a),dfc.getColumn(b)))),cs,'Correlation heatmap');}, covariance_heatmap:(cols=null)=>{const dfc=currentDF(), cs=cols||dfc.columns().filter(c=>numCol(dfc.rows,c).length).slice(0,12); return drawMatrix(cs.map(a=>cs.map(b=>stat.corr(dfc.getColumn(a),dfc.getColumn(b))*stat.std(dfc.getColumn(a))*stat.std(dfc.getColumn(b)))),cs,'Covariance heatmap');}, residual_plot:(x,y)=>{const lr=stat.linreg(x,y); return drawPoints(finitePairs(x,y).map(p=>({x:p.x,y:p.y-(lr.slope*p.x+lr.intercept)})),'Residual plot');}, ci_chart:(labels,mean,low,high)=>drawLineSeries([mean,low,high],['Mean','Low','High'],'Confidence interval chart'),
+ multiline:(series,labels=null)=>drawLineSeries(series,labels,'Multi-line trend'), rolling_avg:(x,w=5)=>drawLineSeries([new Series(x).rolling(w).mean().data],['Rolling mean'],'Rolling average'), moving_std:(x,w=5)=>drawLineSeries([new Series(x).rolling(w).std().data],['Moving std'],'Moving standard deviation'), forecast_band:(hist,forecast,low,high)=>drawLineSeries([hist,forecast,low,high],['History','Forecast','Low','High'],'Forecast with confidence bands'), changepoints:(x)=>drawLineSeries([x],['Series'],'Change-point scan'), run_chart:(x)=>drawLineSeries([x],['Run'],'Run chart'), control_chart:(x)=>{const a=nums(x),m=stat.mean(a),sd=stat.std(a);return drawLineSeries([a,Array(a.length).fill(m),Array(a.length).fill(m+3*sd),Array(a.length).fill(m-3*sd)],['Value','Mean','UCL','LCL'],'SPC control chart');}, acf:(x,lags=20)=>{const a=nums(x),m=stat.mean(a); const vals=[]; for(let k=0;k<=lags;k++){let num=0,den=0;for(let i=0;i<a.length-k;i++)num+=(a[i]-m)*(a[i+k]-m);for(let v of a)den+=(v-m)**2;vals.push(num/(den||1));}return drawBar(vals.map((_,i)=>i),vals,'Autocorrelation');}, pacf:(x,lags=20)=>plt.acf(x,lags),
+ tornado:(labels,values)=>drawBar(labels,values,'Tornado sensitivity'), spider:(series,labels=null)=>drawLineSeries(series,labels,'Sensitivity spider'), cumprob:(x)=>plt.cdf(x), exceedance:(x)=>{const a=nums(x).sort((p,q)=>p-q);return drawLineSeries([a.map((_,i)=>1-(i+1)/a.length)],['Exceedance'],'Exceedance probability');}, fan_chart:(series)=>drawLineSeries(series,null,'Percentile fan chart'), risk_matrix:(likelihood,consequence)=>drawPoints(finitePairs(likelihood,consequence),'Risk matrix'), scenario_bars:(labels,values)=>drawBar(labels,values,'Scenario comparison'), overlay_hist:(series)=>drawLineSeries(series.map(s=>stat.histogram(s,20).map(b=>b.count)),null,'Distribution overlay'), waterfall:(labels,values)=>drawBar(labels,values,'Waterfall chart'), convergence:(x)=>{const a=nums(x);let s=0;return drawLineSeries([a.map((v,i)=>(s+=v)/(i+1))],['Running mean'],'Monte Carlo convergence');}, trace:(x)=>drawLineSeries([x],['Trace'],'Simulation trace'), lhs_coverage:(x)=>drawDensity(x,'Latin Hypercube coverage'),
+ confusion_matrix:(matrix,labels=null)=>drawMatrix(matrix,labels||['Neg','Pos'],'Confusion matrix'), roc_curve:(fpr,tpr)=>drawPoints(finitePairs(fpr,tpr),'ROC curve'), precision_recall:(recall,precision)=>drawPoints(finitePairs(recall,precision),'Precision-Recall curve'), feature_importance:(labels,values)=>drawBar(labels,values,'Feature importance'), shap:(labels,values)=>drawBar(labels,values,'SHAP-style contributions'), decision_tree:(nodes,edges)=>drawDiagram(nodes,edges,'Decision tree'), cluster_scatter:(x,y)=>drawPoints(finitePairs(x,y),'Cluster scatter'), pca:(x,y)=>drawPoints(finitePairs(x,y),'PCA projection'), tsne:(x,y)=>drawPoints(finitePairs(x,y),'t-SNE projection'), kmeans:(x,y)=>drawPoints(finitePairs(x,y),'K-Means clusters'), silhouette:(values)=>drawBar(np.arange(toArray(values).length),values,'Silhouette analysis'),
+ network:(nodes,edges)=>drawDiagram(nodes,edges,'Network graph'), dependency_graph:(nodes,edges)=>drawDiagram(nodes,edges,'Dependency graph'), attack_path:(nodes,edges)=>drawDiagram(nodes,edges,'Attack path'), bayesian_network:(nodes,edges)=>drawDiagram(nodes,edges,'Bayesian network'), critical_path:(nodes,edges)=>drawDiagram(nodes,edges,'Critical path'), transport_network:(nodes,edges)=>drawDiagram(nodes,edges,'Transportation network'), hub_spoke:(nodes,edges)=>drawDiagram(nodes,edges,'Hub-and-spoke network'), flow:(labels,values)=>drawBar(labels,values,'Flow diagram'),
+ choropleth:(labels,values)=>drawBar(labels,values,'Offline choropleth-style map'), bubble_map:(x,y,size=null)=>drawPoints(finitePairs(x,y),'Bubble map'), heatmap_map:(matrix)=>drawMatrix(matrix,[], 'Map heat layer'), route_map:(x,y)=>drawLineSeries([y],['Route'],'Route map'), asset_plot:(x,y)=>drawPoints(finitePairs(x,y),'Asset location plot'), airport_network:(nodes,edges)=>drawDiagram(nodes,edges,'Airport network'), incident_density:(x,y)=>drawPoints(finitePairs(x,y),'Incident density map'), hex_density_grid:(x,y)=>plt.hexbin(x,y),
+ timeline:(labels,values)=>drawBar(labels,values,'Event timeline'), escalation_timeline:(values)=>drawLineSeries([values],['Escalation'],'Threat escalation timeline'), sankey:(labels,values)=>drawBar(labels,values,'Sankey-style flow'), kill_chain:(labels,values)=>drawBar(labels,values,'Kill chain'), event_tree:(nodes,edges)=>drawDiagram(nodes,edges,'Event tree'), fault_tree:(nodes,edges)=>drawDiagram(nodes,edges,'Fault tree'), bowtie:(nodes,edges)=>drawDiagram(nodes,edges,'Bow-tie risk diagram'), confidence_matrix:(matrix,labels=null)=>drawMatrix(matrix,labels||[],'Intelligence confidence matrix'), reliability_matrix:(matrix,labels=null)=>drawMatrix(matrix,labels||[],'Source reliability matrix'), actor_graph:(nodes,edges)=>drawDiagram(nodes,edges,'Threat actor relationship graph'),
+ bode:(freq,mag)=>drawLineSeries([mag],['Magnitude'],'Bode plot'), nyquist:(real,imag)=>drawPoints(finitePairs(real,imag),'Nyquist plot'), stress_strain:(strain,stress)=>drawPoints(finitePairs(strain,stress),'Stress-strain curve'), trajectory:(x,y)=>drawLineSeries([y],['Trajectory'],'Trajectory'), orbit:(x,y)=>drawPoints(finitePairs(x,y),'Orbit trajectory'), flight_path:(x,y)=>drawLineSeries([y],['Flight path'],'Flight path'), fuel_profile:(x)=>drawLineSeries([x],['Fuel'],'Fuel consumption profile'), performance_envelope:(x,y)=>drawPoints(finitePairs(x,y),'Performance envelope'), phase_diagram:(x,y)=>drawPoints(finitePairs(x,y),'Phase diagram'),
+ candlestick:(labels,open,high,low,close)=>drawLineSeries([open,high,low,close],['Open','High','Low','Close'],'Candlestick/OHLC'), ohlc:(labels,open,high,low,close)=>plt.candlestick(labels,open,high,low,close), allocation:(labels,values)=>drawBar(labels,values,'Portfolio allocation'), efficient_frontier:(risk,ret)=>drawPoints(finitePairs(risk,ret),'Efficient frontier'), drawdown:(x)=>drawLineSeries([x],['Drawdown'],'Drawdown'), cumulative_return:(x)=>drawLineSeries([x],['Return'],'Cumulative return'), sharpe:(labels,values)=>drawBar(labels,values,'Sharpe ratio comparison'), var_chart:(x)=>drawDensity(x,'Value-at-Risk distribution'),
+ kpi:(labels,values)=>drawBar(labels,values,'KPI cards'), gauge:drawGauge, bullet:(labels,actual,target)=>drawLineSeries([actual,target],['Actual','Target'],'Bullet chart'), sparkline:(x)=>drawLineSeries([x],['Sparkline'],'Sparkline'), sparklines:(series)=>drawLineSeries(series,null,'Sparklines'), treemap:(items)=>drawTreemap(items,'Treemap'), sunburst:(labels,values)=>drawBar(labels,values,'Sunburst-style hierarchy'), funnel:(labels,values)=>drawBar(labels,values,'Funnel chart'), radar:(labels,values)=>{const vals=nums(values); const nodes=labels||vals.map((_,i)=>'A'+i); const edges=nodes.map((n,i)=>[n,nodes[(i+1)%nodes.length]]); return drawDiagram(nodes,edges,'Radar chart');}, parallel_coordinates:(series)=>drawLineSeries(series,null,'Parallel coordinates'),
+ scatter3d:(x,y,z=null)=>drawPoints(finitePairs(x,y),'3D scatter projection'), surface3d:(matrix)=>drawMatrix(matrix,[],'3D surface projection'), wireframe:(matrix)=>drawMatrix(matrix,[],'Wireframe projection'), terrain:(matrix)=>drawMatrix(matrix,[],'Terrain model'), volume_heatmap:(matrix)=>drawMatrix(matrix,[],'Volumetric heat map'), risk_landscape:(matrix)=>drawMatrix(matrix,[],'Risk landscape'), probability_surface:(matrix)=>drawMatrix(matrix,[],'Probability surface')
+};
+const plot = plt;
+function clearChart(){ctx.clearRect(0,0,chart.width,chart.height);ctx.fillStyle='#07111f';ctx.fillRect(0,0,chart.width,chart.height);$('chartCaption').textContent='No chart drawn yet.';}
+function baseChart(title){ctx.clearRect(0,0,chart.width,chart.height);ctx.fillStyle='#07111f';ctx.fillRect(0,0,chart.width,chart.height);ctx.strokeStyle='#354c75';ctx.lineWidth=2;ctx.strokeRect(56,34,chart.width-100,chart.height-95);ctx.fillStyle='#eef5ff';ctx.font='24px system-ui';ctx.fillText(title,64,26);ctx.textAlign='left';}
+function drawHist(bins,title){baseChart(title); if(!bins.length)return null; const max=Math.max(...bins.map(b=>b.count),1), x0=64,y0=chart.height-70,w=chart.width-120,h=chart.height-120,bw=w/bins.length; ctx.fillStyle='#79a9ff'; bins.forEach((b,i)=>{const bh=(b.count/max)*h; ctx.fillRect(x0+i*bw+3,y0-bh,bw-6,bh);}); $('chartCaption').textContent='Histogram with '+bins.length+' bins. Max bin count: '+max; rememberChart('Histogram',{bins}); return null;}
+function drawScatter(xs,ys,xlab,ylab){return drawPoints(finitePairs(xs,ys),'Scatter');}
+function drawLine(xs,ys,xlab,ylab){return drawLineSeries([ys],['Line'],'Line');}
+function drawBar(labels,values,title){baseChart(title); labels=toArray(labels); values=toArray(values).map(Number); const max=Math.max(1,...values.map(v=>Math.abs(v))),x0=64,y0=chart.height-70,w=chart.width-120,h=chart.height-120,bw=w/Math.max(1,values.length); ctx.fillStyle='#77e096'; values.forEach((v,i)=>{const bh=(Math.abs(v)/max)*h; const y=v>=0?y0-bh:y0; ctx.fillRect(x0+i*bw+2,y,Math.max(1,bw-4),bh); if(values.length<=24){ctx.fillStyle='#aebbd2';ctx.font='12px system-ui';ctx.fillText(String(labels[i]).slice(0,10),x0+i*bw+2,y0+18);ctx.fillStyle='#77e096';}});$('chartCaption').textContent=title+': '+values.length+' bars.'; rememberChart(title,{labels,values});return null;}
+
+// Monte Carlo with plain-language summary, custom trial functions, and Latin Hypercube Sampling
+function summarize(arr){ const res=nums(arr); return {n:res.length, mean:round(stat.mean(res)), median:round(stat.median(res)), std:round(stat.std(res)), p05:round(stat.quantile(res,.05)), p50:round(stat.quantile(res,.50)), p95:round(stat.quantile(res,.95)), min:round(stat.min(res)), max:round(stat.max(res))}; }
+function monte_carlo(a=10000,b=0,c=1){
+  if(typeof a==='function'){ const fn=a; const iterations=Math.min(1000000,Math.max(1,Math.floor(Number(b)||10000))); const res=new Array(iterations); for(let i=0;i<iterations;i++){ res[i]=Number(fn(i)); } return Object.assign({iterations},summarize(res)); }
+  const iterations=Math.min(1000000,Math.max(1,Math.floor(Number(a)||10000))); const res=Array.from({length:iterations},()=>stat.randomNormal(b,c)); return Object.assign({iterations},summarize(res));
+}
+function lhs(n,min=0,max=1){ n=Math.min(1000000,Math.max(1,Math.floor(Number(n)||1))); const strata=Array.from({length:n},(_,i)=>(i+rng())/n); for(let i=n-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [strata[i],strata[j]]=[strata[j],strata[i]]; } return strata.map(u=>min+(max-min)*u); }
+function lhs_normal(n,mu=0,sigma=1){ return lhs(n,0,1).map(u=>mu+sigma*invNorm(Math.min(1-1e-12,Math.max(1e-12,u)))); }
+const textlib = { profile:()=>{ const txt=state.text||toCSV(state.rows); const words=(txt.toLowerCase().match(/[a-z0-9']+/g)||[]); const sentences=(txt.match(/[^.!?]+[.!?]+/g)||[]); const freq={}; words.forEach(w=>{if(w.length>2)freq[w]=(freq[w]||0)+1;}); return {characters:txt.length, words:words.length, sentences:sentences.length, unique_words:Object.keys(freq).length, top_terms:Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,25).map(([word,count])=>({word,count}))};}, lines:()=>new DataFrame((state.text||'').split(/\r?\n/).map((line,i)=>({line_number:i+1,line}))) };
+
+// Tokenizer and expression parser
+function stripComment(line){ let q=null, out=''; for(let i=0;i<line.length;i++){const c=line[i]; if(q){out+=c; if(c===q && line[i-1] !== '\\') q=null;} else if(c==='"'||c==="'"){q=c;out+=c;} else if(c==='#') break; else out+=c;} return out; }
+function tokenize(s){ const t=[]; let i=0; const two=['==','!=','>=','<=','//','**','+=','-=','*=','/=']; while(i<s.length){ const c=s[i]; if(/\s/.test(c)){i++;continue;} const d=s.slice(i,i+2); if(two.includes(d)){t.push({type:'op',value:d});i+=2;continue;} if('+-*/%()[]{}.,:=<>'.includes(c)){t.push({type:'op',value:c});i++;continue;}
+  if((c==='f'||c==='F') && (s[i+1]==='"'||s[i+1]==="'")){ const q=s[i+1]; let v=''; i+=2; while(i<s.length){ const ch=s[i]; if(ch==='\\'){ const n=s[i+1]; v += n==='n'?'\n':n==='t'?'\t':n; i+=2; } else if(ch===q){i++;break;} else {v+=ch;i++;} } t.push({type:'fstring',value:v}); continue;}
+  if(c==='"'||c==="'"){ const q=c; let v=''; i++; while(i<s.length){ const ch=s[i]; if(ch==='\\'){ const n=s[i+1]; v += n==='n'?'\n':n==='t'?'\t':n; i+=2; } else if(ch===q){i++;break;} else {v+=ch;i++;} } t.push({type:'string',value:v}); continue;}
+  if(/\d/.test(c) || (c==='.' && /\d/.test(s[i+1]))){ const m=s.slice(i).match(/^\d+(\.\d+)?([eE][-+]?\d+)?|^\.\d+([eE][-+]?\d+)?/); t.push({type:'number',value:Number(m[0])}); i+=m[0].length; continue;}
+  if(/[A-Za-z_]/.test(c)){ let j=i+1; while(j<s.length && /[A-Za-z0-9_]/.test(s[j])) j++; const name=s.slice(i,j); t.push({type:'name',value:name}); i=j; continue;}
+  throw new Error('Unexpected character '+c); } t.push({type:'eof',value:'eof'}); return t; }
+
+// f-string evaluation with format specs (.2f, comma grouping, %, e, d, width/alignment)
+function evalFString(str){
+  let result='', i=0;
+  while(i<str.length){
+    const c=str[i];
+    if(c==='{' && str[i+1]==='{'){ result+='{'; i+=2; continue; }
+    if(c==='}' && str[i+1]==='}'){ result+='}'; i+=2; continue; }
+    if(c==='{'){
+      let depth=1, j=i+1, expr='';
+      while(j<str.length && depth>0){ const ch=str[j]; if(ch==='{')depth++; else if(ch==='}')depth--; if(depth>0)expr+=ch; j++; }
+      if(depth>0) throw new Error('Unclosed { in f-string');
+      let spec=null, d2=0, q=null, ci=-1;
+      for(let k=0;k<expr.length;k++){ const ch=expr[k]; if(q){ if(ch===q)q=null; } else if(ch==='"'||ch==="'")q=ch; else if('([{'.includes(ch))d2++; else if(')]}'.includes(ch))d2--; else if(ch===':'&&d2===0){ci=k;break;} }
+      if(ci>=0){ spec=expr.slice(ci+1); expr=expr.slice(0,ci); }
+      result+=applyFormatSpec(evalExpr(expr),spec);
+      i=j; continue;
+    }
+    result+=c; i++;
+  }
+  return result;
+}
+function applyFormatSpec(v,spec){
+  if(spec==null||spec==='') return formatValue(v);
+  const m=spec.match(/^([<>^]?)(\d*)(,?)(?:\.(\d+))?([fde%])?$/);
+  if(!m) return formatValue(v);
+  const align=m[1], widthS=m[2], comma=m[3], precS=m[4], type=m[5];
+  const n=Number(v); let s;
+  if(type==='f'){ s=n.toFixed(precS!=null?Number(precS):6); }
+  else if(type==='e'){ s=n.toExponential(precS!=null?Number(precS):6); }
+  else if(type==='%'){ s=(n*100).toFixed(precS!=null?Number(precS):6)+'%'; }
+  else if(type==='d'){ s=String(Math.trunc(n)); }
+  else if(precS!=null){ s=n.toFixed(Number(precS)); }
+  else s=formatValue(v);
+  if(comma){ const pct=s.endsWith('%'); const core=pct?s.slice(0,-1):s; const neg=core.startsWith('-'); const body=neg?core.slice(1):core; const parts=body.split('.'); parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,','); s=(neg?'-':'')+parts.join('.')+(pct?'%':''); }
+  const width=Number(widthS)||0;
+  if(s.length<width){ const pad=' '.repeat(width-s.length); if(align==='<') s=s+pad; else if(align==='^'){ const l=Math.floor(pad.length/2); s=pad.slice(0,l)+s+pad.slice(l); } else s=pad+s; }
+  return s;
+}
+
+class Parser{
+  constructor(tokens){this.t=tokens;this.i=0;} peek(){return this.t[this.i];} next(){return this.t[this.i++];} match(v){const p=this.peek(); if(p.type==='op'&&p.value===v){this.i++;return true;}return false;} expect(v){if(!this.match(v))throw new Error('Expected '+v+' got '+this.peek().value);}
+  expectName(){ const t=this.next(); if(t.type!=='name') throw new Error('Expected a name, got '+t.value); return t.value; }
+  parse(){ const v=this.parseOr(); if(this.peek().type==='name'&&this.peek().value==='if'){ this.next(); const cond=this.parseOr(); if(!(this.peek().type==='name'&&this.peek().value==='else')) throw new Error('Conditional expression requires else'); this.next(); const other=this.parse(); return isTruthy(cond)?v:other; } return v; }
+  parseOr(){let v=this.parseAnd(); while(this.peek().type==='name'&&this.peek().value==='or'){this.next(); v=applyBinary(v,'or',this.parseAnd());} return v;}
+  parseAnd(){let v=this.parseNot(); while(this.peek().type==='name'&&this.peek().value==='and'){this.next(); v=applyBinary(v,'and',this.parseNot());} return v;}
+  parseNot(){ if(this.peek().type==='name'&&this.peek().value==='not'){this.next(); return !isTruthy(this.parseNot());} return this.parseCompare(); }
+  parseCompare(){let v=this.parseAdd(); while(true){ const p=this.peek();
+    if(p.type==='op'&&['==','!=','>=','<=','>','<'].includes(p.value)){const op=this.next().value; v=applyBinary(v,op,this.parseAdd()); continue;}
+    if(p.type==='name'&&p.value==='in'){this.next(); v=applyBinary(v,'in',this.parseAdd()); continue;}
+    if(p.type==='name'&&p.value==='not'&&this.t[this.i+1]&&this.t[this.i+1].type==='name'&&this.t[this.i+1].value==='in'){this.next();this.next(); v=!isTruthy(applyBinary(v,'in',this.parseAdd())); continue;}
+    if(p.type==='name'&&p.value==='is'){this.next(); let neg=false; if(this.peek().type==='name'&&this.peek().value==='not'){neg=true;this.next();} const rhs=this.parseAdd(); const eq=(v===rhs)||((v==null)&&(rhs==null)); v=neg?!eq:eq; continue;}
+    break; } return v;}
+  parseAdd(){let v=this.parseMul(); while(this.peek().type==='op'&&['+','-'].includes(this.peek().value)){const op=this.next().value; v=applyBinary(v,op,this.parseMul());} return v;}
+  parseMul(){let v=this.parsePow(); while(this.peek().type==='op'&&['*','/','//','%'].includes(this.peek().value)){const op=this.next().value; v=applyBinary(v,op,this.parsePow());} return v;}
+  parsePow(){let v=this.parseUnary(); while(this.peek().type==='op'&&this.peek().value==='**'){this.next(); v=applyBinary(v,'**',this.parseUnary());} return v;}
+  parseUnary(){ if(this.match('+')) return this.parseUnary(); if(this.match('-')) return applyBinary(0,'-',this.parseUnary()); return this.parsePostfix(); }
+  parsePostfix(){ let v=this.parsePrimary(); while(true){ if(this.match('.')){ const name=this.next(); if(name.type!=='name') throw new Error('Expected attribute name'); v=new MethodRef(v,name.value); }
+      else if(this.match('[')){ let key; if(this.match(':')){ const end=this.peek().value!==']'?this.parseOr():null; this.expect(']'); key={slice:[null,end]}; } else { key=this.parseOr(); if(this.match(':')){ const end=this.peek().value!==']'?this.parseOr():null; key={slice:[key,end]}; } this.expect(']'); } v=getItem(v,key); }
+      else if(this.match('(')){ const {args,kwargs}=this.parseArgList(); v=callValue(v,args,kwargs); }
+      else break; }
+    return v instanceof MethodRef ? resolveMethodRef(v) : v; }
+  parseArgList(){ const args=[], kwargs={}; if(this.match(')')) return {args,kwargs}; while(true){ if(this.peek().type==='name' && this.t[this.i+1] && this.t[this.i+1].value==='='){ const k=this.next().value; this.expect('='); kwargs[k]=this.parseOr(); } else args.push(this.parseOr()); if(this.match(')')) break; this.expect(','); if(this.match(')')) break; } return {args,kwargs}; }
+  scanTokens(stopNames,closer){ const toks=[]; let depth=0; while(true){ const t=this.peek(); if(t.type==='eof') return {tokens:toks,stop:null};
+      if(t.type==='op'&&')]}'.includes(t.value)&&depth===0){ return {tokens:toks, stop:(t.value===closer?closer:null)}; }
+      if(depth===0&&t.type==='name'&&stopNames.includes(t.value)){ this.next(); return {tokens:toks,stop:t.value}; }
+      if(t.type==='op'&&'([{'.includes(t.value)) depth++;
+      if(t.type==='op'&&')]}'.includes(t.value)) depth--;
+      toks.push(this.next()); } }
+  parseComprehension(headTokens,closer,dictMode){
+    const vars=[this.expectName()];
+    while(this.peek().type==='op'&&this.peek().value===','){ this.next(); vars.push(this.expectName()); }
+    if(!(this.peek().type==='name'&&this.peek().value==='in')) throw new Error('Comprehension requires the in keyword');
+    this.next();
+    const iterScan=this.scanTokens(['if'],closer);
+    if(!iterScan.tokens.length) throw new Error('Comprehension requires an iterable');
+    const iterable=toIterable(evalTokens(iterScan.tokens));
+    let condToks=null;
+    if(iterScan.stop==='if'){ condToks=this.scanTokens([],closer).tokens; }
+    this.expect(closer);
+    let keyToks=null, valToks=null;
+    if(dictMode){ const ci=topLevelColonIndex(headTokens); if(ci<0) throw new Error('Dict comprehension requires key: value'); keyToks=headTokens.slice(0,ci); valToks=headTokens.slice(ci+1); if(!keyToks.length||!valToks.length) throw new Error('Dict comprehension requires key: value'); }
+    const saved=vars.map(v=>({v, had:(v in env), val:env[v]}));
+    const result=dictMode?{}:[];
+    try{
+      let c=0;
+      for(const item of iterable){
+        if(++c>200000) throw new Error('Comprehension limit exceeded');
+        bindLoopVars(vars,item);
+        if(condToks && !isTruthy(evalTokens(condToks))) continue;
+        if(dictMode) result[evalTokens(keyToks)]=evalTokens(valToks);
+        else result.push(evalTokens(headTokens));
+      }
+    } finally { saved.forEach(s=>{ if(s.had) env[s.v]=s.val; else delete env[s.v]; }); }
+    return result;
+  }
+  parsePrimary(){ const tok=this.next();
+    if(tok.type==='number'||tok.type==='string') return tok.value;
+    if(tok.type==='fstring') return evalFString(tok.value);
+    if(tok.type==='name'){ if(tok.value==='True')return true;if(tok.value==='False')return false;if(tok.value==='None')return null;if(tok.value==='range')return range;if(tok.value==='len')return pyLen;if(tok.value==='list')return x=>x==null?[]:toArray(x); if(tok.value==='dict')return x=>x||{}; if(tok.value==='print')return (...a)=>{log(...a);return null;}; if(tok.value in env) return env[tok.value]; throw new Error('Unknown name '+tok.value); }
+    if(tok.type==='op'&&tok.value==='('){ if(this.match(')')) return []; const v=this.parseOr(); if(this.match(',')){ const arr=[v]; if(!this.match(')')){ while(true){ arr.push(this.parseOr()); if(this.match(')')) break; this.expect(','); if(this.match(')')) break; } } return arr; } this.expect(')'); return v; }
+    if(tok.type==='op'&&tok.value==='['){ if(this.match(']')) return [];
+      const save=this.i; const scan=this.scanTokens(['for'],']');
+      if(scan.stop==='for') return this.parseComprehension(scan.tokens,']',false);
+      this.i=save;
+      const arr=[]; while(true){ arr.push(this.parseOr()); if(this.match(']')) break; this.expect(','); if(this.match(']')) break; } return arr; }
+    if(tok.type==='op'&&tok.value==='{'){ if(this.match('}')) return {};
+      const save=this.i; const scan=this.scanTokens(['for'],'}');
+      if(scan.stop==='for') return this.parseComprehension(scan.tokens,'}',true);
+      this.i=save;
+      const obj={}; while(true){ const key=this.parseOr(); this.expect(':'); obj[key]=this.parseOr(); if(this.match('}')) break; this.expect(','); if(this.match('}')) break; } return obj; }
+    throw new Error('Unexpected token '+tok.value); }
+}
+class MethodRef{ constructor(obj,name){this.obj=obj;this.name=name;} }
+function range(start,stop,step=1){ if(stop==null){stop=start;start=0;} const out=[]; let guard=0; for(let x=start; step>=0?x<stop:x>stop; x+=step){ out.push(x); if(++guard>2000000) throw new Error('range limit exceeded'); } return out; }
+function pyLen(x){ if(typeof x==='string') return x.length; if(x instanceof Series) return x.data.length; if(x instanceof DataFrame) return x.rows.length; if(Array.isArray(x)) return x.length; if(x && typeof x==='object') return Object.keys(x).length; return toArray(x).length; }
+function evalTokens(toks){ if(!toks.length) throw new Error('Empty expression'); return new Parser(toks.concat([{type:'eof',value:'eof'}])).parse(); }
+function topLevelColonIndex(tokens){ let depth=0; for(let k=0;k<tokens.length;k++){ const t=tokens[k]; if(t.type==='op'&&'([{'.includes(t.value)) depth++; else if(t.type==='op'&&')]}'.includes(t.value)) depth--; else if(t.type==='op'&&t.value===':'&&depth===0) return k; } return -1; }
+function bindLoopVars(vars,val){ if(vars.length===1){ env[vars[0]]=val; return; } const a=toArray(val); vars.forEach((v,i)=>{ env[v]=a[i]; }); }
+
+// String / list / dict method surfaces
+function trimChars(s,chars,mode){ const set=new Set(String(chars).split('')); let a=0,b=s.length; if(mode&1){while(a<b&&set.has(s[a]))a++;} if(mode&2){while(b>a&&set.has(s[b-1]))b--;} return s.slice(a,b); }
+function strMethod(s,name){ const M={ upper:()=>s.toUpperCase(), lower:()=>s.toLowerCase(), strip:(ch)=>ch!=null?trimChars(s,ch,3):s.trim(), lstrip:(ch)=>ch!=null?trimChars(s,ch,1):s.replace(/^\s+/,''), rstrip:(ch)=>ch!=null?trimChars(s,ch,2):s.replace(/\s+$/,''), split:function split(sep){ return sep==null?s.trim().split(/\s+/).filter(x=>x!==''):s.split(sep); }, replace:(a,b)=>s.split(a).join(b), startswith:p=>s.startsWith(p), endswith:p=>s.endsWith(p), title:()=>s.replace(/[A-Za-z][A-Za-z0-9']*/g,w=>w[0].toUpperCase()+w.slice(1).toLowerCase()), capitalize:()=>s?s[0].toUpperCase()+s.slice(1).toLowerCase():s, join:arr=>toArray(arr).map(x=>formatValue(x)).join(s), format:(...a)=>{let k=0; return s.replace(/\{(\d*)\}/g,(mm,g)=>formatValue(g===''?a[k++]:a[Number(g)]));}, find:x=>s.indexOf(x), rfind:x=>s.lastIndexOf(x), index:x=>{const k=s.indexOf(x); if(k<0) throw new Error('substring not found'); return k;}, count:x=>x?s.split(x).length-1:0, zfill:n=>s.padStart(Number(n),'0'), ljust:n=>s.padEnd(Number(n)), rjust:n=>s.padStart(Number(n)), isdigit:()=>/^\d+$/.test(s), isalpha:()=>/^[A-Za-z]+$/.test(s), isnumeric:()=>/^\d+(\.\d+)?$/.test(s), isupper:()=>s===s.toUpperCase()&&/[A-Z]/.test(s), islower:()=>s===s.toLowerCase()&&/[a-z]/.test(s), swapcase:()=>s.replace(/[a-zA-Z]/g,c=>c===c.toLowerCase()?c.toUpperCase():c.toLowerCase()) }; return M[name]||null; }
+function listMethod(arr,name){ const M={ append:v=>{arr.push(v);return null;}, extend:v=>{arr.push(...toArray(v));return null;}, pop:(idx)=>{ if(idx==null) return arr.pop(); let i=Number(idx); if(i<0)i+=arr.length; return arr.splice(i,1)[0]; }, insert:(idx,v)=>{arr.splice(Number(idx),0,v);return null;}, remove:v=>{const k=arr.indexOf(v); if(k<0)throw new Error('list.remove(x): x not in list'); arr.splice(k,1); return null;}, index:v=>{const k=arr.indexOf(v); if(k<0)throw new Error('value not in list'); return k;}, count:v=>arr.filter(x=>x===v).length, sort:function sort(reverse){ arr.sort((a,b)=>{const x=Number(a),y=Number(b); return (Number.isFinite(x)&&Number.isFinite(y))?x-y:String(a).localeCompare(String(b));}); if(isTruthy(reverse))arr.reverse(); return null; }, reverse:()=>{arr.reverse();return null;}, copy:()=>arr.slice(), clear:()=>{arr.length=0;return null;} }; return M[name]||null; }
+function dictMethod(obj,name){ const M={ items:()=>Object.entries(obj), keys:()=>Object.keys(obj), values:()=>Object.values(obj), get:(k,d=null)=>(k in obj)?obj[k]:d, update:o=>{Object.assign(obj,o);return null;}, pop:(k,d=null)=>{ if(k in obj){const v=obj[k]; delete obj[k]; return v;} return d; }, setdefault:(k,d=null)=>{ if(!(k in obj)) obj[k]=d; return obj[k]; }, copy:()=>Object.assign({},obj) }; return M[name]||null; }
+
+function getAttr(obj,name){
+  if(obj instanceof MethodRef) obj=resolveMethodRef(obj);
+  if(obj instanceof DataFrame){
+    if(name==='shape') return obj.shape();
+    if(name==='columns') return obj.columns();
+    if(name==='rows') return obj.rows;
+    if(name==='iloc'||name==='loc') return new Indexer(obj,name);
+    if(name in obj) return typeof obj[name]==='function' ? obj[name].bind(obj) : obj[name];
+    const cols=obj.columns(); if(cols.includes(name)) return obj.getColumn(name);
+    throw new Error('No DataFrame attribute or column named '+name);
+  }
+  if(obj instanceof Series){ if(name==='values'||name==='data') return obj.data; if(name in obj) return typeof obj[name]==='function' ? obj[name].bind(obj) : obj[name]; throw new Error('No Series attribute '+name); }
+  if(typeof obj==='string'){ const f=strMethod(obj,name); if(f) return f; throw new Error('No string method '+name); }
+  if(Array.isArray(obj)){ const f=listMethod(obj,name); if(f) return f; throw new Error('No list method '+name); }
+  if(obj && typeof obj==='object'){ if(name in obj){ const v=obj[name]; return typeof v==='function'?v.bind(obj):v; } const f=dictMethod(obj,name); if(f) return f; }
+  throw new Error('No attribute '+name);
+}
+function resolveMethodRef(ref){ return getAttr(ref.obj,ref.name); }
+function getItem(obj,key){
+  if(obj instanceof MethodRef) obj=resolveMethodRef(obj);
+  if(obj instanceof Indexer){ const df=obj.df; const n=df.rows.length;
+    if(key && typeof key==='object' && Array.isArray(key.slice)){ let a=key.slice[0]??0,b=key.slice[1]??n; if(a<0)a+=n; if(b<0)b+=n; return new DataFrame(df.rows.slice(a,b)); }
+    if(key instanceof Series) return new DataFrame(df.rows.filter((r,i)=>isTruthy(key.data[i])));
+    if(typeof key==='number'){ let i=key; if(i<0)i+=n; const r=df.rows[i]; if(!r) throw new Error('Row index '+key+' out of range'); return Object.assign({},r); }
+    if(obj.kind==='loc'&&typeof key==='string') return df.getColumn(key);
+    throw new Error('Unsupported '+obj.kind+' key');
+  }
+  if(key && typeof key==='object' && !Array.isArray(key) && Array.isArray(key.slice)){
+    if(typeof obj==='string'){ let a=key.slice[0]??0,b=key.slice[1]??obj.length; if(a<0)a+=obj.length; if(b<0)b+=obj.length; return obj.slice(a,b); }
+    const arr=toArray(obj); let a=key.slice[0]??0,b=key.slice[1]??arr.length; if(a<0)a+=arr.length; if(b<0)b+=arr.length; return arr.slice(a,b);
+  }
+  if(obj instanceof DataFrame) return obj.getItem(key);
+  if(obj instanceof Series){ let i=Number(key); if(i<0)i+=obj.data.length; return obj.data[i]; }
+  if(typeof obj==='string'){ let i=Number(key); if(Number.isFinite(i)){ if(i<0)i+=obj.length; return obj[i]; } throw new Error('String indices must be integers'); }
+  if(Array.isArray(obj)){ if(typeof key==='number'){ let i=key; if(i<0)i+=obj.length; return obj[i]; } return obj[key]; }
+  if(obj && typeof obj==='object') return obj[key];
+  throw new Error('Object is not indexable');
+}
+const KWMAP={ hist:['x','bins'], scatter:['x','y'], plot:['x','y'], bar:['labels','values'], sort_values:['column','ascending'], sort:['reverse'], sorted:['iterable','key','reverse'], rolling:['window'], merge:['other','on','how'], apply:['fn','axis'], fillna:['value'], dropna:['col'], nlargest:['n','col'], nsmallest:['n','col'], round:['x','n'], npround:['x','n'], sample:['n'], head:['n'], tail:['n'], quantile:['q'], percentile:['x','p'], astype:['t'], agg:['valueCol','agg'], normal:['mu','sigma','size'], uniform:['min','max','size'], choice:['arr','size'], randint:['low','high','size'], seed:['n'], linspace:['start','end','n'], arange:['start','stop','step'], monte_carlo:['fn','iterations'], lhs:['n','min','max'], lhs_normal:['n','mu','sigma'], rename:['mapping'], drop_duplicates:['col'], split:['sep'], enumerate:['iterable','start'], query:['q'], gauss:['mu','sigma'], sample_random:['arr','k'], triangular:['low','high','mode'] };
+function callValue(callee,args,kwargs){
+  if(callee instanceof MethodRef){ const fn=getAttr(callee.obj,callee.name); return callValue(fn,args,kwargs); }
+  if(typeof callee!=='function') throw new Error('Value is not callable');
+  kwargs=kwargs||{};
+  const kwKeys=Object.keys(kwargs);
+  if(kwKeys.length){
+    if(callee.__pyParams){ const ps=callee.__pyParams; const full=args.slice(); kwKeys.forEach(k=>{ const idx=ps.findIndex(p=>p.name===k); if(idx<0) throw new Error('Unknown keyword argument '+k+' for '+(callee.__pyName||'function')+'()'); full[idx]=kwargs[k]; }); return callee(...full); }
+    const bn=(callee.name||'').replace(/^bound /,''); const sig=KWMAP[bn];
+    if(sig){ const full=args.slice(); kwKeys.forEach(k=>{ const idx=sig.indexOf(k); if(idx>=0) full[idx]=kwargs[k]; }); return callee(...full); }
+  }
+  return callee(...args);
+}
+function evalExpr(expr){ expr=stripComment(expr).trim(); if(!expr) return undefined; const p=new Parser(tokenize(expr)); return p.parse(); }
+
+// Statement runner
+function countIndent(raw){ const m=raw.match(/^[ \t]*/)[0]; return m.replace(/\t/g,'    ').length; }
+function normalizeLines(src){ return src.replace(/\r/g,'').split('\n').map((raw,idx)=>({raw,indent:countIndent(raw),text:stripComment(raw).trim(),idx:idx+1})).filter(l=>l.text); }
+function runScript(src){ out.textContent=''; state.logs=[]; state.lastScript=src||''; rng=Math.random; initEnv(); const lines=normalizeLines(src); try{ execBlock(lines,0,0,lines.length); state.lastResult = env._; syncStateFromEnv(); renderPreview(); recommendVisualization('processed'); } catch(e){ error(e.message||String(e)); } }
+function findBlockEnd(lines,start,baseIndent){ let j=start; while(j<lines.length && lines[j].indent>baseIndent) j++; return j; }
+function bodyIndentOf(lines,bStart,bEnd,fallback){ return bStart<bEnd ? lines[bStart].indent : fallback; }
+function execBlock(lines,start,indent,end){ let i=start, guard=0; while(i<end){ if(++guard>500000) throw new Error('Execution limit exceeded.'); const l=lines[i]; if(l.indent<indent) break; if(l.indent>indent){ i++; continue; } const text=l.text;
+    if(/^import\s+/.test(text) || /^from\s+/.test(text)){ i++; continue; }
+    if(text==='pass'){ i++; continue; }
+    if(text==='break'){ throw new BreakSignal(); }
+    if(text==='continue'){ throw new ContinueSignal(); }
+    if(text==='return'){ throw new ReturnSignal(null); }
+    if(text.startsWith('return ')){ throw new ReturnSignal(evalExpr(text.slice(7))); }
+    if(text.startsWith('def ') && text.endsWith(':')){ i=defineFunction(lines,i,l); continue; }
+    if(text.startsWith('for ') && text.endsWith(':')){ const m=text.match(/^for\s+([A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*)\s+in\s+(.+):$/); if(!m) throw new Error('Line '+l.idx+': unsupported for syntax'); const vars=m[1].split(',').map(s=>s.trim()); const iterable=toIterable(evalExpr(m[2])); const bStart=i+1,bEnd=findBlockEnd(lines,bStart,l.indent); const bIndent=bodyIndentOf(lines,bStart,bEnd,l.indent+4); let c=0; for(const val of iterable){ if(++c>200000) throw new Error('Loop limit exceeded'); bindLoopVars(vars,val); try{ execBlock(lines,bStart,bIndent,bEnd); } catch(e){ if(e instanceof ContinueSignal) continue; if(e instanceof BreakSignal) break; throw e; } } i=bEnd; continue; }
+    if(text.startsWith('while ') && text.endsWith(':')){ const expr=text.slice(6,-1), bStart=i+1,bEnd=findBlockEnd(lines,bStart,l.indent); const bIndent=bodyIndentOf(lines,bStart,bEnd,l.indent+4); let c=0; while(isTruthy(evalExpr(expr))){ if(++c>200000) throw new Error('While loop limit exceeded'); try{ execBlock(lines,bStart,bIndent,bEnd); } catch(e){ if(e instanceof ContinueSignal) continue; if(e instanceof BreakSignal) break; throw e; } } i=bEnd; continue; }
+    if(text.startsWith('if ') && text.endsWith(':')){ const cond=text.slice(3,-1), bStart=i+1,bEnd=findBlockEnd(lines,bStart,l.indent); let next=bEnd, handled=false; if(isTruthy(evalExpr(cond))){ execBlock(lines,bStart,bodyIndentOf(lines,bStart,bEnd,l.indent+4),bEnd); handled=true; }
+      while(next<end && lines[next].indent===l.indent && (lines[next].text.startsWith('elif ') || lines[next].text==='else:')){ const ctl=lines[next].text, s=next+1, e=findBlockEnd(lines,s,l.indent); if(!handled){ if(ctl==='else:' || (ctl.startsWith('elif ') && ctl.endsWith(':') && isTruthy(evalExpr(ctl.slice(5,-1))))){ execBlock(lines,s,bodyIndentOf(lines,s,e,l.indent+4),e); handled=true; } } next=e; } i=next; continue; }
+    if(text.startsWith('elif ') || text==='else:'){ break; }
+    execStatement(text,l.idx); i++; }
+  return i; }
+function defineFunction(lines,i,l){
+  const m=l.text.match(/^def\s+([A-Za-z_]\w*)\s*\((.*)\)\s*:$/);
+  if(!m) throw new Error('Line '+l.idx+': unsupported def syntax');
+  const fname=m[1];
+  const params=splitTopLevelCommas(m[2]).map(s=>s.trim()).filter(s=>s).map(p=>{ const eq=splitTopLevelAssignment(p); if(eq) return {name:eq[0], def:evalExpr(eq[1]), hasDef:true}; if(!/^[A-Za-z_]\w*$/.test(p)) throw new Error('Line '+l.idx+': unsupported parameter '+p); return {name:p, hasDef:false}; });
+  const bStart=i+1, bEnd=findBlockEnd(lines,bStart,l.indent);
+  const bIndent=bodyIndentOf(lines,bStart,bEnd,l.indent+4);
+  const fn=function(...args){
+    const savedEnv=env;
+    env=Object.assign(Object.create(null), savedEnv);
+    try{
+      params.forEach((p,idx)=>{ const provided = idx<args.length && args[idx]!==undefined; if(provided) env[p.name]=args[idx]; else if(p.hasDef) env[p.name]=p.def; else throw new Error('Missing argument "'+p.name+'" in call to '+fname+'()'); });
+      execBlock(lines,bStart,bIndent,bEnd);
+      return null;
+    } catch(e){ if(e instanceof ReturnSignal) return e.value; throw e; }
+    finally{ env=savedEnv; }
+  };
+  fn.__pyParams=params; fn.__pyName=fname;
+  env[fname]=fn;
+  return bEnd;
+}
+function splitTopLevelCommas(s){ const parts=[]; let cur='',q=null,depth=0; for(let i=0;i<s.length;i++){ const c=s[i]; if(q){ cur+=c; if(c===q && s[i-1]!=='\\') q=null; } else if(c==='"'||c==="'"){q=c;cur+=c;} else if('([{'.includes(c)){depth++;cur+=c;} else if(')]}'.includes(c)){depth--;cur+=c;} else if(c===','&&depth===0){parts.push(cur);cur='';} else cur+=c; } if(cur.trim()!==''||parts.length) parts.push(cur); return parts.filter((p,ix,arr)=>!(ix===arr.length-1&&p.trim()==='')); }
+function splitTopLevelAssignment(text){ let q=null, depth=0; for(let i=0;i<text.length;i++){const c=text[i], n=text[i+1]; if(q){ if(c===q && text[i-1] !== '\\') q=null; } else if(c==='"'||c==="'") q=c; else if('([{'.includes(c)) depth++; else if(')]}'.includes(c)) depth--; else if(c==='=' && depth===0 && !['=','!','>','<','+','-','*','/'].includes(text[i-1]) && n!=='=') return [text.slice(0,i).trim(), text.slice(i+1).trim()]; } return null; }
+function findTopLevelAug(text){ let q=null, depth=0; for(let i=0;i<text.length;i++){ const c=text[i]; if(q){ if(c===q && text[i-1]!=='\\') q=null; continue; } if(c==='"'||c==="'"){q=c;continue;} if('([{'.includes(c)){depth++;continue;} if(')]}'.includes(c)){depth--;continue;} if(depth===0 && '+-*/'.includes(c) && text[i+1]==='=' && text[i+2]!=='=' && text[i-1]!=='*' && c+text[i+1]!=='**'){ if(c==='*'&&text[i+1]==='*') continue; return {left:text.slice(0,i).trim(), op:c, right:text.slice(i+2).trim()}; } } return null; }
+function execStatement(text,lineNo){
+  const aug=findTopLevelAug(text);
+  if(aug && aug.left){ const cur=evalAssignable(aug.left); assignTarget(aug.left, applyBinary(cur,aug.op,evalExpr(aug.right))); return; }
+  const asg=splitTopLevelAssignment(text);
+  if(asg){ const lparts=splitTopLevelCommas(asg[0]); let value;
+    if(lparts.length>1){ const rparts=splitTopLevelCommas(asg[1]); value = rparts.length>1 ? rparts.map(p=>evalExpr(p)) : evalExpr(asg[1]); }
+    else value = evalExpr(asg[1]);
+    assignTarget(asg[0], value); return; }
+  const v=evalExpr(text); env._=v; if(v!==undefined && v!==null) log(v);
+}
+function evalAssignable(left){ if(/^[A-Za-z_]\w*$/.test(left)){ if(!(left in env)) throw new Error('Unknown name '+left); return env[left]; } return evalExpr(left); }
+function assignTarget(left,value){
+  const parts=splitTopLevelCommas(left);
+  if(parts.length>1){ const vals=toArray(value); if(vals.length<parts.length) throw new Error('Not enough values to unpack (expected '+parts.length+', got '+vals.length+')'); parts.forEach((p,i)=>assignTarget(p.trim(),vals[i])); env._=value; return; }
+  const m=left.match(/^([A-Za-z_]\w*)\s*\[(.+)\]$/);
+  if(m){ const obj=env[m[1]]; if(obj===undefined) throw new Error('Unknown name '+m[1]); const key=evalExpr(m[2]);
+    if(obj instanceof DataFrame){ obj.setColumn(String(key),value); env._=obj; return; }
+    if(obj instanceof Series){ let i=Number(key); if(i<0)i+=obj.data.length; obj.data[i]=value; env._=obj; return; }
+    if(Array.isArray(obj)){ let i=Number(key); if(i<0)i+=obj.length; obj[i]=value; env._=obj; return; }
+    if(obj && typeof obj==='object'){ obj[key]=value; env._=obj; return; }
+    throw new Error('Cannot index-assign into this value'); }
+  if(/^[A-Za-z_]\w*$/.test(left)){ env[left]=value; env._=value; return; }
+  throw new Error('Unsupported assignment target '+left);
+}
+function sortedFn(x,key=null,reverse=false){ const a=toArray(x).slice(); a.sort((p,q)=>{ const kp=key?key(p):p, kq=key?key(q):q; const np_=Number(kp), nq=Number(kq); const numeric=typeof kp!=='string'&&typeof kq!=='string'&&Number.isFinite(np_)&&Number.isFinite(nq); return numeric?np_-nq:String(kp).localeCompare(String(kq)); }); if(isTruthy(reverse)) a.reverse(); return a; }
+Object.defineProperty(sortedFn,'name',{value:'sorted'});
+function initEnv(){ env=Object.create(null); env.df=new DataFrame(state.rows); env.pd=pd; env.np=np; env.plt=plt; env.plot=plot; env.stats=scipyStats; env.scipy={stats:scipyStats}; env.math=mathlib; env.text=textlib; env.random=randomlib; env.monte_carlo=monte_carlo; env.montecarlo=monte_carlo; env.summarize=summarize; env.lhs=lhs; env.lhs_normal=lhs_normal;
+  env.mean=stat.mean; env.median=stat.median; env.std=stat.std; env.sum=stat.sum;
+  env.min=(...a)=>a.length===1?stat.min(toArray(a[0])):Math.min(...a.map(Number));
+  env.max=(...a)=>a.length===1?stat.max(toArray(a[0])):Math.max(...a.map(Number));
+  env.len=pyLen; env.range=range; env.print=(...a)=>{log(...a);return null;};
+  env.str=v=>formatValue(v); env.int=v=>Math.trunc(Number(v)); env.float=v=>Number(v); env.bool=v=>isTruthy(v);
+  env.abs=np.abs; env.round=(x,n=0)=>np.round(x,n);
+  env.sorted=sortedFn; env.reversed=x=>toArray(x).slice().reverse();
+  env.enumerate=function enumerate(x,start=0){ return toIterable(x).map((v,i)=>[i+Number(start),v]); };
+  env.zip=(...arrs)=>{ const as=arrs.map(toIterable); const n=as.length?Math.min(...as.map(a=>a.length)):0; return Array.from({length:n},(_,i)=>as.map(a=>a[i])); };
+  env.any=x=>toIterable(x).some(isTruthy); env.all=x=>toIterable(x).every(isTruthy);
+  env.map=(f,x)=>toIterable(x).map(v=>f(v)); env.filter=(f,x)=>toIterable(x).filter(v=>isTruthy(f(v)));
+  env.list=x=>x==null?[]:toIterable(x); env.dict=x=>x||{}; env.tuple=x=>x==null?[]:toIterable(x); env.set=x=>unique(toIterable(x));
+  env.True=true; env.False=false; env.None=null; }
+function syncStateFromEnv(){ if(env.df instanceof DataFrame) state.rows = env.df.rows; recommendVisualization('processed'); }
+
+function profileData(rows=state.rows){
+  const cols=columns(rows);
+  const numeric=[], categorical=[], dateish=[], textish=[];
+  cols.forEach(c=>{
+    const vals=colValues(rows,c); if(!vals.length) return;
+    const numsCount=vals.filter(v=>Number.isFinite(Number(v)) && String(v).trim()!=='').length;
+    const uniq=unique(vals.map(v=>String(v))).length;
+    const dateCount=vals.filter(v=>{ const t=Date.parse(String(v)); return Number.isFinite(t) && /[-\/]|\d{4}/.test(String(v)); }).length;
+    const textCount=vals.filter(v=>String(v).length>24).length;
+    if(numsCount >= Math.max(3, vals.length*.65)) numeric.push(c);
+    else if(dateCount >= Math.max(3, vals.length*.55)) dateish.push(c);
+    else if(textCount >= Math.max(3, vals.length*.35)) textish.push(c);
+    else if(uniq <= Math.max(25, vals.length*.35)) categorical.push(c);
+    else textish.push(c);
+  });
+  return {rows:rows.length, cols, numeric, categorical, dateish, textish};
+}
+function colLit(c){ return JSON.stringify(c); }
+function buildGroupMeanScript(cat,num){ return 'summary = df.groupby('+colLit(cat)+').mean('+colLit(num)+')\nplt.bar(summary['+colLit(cat)+'].tolist(), summary["mean_'+num.replace(/"/g,'')+'"].tolist())\nplt.title("Recommended: average '+num.replace(/"/g,'\\"')+' by '+cat.replace(/"/g,'\\"')+'")'; }
+function buildValueCountScript(cat){ return 'counts = df['+colLit(cat)+'].value_counts()\nplt.bar(counts["value"].tolist(), counts["count"].tolist())\nplt.title("Recommended: count by '+cat.replace(/"/g,'\\"')+'")'; }
+function buildLineScript(x,y){ return 'plt.plot(df['+colLit(x)+'].tolist(), df['+colLit(y)+'].tolist())\nplt.title("Recommended: '+y.replace(/"/g,'\\"')+' over '+x.replace(/"/g,'\\"')+'")'; }
+function buildScatterScript(x,y){ return 'plt.scatter(df['+colLit(x)+'].tolist(), df['+colLit(y)+'].tolist())\nprint("Correlation:", np.corrcoef(df['+colLit(x)+'], df['+colLit(y)+']))\nplt.title("Recommended: '+x.replace(/"/g,'\\"')+' vs '+y.replace(/"/g,'\\"')+'")'; }
+function buildHistScript(num){ return 'plt.hist(df['+colLit(num)+'].tolist(), bins=14)\nplt.title("Recommended: distribution of '+num.replace(/"/g,'\\"')+'")'; }
+function chooseVisualization(rows=state.rows){
+  const p=profileData(rows), cols=p.cols;
+  const lower=Object.fromEntries(cols.map(c=>[c.toLowerCase(),c]));
+  const prob=cols.find(c=>/prob|likelihood|chance/i.test(c) && p.numeric.includes(c));
+  const impact=cols.find(c=>/impact|consequence|loss|cost|severity/i.test(c) && p.numeric.includes(c));
+  if(!rows.length) return {title:'No data loaded', chart:'none', score:0, why:'Upload CSV, TSV, JSON, TXT, or Markdown data to receive a recommendation.', script:'# Upload or load sample data first.'};
+  if(prob && impact) return {title:'Risk matrix', chart:'risk_matrix', score:96, why:'The data includes probability/likelihood and impact/consequence fields, which are best shown as likelihood × consequence risk points.', script:'plt.risk_matrix(df['+colLit(prob)+'].tolist(), df['+colLit(impact)+'].tolist())\nplt.title("Recommended: risk matrix")'};
+  if(p.dateish.length && p.numeric.length) return {title:'Time-series line chart', chart:'line', score:92, why:'A date/time column and numeric measure were detected; a line chart is usually the clearest first view for ordered trends.', script:buildLineScript(p.dateish[0], p.numeric[0])};
+  const idcol=p.numeric.find(c=>/^(id|index|day|month|year|time|period|seq|sequence)$/i.test(c));
+  if(idcol && p.numeric.length>1){ const y=p.numeric.find(c=>c!==idcol)||p.numeric[0]; return {title:'Ordered trend line', chart:'line', score:88, why:'A likely ordered/index column and another numeric measure were detected, so a trend line is a strong first diagnostic.', script:buildLineScript(idcol,y)}; }
+  if(p.categorical.length && p.numeric.length) return {title:'Category comparison bar chart', chart:'bar', score:86, why:'The data includes categorical groups and numeric measures; comparing group averages is a useful first summary.', script:buildGroupMeanScript(p.categorical[0],p.numeric[0])};
+  if(p.numeric.length>=3) return {title:'Correlation heatmap', chart:'corr_heatmap', score:84, why:'Three or more numeric columns were detected; a correlation heatmap quickly shows which variables move together.', script:'plt.corr_heatmap()\nplt.title("Recommended: correlation heatmap")'};
+  if(p.numeric.length>=2) return {title:'Scatter plot', chart:'scatter', score:82, why:'Two numeric columns were detected; a scatter plot is the best first view for relationship, outliers, and clustering.', script:buildScatterScript(p.numeric[0],p.numeric[1])};
+  if(p.categorical.length) return {title:'Value-count bar chart', chart:'bar', score:78, why:'A categorical field was detected; a count-by-category bar chart shows the basic distribution.', script:buildValueCountScript(p.categorical[0])};
+  if(p.numeric.length===1) return {title:'Histogram', chart:'histogram', score:76, why:'One numeric column was detected; a histogram shows spread, skew, and possible outliers.', script:buildHistScript(p.numeric[0])};
+  if(p.textish.length) return {title:'Text length histogram', chart:'histogram', score:70, why:'The data appears text-heavy; line length is a useful quick diagnostic before deeper text analysis.', script:'lengths = [len(x) for x in df['+colLit(p.textish[0])+'].tolist()]\nplt.hist(lengths, bins=12)\nplt.title("Recommended: text length distribution")'};
+  return {title:'Data preview', chart:'table', score:50, why:'No strong chart pattern was detected. Review the data preview, then choose a chart manually.', script:'print(df.head(20))'};
+}
+function renderRecommendation(rec){
+  state.recommendation=rec;
+  const text=$('vizRecommendationText'), why=$('vizRecommendationWhy'), code=$('vizRecommendationCode'), bar=$('vizScoreBar');
+  if(!text||!why||!code||!bar) return;
+  text.innerHTML='<b>'+escapeHtml(rec.title)+'</b> <span class="badge good">'+escapeHtml(String(rec.chart))+'</span>';
+  why.textContent=rec.why||''; code.textContent=rec.script||''; bar.style.width=Math.max(0,Math.min(100,rec.score||0))+'%';
+}
+function recommendVisualization(reason='loaded'){ const rec=chooseVisualization(state.rows); renderRecommendation(rec); return rec; }
+function drawRecommendedChart(){ const rec=state.recommendation||recommendVisualization('manual'); if(!rec||!rec.script||rec.chart==='none'){ log('No recommended chart available.'); return; } runScript(rec.script); }
+function rememberChart(type,meta={}){ state.chartData=Object.assign({type:type||'chart', caption:$('chartCaption')?$('chartCaption').textContent:'', filename:state.filename||'', generated_at:new Date().toISOString(), recommendation:state.recommendation}, meta||{}); return state.chartData; }
+
+function loadRows(rows,filename,text){ state.rows=rows||[]; state.filename=filename||''; state.text=text||''; initEnv(); updateStatus(); renderPreview(); recommendVisualization('loaded'); }
+function updateStatus(){ const df=new DataFrame(state.rows); $('dataStatus').innerHTML = state.filename ? '<b>'+escapeHtml(state.filename)+'</b><br>'+df.shape()[0]+' rows × '+df.shape()[1]+' columns' : 'No file loaded.'; }
+function renderPreview(){ const table=$('preview'),thead=table.querySelector('thead'),tbody=table.querySelector('tbody'); thead.innerHTML=''; tbody.innerHTML=''; const rows=state.rows.slice(0,100), cols=columns(state.rows).slice(0,60); if(!cols.length){tbody.innerHTML='<tr><td>No tabular data.</td></tr>'; updateStatus(); return;} thead.innerHTML='<tr>'+cols.map(c=>'<th>'+escapeHtml(c)+'</th>').join('')+'</tr>'; tbody.innerHTML=rows.map(r=>'<tr>'+cols.map(c=>'<td>'+escapeHtml(r[c]??'')+'</td>').join('')+'</tr>').join(''); updateStatus(); }
+function loadSample(){ const cats=['Aviation','Surface','Cyber','Cargo','Transit']; const regions=['East','West','South','Central']; const rows=[]; for(let i=1;i<=180;i++){ const prob=Math.max(0,Math.min(1,stat.randomNormal(.22,.09))); const impact=stat.randomUniform(10,130); rows.push({ID:i,Category:cats[i%cats.length],Region:regions[i%regions.length],Value:round(50+stat.randomNormal(0,14)+i*.12,2),Probability:round(prob,3),Impact:round(impact,2),Score:round(prob*impact,3)}); } loadRows(rows,'embedded_sample.csv',toCSV(rows)); log('Loaded embedded sample dataset.'); }
+$('fileInput').addEventListener('change',async e=>{ const file=e.target.files[0]; if(!file)return; const text=await file.text(); try{ let rows=[]; const lower=file.name.toLowerCase(); if(lower.endsWith('.json')){ const obj=JSON.parse(text); rows=Array.isArray(obj)?obj:(Array.isArray(obj.rows)?obj.rows:[obj]); } else if(lower.endsWith('.txt')||lower.endsWith('.md')) rows=text.split(/\r?\n/).map((line,i)=>({line_number:i+1,line})); else rows=parseDelimited(text); loadRows(rows,file.name,text); log('Loaded',file.name,'('+rows.length+' rows)'); } catch(err){ error('File load failed: '+err.message); } });
+$('loadSample').onclick=loadSample; $('clearData').onclick=()=>loadRows([],'',''); $('runBtn').onclick=()=>runScript($('script').value); $('clearOut').onclick=()=>{out.textContent='';state.logs=[];}; $('copyOut').onclick=async()=>{try{await navigator.clipboard.writeText(out.textContent);log('Output copied.');}catch(e){error('Clipboard unavailable.');}};
+const examples={
+pybasic:'import pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\n\nprint("shape", df.shape)\nprint("columns", df.columns)\nprint(df.head(8))',
+funcs:'def fib(n):\n    if n < 2:\n        return n\n    return fib(n-1) + fib(n-2)\n\nprint("fibonacci:", [fib(i) for i in range(10)])\n\ndef risk(prob, impact=100):\n    return prob * impact\n\nprint("keyword args:", risk(0.3, impact=80))\n\ntotal = 0\nfor i in range(20):\n    if i == 5:\n        continue\n    if i > 8:\n        break\n    total += i\nprint("loop with break/continue:", total)',
+compr:'squares = [x**2 for x in range(10)]\nevens = [x for x in squares if x % 2 == 0]\nlookup = {c: len(c) for c in df.columns}\npairs = [[i, v] for i, v in enumerate(["a", "b", "c"])]\nprint(squares)\nprint(evens)\nprint(lookup)\nprint(pairs)\nlabel = "high" if np.mean(df["Score"]) > 10 else "low"\nprint("ternary result:", label)',
+fstr:'mean_risk = np.mean(df["Probability"] * df["Impact"])\nprint(f"Mean risk: {mean_risk:.3f}")\nprint(f"Padded width 12: {mean_risk:12.1f}|")\nprint(f"Thousands: {1234567.891:,.2f}")\nname = "workbench"\nprint(f"upper: {name.upper()} | chars: {len(name)}")\nshare = 0.3517\nprint(f"percent: {share:.1%}")',
+strings:'s = "Transportation Security"\nprint(s.upper(), "|", s.lower())\nprint(s.split(" "))\nprint("-".join(["a", "b", "c"]))\nitems = [3, 1, 2]\nitems.append(5)\nitems.sort()\nprint(items, "| max:", max(items))\nd = {"a": 1, "b": 2}\nfor k, v in d.items():\n    print(k, "->", v)\nprint("b" in d, "|", "c" not in d)\nprint("slice:", s[0:14], "| negative:", s[-8:])',
+dfcalc:'df["Risk"] = df["Probability"] * df["Impact"]\nprint(df[["ID", "Category", "Probability", "Impact", "Risk"]].head(10))\nprint(df["Risk"].describe())',
+filter:'df["Risk"] = df["Probability"] * df["Impact"]\nhigh = df[df["Risk"] > 15]\nprint(high.sort_values("Risk", ascending=False).head(20))',
+loopif:'total = 0\nfor i in range(1, 6):\n    total += i\n    if i > 3:\n        print("large", i)\n    else:\n        print("small", i)\nprint("total", total)',
+group:'df["Risk"] = df["Probability"] * df["Impact"]\nprint(df.groupby("Category").count())\nprint(df.groupby("Category").mean("Risk"))\nprint(df.groupby("Region").describe("Score"))',
+numpy:'arr = np.linspace(0, 10, 6)\nprint("arr", arr)\nprint("mean", np.mean(arr))\nprint("cumsum", np.cumsum(arr))\nprint("clip", np.clip(arr, 2, 8))\nprint("where", np.where(df["Score"] > 10, "high", "low")[0:8])\nprint("argmax of Score:", np.argmax(df["Score"]))\nprint("random normal sample", np.random.normal(100, 15, 5))\nprint("dot", np.dot([1,2,3], [4,5,6]))',
+scipy:'from scipy import stats\nprint("normal cdf", stats.norm.cdf(1.96))\nprint("normal inverse", stats.norm.ppf(0.975))\nprint("correlation", np.corrcoef(df["Impact"], df["Score"]))\nprint("t-test", stats.ttest_ind(df["Impact"], df["Value"]))',
+dist:'from scipy import stats\nprint("t cdf (x=2, df=10):", stats.t.cdf(2.0, 10))\nprint("t ppf (p=0.975, df=10):", stats.t.ppf(0.975, 10))\nprint("binomial P(k<=3 | n=10, p=0.2):", stats.binom.cdf(3, 10, 0.2))\nprint("poisson pmf (k=2, mu=1.5):", stats.poisson.pmf(2, 1.5))\nprint("lognormal cdf (x=1.5, s=0.5):", stats.lognorm.cdf(1.5, 0.5))\nprint("linear regression:", stats.linregress(df["Impact"], df["Score"]))\nprint("mann-whitney U:", stats.mannwhitneyu(df["Impact"], df["Value"]))\nprint("percentile of score 15:", stats.percentileofscore(df["Score"], 15))',
+monte:'result = monte_carlo(20000, 100, 15)\nprint(result)',
+mc2:'import random\nrandom.seed(7)\n\ndef trial(i):\n    prob = max(0, random.gauss(0.22, 0.09))\n    impact = random.uniform(10, 130)\n    return prob * impact\n\nprint("Custom Monte Carlo (20k trials):")\nprint(monte_carlo(trial, 20000))\n\ndraws = lhs_normal(1000, 100, 15)\nprint("Latin Hypercube normal sample (n=1000):")\nprint(summarize(draws))',
+plots:'df["Risk"] = df["Probability"] * df["Impact"]\nplt.hist(df["Risk"], bins=12)\nplt.show()\n# Try instead:\n# plt.scatter(df["Impact"], df["Risk"])\n# plt.plot(df["ID"], df["Value"])\n# plt.bar(df["Category"].unique(), df.groupby("Category").mean("Score")["mean_Score"] )',
+vizstats:'df["Risk"] = df["Probability"] * df["Impact"]\nplt.boxplot([df["Risk"].tolist(), df["Impact"].tolist()], ["Risk", "Impact"])\n# Other statistical charts:\n# plt.density(df["Risk"])\n# plt.qqplot(df["Risk"])\n# plt.corr_heatmap()\n# plt.residual_plot(df["Impact"], df["Risk"])',
+vizrisk:'draws = lhs_normal(2000, 100, 15)\nplt.convergence(draws)\n# Other risk charts:\n# plt.exceedance(draws)\n# plt.risk_matrix(df["Probability"], df["Impact"])\n# plt.tornado(["Threat","Vulnerability","Consequence"], [0.18,0.31,0.51])\n# plt.control_chart(df["Score"])',
+vizml:'plt.confusion_matrix([[42, 8], [5, 31]], ["No", "Yes"])\n# Other ML/network diagnostics:\n# plt.roc_curve([0, .1, .2, .4, 1], [0, .55, .72, .88, 1])\n# plt.feature_importance(["A","B","C"], [.2,.5,.3])\n# plt.network(["A","B","C","D"], [["A","B"],["A","C"],["C","D"]])',
+vizdomain:'plt.event_tree(["Start","Detect","Delay","Respond","Recover"], [["Start","Detect"],["Detect","Delay"],["Delay","Respond"],["Respond","Recover"]])\n# Domain charts:\n# plt.gauge(72, 0, 100, "Readiness gauge")\n# plt.performance_envelope(df["Impact"], df["Score"])\n# plt.efficient_frontier([.1,.2,.3], [.05,.11,.14])\n# plt.risk_landscape([[1,2,3],[2,4,6],[3,6,9]])',
+text:'print(text.profile())\nprint(text.lines().head(20))'
+};
+$('insertExample').onclick=()=>{const v=$('examples').value;if(examples[v])$('script').value=examples[v];}; $('appendExample').onclick=()=>{const v=$('examples').value;if(examples[v])$('script').value+='\n\n'+examples[v];};
+$('insertRecommended').onclick=()=>{ const rec=state.recommendation||recommendVisualization('manual'); if(rec&&rec.script)$('script').value=rec.script; };
+$('drawRecommended').onclick=()=>drawRecommendedChart();
+$('copyRecommended').onclick=async()=>{ const rec=state.recommendation||recommendVisualization('manual'); try{ await navigator.clipboard.writeText((rec&&rec.script)||''); log('Recommended visualization script copied.'); }catch(e){ error('Clipboard unavailable.'); } };
+function chartBaseName(){ return sanitizeFilename((state.filename||'secure_python_workbench_chart').replace(/\.[^.]+$/,'')); }
+function chartPngData(){ try{return chart.toDataURL('image/png');}catch(e){return '';} }
+function chartExportPayload(){ rememberChart((state.chartData&&state.chartData.type)||'chart'); return {caption:$('chartCaption').textContent||'', filename:state.filename||'', rows:state.rows.length, columns:columns(state.rows), recommendation:state.recommendation, chartData:state.chartData, output:out.textContent||'', script:state.lastScript||$('script').value||'', image_png_data_uri:chartPngData()}; }
+function exportChartPng(){ const a=document.createElement('a'); a.download=chartBaseName()+'_chart.png'; a.href=chartPngData(); a.click(); }
+function exportChartSvg(){ const png=chartPngData(); const cap=escapeHtml($('chartCaption').textContent||'Chart'); const svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+chart.width+'" height="'+(chart.height+42)+'" viewBox="0 0 '+chart.width+' '+(chart.height+42)+'"><rect width="100%" height="100%" fill="#07111f"/><image href="'+png+'" x="0" y="0" width="'+chart.width+'" height="'+chart.height+'"/><text x="18" y="'+(chart.height+28)+'" fill="#aebbd2" font-family="Arial, sans-serif" font-size="16">'+cap+'</text></svg>'; download(chartBaseName()+'_chart.svg','image/svg+xml',svg); }
+function exportChartHtml(){ const p=chartExportPayload(); const html='<!doctype html><html><head><meta charset="utf-8"><title>'+escapeHtml(p.caption||'Workbench Chart')+'</title><style>body{font-family:system-ui,Arial,sans-serif;background:#07111f;color:#eef5ff;margin:24px}img{max-width:100%;border:1px solid #354c75;border-radius:12px}pre{white-space:pre-wrap;background:#0b1528;border:1px solid #354c75;border-radius:10px;padding:12px}</style></head><body><h1>'+escapeHtml(p.caption||'Workbench Chart')+'</h1><p>Source: '+escapeHtml(p.filename||'workbench')+' | Rows: '+p.rows+'</p><img alt="Chart" src="'+p.image_png_data_uri+'"><h2>Recommendation</h2><pre>'+escapeHtml(JSON.stringify(p.recommendation,null,2))+'</pre><h2>Script</h2><pre>'+escapeHtml(p.script)+'</pre><h2>Output</h2><pre>'+escapeHtml(p.output)+'</pre></body></html>'; download(chartBaseName()+'_chart.html','text/html',html); }
+function exportChartJson(){ download(chartBaseName()+'_chart.json','application/json',JSON.stringify(chartExportPayload(),null,2)); }
+function exportChartMd(){ const p=chartExportPayload(); const md='# '+(p.caption||'Workbench Chart')+'\n\nSource: '+(p.filename||'workbench')+'  \nRows: '+p.rows+'\n\n![Chart]('+p.image_png_data_uri+')\n\n## Recommendation\n\n```json\n'+JSON.stringify(p.recommendation,null,2)+'\n```\n\n## Script\n\n```python\n'+p.script+'\n```\n\n## Output\n\n```text\n'+p.output+'\n```\n'; download(chartBaseName()+'_chart.md','text/markdown',md); }
+
+const SESSION_SCHEMA='secure_python_workbench_session_v1';
+const SESSION_STORAGE_KEY='secure_python_workbench_v4_2_session';
+function sessionBaseName(){ return sanitizeFilename((state.filename||'secure_python_workbench').replace(/\.[^.]+$/,'')); }
+function sessionPayload(){
+  const scriptEl=$('script'), examplesEl=$('examples');
+  const chartPayload=chartExportPayload();
+  return {
+    schema:SESSION_SCHEMA,
+    app:'Secure Offline Python-Compatible Workbench',
+    version:'4.2',
+    saved_at:new Date().toISOString(),
+    source_filename:state.filename||'',
+    data:{rows:state.rows||[], text:state.text||'', filename:state.filename||''},
+    script:scriptEl?scriptEl.value:'',
+    output:out?out.textContent:'',
+    logs:state.logs||[],
+    recommendation:state.recommendation||null,
+    chart:{caption:$('chartCaption')?$('chartCaption').textContent:'', data:state.chartData||null, image_png_data_uri:chartPayload.image_png_data_uri||''},
+    ui:{selected_example:examplesEl?examplesEl.value:'', chart_caption:$('chartCaption')?$('chartCaption').textContent:''},
+    last_result:state.lastResult||null
+  };
+}
+function updateSessionStatus(msg){ const el=$('sessionStatus'); if(el) el.textContent=msg; }
+function exportSessionJson(){ const payload=sessionPayload(); state.savedAt=payload.saved_at; download(sessionBaseName()+'_workbench_session.json','application/json',JSON.stringify(payload,null,2)); updateSessionStatus('Exported session JSON at '+payload.saved_at+'.'); log('Session JSON exported.'); }
+function saveSessionToBrowser(){ try{ const payload=sessionPayload(); localStorage.setItem(SESSION_STORAGE_KEY,JSON.stringify(payload)); state.savedAt=payload.saved_at; updateSessionStatus('Saved session in this browser at '+payload.saved_at+'.'); log('Session saved in browser local storage.'); }catch(e){ error('Browser session save failed: '+(e.message||e)); } }
+function clearBrowserSession(){ try{ localStorage.removeItem(SESSION_STORAGE_KEY); updateSessionStatus('Browser saved session cleared.'); log('Browser saved session cleared.'); }catch(e){ error('Could not clear browser save: '+(e.message||e)); } }
+function restoreChartImage(dataUri,caption){
+  if(!dataUri){ if(caption) setCaption(caption); return; }
+  try{
+    const img=new Image();
+    img.onload=function(){ clearChart(); ctx.drawImage(img,0,0,chart.width,chart.height); if(caption) setCaption(caption); rememberChart((state.chartData&&state.chartData.type)||'restored_chart',{restored:true}); };
+    img.onerror=function(){ if(caption) setCaption(caption); };
+    img.src=dataUri;
+  }catch(e){ if(caption) setCaption(caption); }
+}
+function applySessionPayload(payload,source='session JSON'){
+  if(!payload || typeof payload!=='object') throw new Error('Session file is not valid JSON.');
+  const isSession = payload.schema===SESSION_SCHEMA || payload.app==='Secure Offline Python-Compatible Workbench' || payload.data || payload.script;
+  if(!isSession) throw new Error('This JSON does not look like a workbench session export.');
+  const data=payload.data||{};
+  state.rows=Array.isArray(data.rows)?data.rows:(Array.isArray(payload.rows)?payload.rows:[]);
+  state.text=data.text||payload.text||'';
+  state.filename=data.filename||payload.source_filename||payload.filename||'restored_session';
+  state.logs=Array.isArray(payload.logs)?payload.logs:[];
+  state.lastResult=payload.last_result||payload.lastResult||null;
+  state.recommendation=payload.recommendation||null;
+  state.chartData=(payload.chart&&payload.chart.data)||payload.chartData||null;
+  state.lastScript=payload.script||state.lastScript||'';
+  state.restoredFrom=source;
+  state.savedAt=payload.saved_at||'';
+  if($('script')) $('script').value=payload.script||'';
+  if(out) out.textContent=payload.output||state.logs.join('\n')||'';
+  if($('examples') && payload.ui && payload.ui.selected_example!=null) $('examples').value=payload.ui.selected_example;
+  initEnv(); renderPreview();
+  if(state.recommendation) renderRecommendation(state.recommendation); else recommendVisualization('restored');
+  const caption=(payload.chart&&payload.chart.caption)||(payload.ui&&payload.ui.chart_caption)||'';
+  const image=(payload.chart&&payload.chart.image_png_data_uri)||payload.image_png_data_uri||'';
+  restoreChartImage(image,caption);
+  updateSessionStatus('Restored '+source+(payload.saved_at?' saved at '+payload.saved_at:'')+'. Rows: '+state.rows.length+'.');
+  log('Session restored from '+source+'.');
+}
+async function importSessionFile(file){ const text=await file.text(); const payload=JSON.parse(text); applySessionPayload(payload,file.name||'session JSON'); }
+function restoreSessionFromBrowser(){ try{ const raw=localStorage.getItem(SESSION_STORAGE_KEY); if(!raw){ updateSessionStatus('No browser saved session found.'); log('No browser saved session found.'); return; } applySessionPayload(JSON.parse(raw),'browser local storage'); }catch(e){ error('Browser session restore failed: '+(e.message||e)); } }
+
+document.querySelectorAll('[data-export]').forEach(b=>b.addEventListener('click',()=>{ const fmt=b.dataset.export, base=sanitizeFilename((state.filename||'secure_python_workbench').replace(/\.[^.]+$/,'')); if(fmt==='txt')download(base+'.txt','text/plain',out.textContent); if(fmt==='md')download(base+'.md','text/markdown','# Secure Python Workbench Output\n\n```text\n'+out.textContent+'\n```\n'); if(fmt==='html')download(base+'.html','text/html','<!doctype html><meta charset="utf-8"><title>Output</title><pre>'+escapeHtml(out.textContent)+'</pre>'); if(fmt==='csv')download(base+'.csv','text/csv',new DataFrame(state.rows).to_csv()); if(fmt==='json')download(base+'.json','application/json',JSON.stringify(state.rows,null,2)); }));
+$('exportChart').onclick=exportChartPng; $('exportChartSvg').onclick=exportChartSvg; $('exportChartHtml').onclick=exportChartHtml; $('exportChartJson').onclick=exportChartJson; $('exportChartMd').onclick=exportChartMd;
+$('exportSessionJson').onclick=exportSessionJson; $('importSessionJson').onclick=()=>$('sessionFileInput').click(); $('sessionFileInput').addEventListener('change',async e=>{ const file=e.target.files[0]; if(!file)return; try{ await importSessionFile(file); e.target.value=''; }catch(err){ error('Session import failed: '+(err.message||err)); } });
+$('saveBrowserSession').onclick=saveSessionToBrowser; $('restoreBrowserSession').onclick=restoreSessionFromBrowser; $('clearBrowserSession').onclick=clearBrowserSession;
+if(typeof window!=='undefined'){ window.__wb={runScript, getLogs:()=>state.logs.slice(), getEnv:()=>env, loadRows, getRows:()=>state.rows, recommendVisualization, drawRecommendedChart, exportChartJson, exportSessionJson, saveSessionToBrowser, restoreSessionFromBrowser, sessionPayload, applySessionPayload}; }
+loadSample(); initEnv();
+})();
+</script>
+</body>
+</html>

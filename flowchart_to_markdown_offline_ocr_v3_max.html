@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Offline Flowchart to Markdown Converter</title>
+<style>
+  :root{
+    --bg:#0f172a;--panel:#111827;--panel2:#1f2937;--muted:#94a3b8;--text:#e5e7eb;--accent:#38bdf8;--accent2:#22c55e;--warn:#f59e0b;--danger:#ef4444;--border:#334155;--input:#020617;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(135deg,#0f172a 0%,#111827 55%,#020617 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45}
+  header{padding:24px 18px 14px;border-bottom:1px solid var(--border);background:rgba(2,6,23,.55);position:sticky;top:0;z-index:5;backdrop-filter: blur(8px)}
+  h1{font-size:1.45rem;margin:0 0 6px}.sub{color:var(--muted);font-size:.95rem;max-width:1100px}.wrap{max-width:1240px;margin:0 auto;padding:18px}
+  .grid{display:grid;grid-template-columns:1fr;gap:16px}@media(min-width:980px){.grid{grid-template-columns:380px 1fr}}
+  .card{background:rgba(15,23,42,.88);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.25);overflow:hidden}.card h2{font-size:1rem;margin:0;padding:14px 16px;background:rgba(30,41,59,.72);border-bottom:1px solid var(--border)}.card .body{padding:14px 16px}
+  .drop{border:2px dashed #475569;border-radius:14px;padding:22px;text-align:center;background:rgba(2,6,23,.35);cursor:pointer;transition:.15s}.drop:hover,.drop.drag{border-color:var(--accent);background:rgba(14,165,233,.10)}.drop strong{display:block;font-size:1.05rem}.drop span{color:var(--muted);font-size:.9rem}
+  input[type=file]{display:none}textarea,input,select{width:100%;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px;font:inherit}textarea{min-height:170px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9rem}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.row>*{flex:1}.row.compact>*{flex:0 0 auto}
+  button{border:1px solid #475569;background:#1e293b;color:var(--text);border-radius:10px;padding:10px 12px;font:inherit;cursor:pointer;transition:.15s}button:hover{border-color:var(--accent);transform:translateY(-1px)}button.primary{background:linear-gradient(135deg,#0284c7,#0891b2);border-color:#38bdf8}button.good{background:linear-gradient(135deg,#15803d,#16a34a);border-color:#22c55e}button.warn{background:linear-gradient(135deg,#b45309,#d97706);border-color:#f59e0b}button.danger{background:#7f1d1d;border-color:#ef4444}button.small{padding:6px 8px;font-size:.83rem;border-radius:8px}button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+  .pill{display:inline-flex;gap:6px;align-items:center;padding:5px 9px;border:1px solid var(--border);border-radius:999px;background:#020617;color:var(--muted);font-size:.82rem;margin:3px 4px 3px 0}.status{font-size:.9rem;color:var(--muted);margin-top:10px}.status b{color:var(--text)}.warnText{color:#fbbf24}.okText{color:#86efac}.badText{color:#fca5a5}
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);padding:8px;background:#020617}.tab{padding:9px 10px;border-radius:10px;color:var(--muted);cursor:pointer}.tab.active{background:#1e293b;color:var(--text);border:1px solid var(--border)}.panel{display:none}.panel.active{display:block}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{border-bottom:1px solid var(--border);padding:8px;vertical-align:top}th{text-align:left;color:#cbd5e1;background:rgba(30,41,59,.6);position:sticky;top:0}td input,td select{padding:7px;border-radius:8px}.tableWrap{max-height:330px;overflow:auto;border:1px solid var(--border);border-radius:12px}.two{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:900px){.two{grid-template-columns:1fr 1fr}}
+  pre{background:#020617;color:#e5e7eb;border:1px solid var(--border);border-radius:12px;padding:14px;overflow:auto;white-space:pre-wrap;word-break:break-word;max-height:540px}.help{font-size:.88rem;color:var(--muted)}.help code{color:#bae6fd;background:#0f172a;padding:1px 4px;border-radius:4px}.divider{height:1px;background:var(--border);margin:12px 0}
+  #canvasBox{position:relative;border:1px solid var(--border);border-radius:14px;overflow:auto;background:#111827;min-height:360px;max-height:650px}.canvasStage{position:relative;display:inline-block;min-width:100%;min-height:360px}#flowCanvas{display:block;background:#fff;touch-action:none}.nodeOverlay{position:absolute;border:2px solid #38bdf8;background:rgba(14,165,233,.16);color:#020617;font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;pointer-events:auto;cursor:pointer;overflow:hidden}.nodeOverlay.decision{transform:rotate(45deg)}.nodeOverlay.decision span{transform:rotate(-45deg);display:block}.nodeOverlay.selected{border-color:#22c55e;background:rgba(34,197,94,.22)}.edgeSvg{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}.resizeHint{position:absolute;border:1px dashed #f59e0b;background:rgba(245,158,11,.15);pointer-events:none;display:none}.badge{display:inline-block;min-width:20px;text-align:center;padding:2px 6px;border-radius:999px;background:#334155;color:#e2e8f0;font-size:.75rem}.footerNote{color:var(--muted);font-size:.82rem;margin-top:8px}
+  .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#020617;border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.35);display:none;z-index:20}.kbd{border:1px solid var(--border);background:#020617;border-radius:6px;padding:1px 5px;color:#cbd5e1;font-size:.8rem}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding:0">
+    <h1>Offline Flowchart → Markdown Converter</h1>
+    <div class="sub">Single-file, no external dependencies. Converts diagrams.net/draw.io XML, SVG flowcharts, Mermaid/text flowcharts, and raster images into Markdown and Mermaid. Includes maximum-practical offline OCR assist for flowchart labels.</div>
+  </div>
+</header>
+<div class="wrap">
+  <div class="grid">
+    <section class="card">
+      <h2>1. Import flowchart</h2>
+      <div class="body">
+        <label class="drop" id="drop">
+          <input id="fileInput" type="file" accept=".drawio,.xml,.svg,.mmd,.mermaid,.txt,.html,.png,.jpg,.jpeg,.webp" />
+          <strong>Drop file here or tap to choose</strong>
+          <span>.drawio, .xml, .svg, .mmd, .txt, .png, .jpg, .webp</span>
+        </label>
+        <div class="status" id="fileStatus">No file loaded.</div>
+        <div class="divider"></div>
+        <label class="help">Or paste SVG, diagrams.net XML, Mermaid, or edge list text:</label>
+        <textarea id="pasteBox" placeholder="Examples:&#10;&lt;mxfile&gt;...&lt;/mxfile&gt;&#10;&lt;svg&gt;...&lt;/svg&gt;&#10;flowchart TD&#10;A[Start] --&gt; B{Decision}&#10;B -- Yes --&gt; C[Action]"></textarea>
+        <div class="row compact" style="margin-top:10px">
+          <button class="primary" id="parsePasteBtn">Parse pasted text</button>
+          <button id="clearBtn">Clear</button>
+        </div>
+        <div class="divider"></div>
+        <div class="help">
+          <p><b>Best inputs:</b> uncompressed draw.io XML, SVG exported from Visio/PowerPoint/draw.io, or Mermaid.</p>
+          <p><b>Raster images:</b> use <b>OCR selected</b> or <b>OCR all nodes</b> after drawing/auto-detecting node boxes. This file includes a maximum-practical multi-pass offline OCR engine and can also use browser-native OCR when available.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="tabs">
+        <div class="tab active" data-tab="review">Review extraction</div>
+        <div class="tab" data-tab="image">Image markup</div>
+        <div class="tab" data-tab="output">Markdown output</div>
+        <div class="tab" data-tab="settings">Settings</div>
+      </div>
+      <div class="body panel active" id="reviewPanel">
+        <div class="row compact" style="margin-bottom:10px">
+          <span class="pill">Nodes: <b id="nodeCount">0</b></span>
+          <span class="pill">Edges: <b id="edgeCount">0</b></span>
+          <span class="pill">Source: <b id="sourceType">none</b></span>
+          <button class="small good" id="addNodeBtn">Add node</button>
+          <button class="small good" id="addEdgeBtn">Add edge</button>
+          <button class="small" id="renumberBtn">Renumber</button>
+        </div>
+        <div class="two">
+          <div>
+            <h3 style="margin:.2rem 0 .5rem">Nodes</h3>
+            <div class="tableWrap"><table id="nodesTable"><thead><tr><th>ID</th><th>Label</th><th>Type</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+          <div>
+            <h3 style="margin:.2rem 0 .5rem">Connections</h3>
+            <div class="tableWrap"><table id="edgesTable"><thead><tr><th>From</th><th>To</th><th>Label</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+        <div class="footerNote">Edit labels and connections here before exporting. Decision nodes become diamond nodes in Mermaid.</div>
+      </div>
+
+      <div class="body panel" id="imagePanel">
+        <div class="row compact" style="margin-bottom:10px">
+          <button class="primary small" id="imgAddNodeBtn">Draw node</button>
+          <button class="small" id="imgConnectBtn">Connect nodes</button>
+          <button class="small" id="imgSelectBtn">Select/edit</button>
+          <button class="small warn" id="autoDetectBtn">Try auto-detect boxes</button>
+          <button class="small" id="ocrSelectedBtn">OCR selected</button>
+          <button class="small" id="ocrAllBtn">OCR all nodes</button>
+          <button class="small" id="ocrWholeBtn">OCR whole image</button>
+          <button class="small danger" id="deleteSelectedBtn">Delete selected</button>
+        </div>
+        <div class="help" style="margin-bottom:10px">
+          For PNG/JPG/WebP, use <b>Try auto-detect boxes</b> or <b>Draw node</b>, then run <b>OCR selected</b> or <b>OCR all nodes</b>. OCR is fully local: it first tries browser-native OCR if available, then falls back to a maximum-practical embedded OCR engine with border/arrow cleanup, multi-scale preprocessing, small-angle deskew, Sauvola/Bradley thresholding, consensus voting, and flowchart-word correction. Review labels after extraction.
+        </div>
+        <div id="canvasBox"><div class="canvasStage" id="canvasStage"><canvas id="flowCanvas" width="1000" height="600"></canvas><svg class="edgeSvg" id="edgeSvg"></svg><div class="resizeHint" id="resizeHint"></div></div></div>
+        <div class="status" id="ocrStatus">OCR status: idle.</div>
+        <div class="footerNote">Tip: OCR works best on high-contrast printed labels in horizontal text. Draw the node box tightly around the label, not the arrow.</div>
+      </div>
+
+      <div class="body panel" id="outputPanel">
+        <div class="row compact" style="margin-bottom:10px">
+          <button class="primary" id="generateBtn">Regenerate Markdown</button>
+          <button class="good" id="copyBtn">Copy</button>
+          <button id="downloadMdBtn">Download .md</button>
+          <button id="downloadJsonBtn">Download .json</button>
+        </div>
+        <pre id="markdownOut">No output yet.</pre>
+      </div>
+
+      <div class="body panel" id="settingsPanel">
+        <div class="two">
+          <label>Markdown style
+            <select id="mdStyle">
+              <option value="narrative">Narrative sections</option>
+              <option value="compact">Compact list</option>
+              <option value="table">Tables only</option>
+            </select>
+          </label>
+          <label>Mermaid direction
+            <select id="mermaidDir">
+              <option value="TD">Top-down</option>
+              <option value="LR">Left-right</option>
+              <option value="BT">Bottom-up</option>
+              <option value="RL">Right-left</option>
+            </select>
+          </label>
+        </div>
+        <div class="divider"></div>
+        <label class="pill"><input type="checkbox" id="includeMermaid" checked style="width:auto"> Include Mermaid diagram</label>
+        <label class="pill"><input type="checkbox" id="includeFrontMatter" style="width:auto"> Include YAML front matter</label>
+        <label class="pill"><input type="checkbox" id="includeWarnings" checked style="width:auto"> Include conversion notes</label>
+        <label class="pill"><input type="checkbox" id="useBullets" checked style="width:auto"> Include step bullets</label>
+        <div class="divider"></div>
+        <div class="help">
+          <b>Offline OCR limits:</b> this file contains a maximum-practical lightweight OCR engine for common flowchart labels. It works best with clean screenshots, dark text on light backgrounds, and printed fonts. It is not as accurate as cloud OCR or Tesseract-trained models, so always review extracted labels.
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+'use strict';
+
+const state = {
+  nodes: [],
+  edges: [],
+  sourceType: 'none',
+  warnings: [],
+  image: null,
+  imageScale: 1,
+  imageMode: 'select',
+  selectedNodeId: null,
+  connectFrom: null,
+  drag: null,
+  ocrLog: []
+};
+
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+const els = {
+  drop: $('#drop'), fileInput: $('#fileInput'), fileStatus: $('#fileStatus'), pasteBox: $('#pasteBox'), parsePasteBtn: $('#parsePasteBtn'), clearBtn: $('#clearBtn'),
+  nodesTable: $('#nodesTable tbody'), edgesTable: $('#edgesTable tbody'), nodeCount: $('#nodeCount'), edgeCount: $('#edgeCount'), sourceType: $('#sourceType'),
+  addNodeBtn: $('#addNodeBtn'), addEdgeBtn: $('#addEdgeBtn'), renumberBtn: $('#renumberBtn'), markdownOut: $('#markdownOut'), generateBtn: $('#generateBtn'), copyBtn: $('#copyBtn'), downloadMdBtn: $('#downloadMdBtn'), downloadJsonBtn: $('#downloadJsonBtn'),
+  mdStyle: $('#mdStyle'), mermaidDir: $('#mermaidDir'), includeMermaid: $('#includeMermaid'), includeFrontMatter: $('#includeFrontMatter'), includeWarnings: $('#includeWarnings'), useBullets: $('#useBullets'),
+  canvas: $('#flowCanvas'), canvasStage: $('#canvasStage'), canvasBox: $('#canvasBox'), edgeSvg: $('#edgeSvg'), resizeHint: $('#resizeHint'),
+  imgAddNodeBtn: $('#imgAddNodeBtn'), imgConnectBtn: $('#imgConnectBtn'), imgSelectBtn: $('#imgSelectBtn'), autoDetectBtn: $('#autoDetectBtn'), ocrSelectedBtn: $('#ocrSelectedBtn'), ocrAllBtn: $('#ocrAllBtn'), ocrWholeBtn: $('#ocrWholeBtn'), ocrStatus: $('#ocrStatus'), deleteSelectedBtn: $('#deleteSelectedBtn'), toast: $('#toast')
+};
+const ctx = els.canvas.getContext('2d', { willReadFrequently: true });
+
+function toast(msg){ els.toast.textContent = msg; els.toast.style.display='block'; setTimeout(()=>els.toast.style.display='none', 2400); }
+function uid(prefix='N'){
+  let i = 1;
+  while(state.nodes.some(n=>n.id===prefix+i)) i++;
+  return prefix+i;
+}
+function cleanText(s){
+  if(s == null) return '';
+  let out = String(s)
+    .replace(/<!\[CDATA\[/g,'').replace(/\]\]>/g,'')
+    .replace(/<br\s*\/?>/gi,'\n')
+    .replace(/<[^>]*>/g,' ')
+    .replace(/&nbsp;/g,' ')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'")
+    .replace(/\s+/g,' ')
+    .trim();
+  try { const t = document.createElement('textarea'); t.innerHTML = out; out = t.value; } catch(e){}
+  return out.trim();
+}
+function escMd(s){ return String(s||'').replace(/\|/g,'\\|').replace(/\n/g,' '); }
+function sanitizeMermaidId(id){ return String(id||'N').replace(/[^a-zA-Z0-9_]/g,'_').replace(/^([0-9])/,'N$1'); }
+function mermaidLabel(s){ return String(s||'').replace(/"/g,'#quot;').replace(/\[/g,'(').replace(/\]/g,')').replace(/\{/g,'(').replace(/\}/g,')').trim() || 'Unnamed'; }
+
+function normalizeModel(source='manual'){
+  const seen = new Set();
+  state.nodes = state.nodes.filter(n=>n && n.id).map((n, idx)=>{
+    let id = String(n.id).trim() || 'N'+(idx+1);
+    if(seen.has(id)){ let base=id, k=2; while(seen.has(base+'_'+k)) k++; id=base+'_'+k; }
+    seen.add(id);
+    return { id, label: cleanText(n.label) || id, type: n.type || 'process', x:+n.x||0, y:+n.y||0, w:+n.w||120, h:+n.h||60 };
+  });
+  const ids = new Set(state.nodes.map(n=>n.id));
+  state.edges = state.edges.filter(e=>e && ids.has(e.from) && ids.has(e.to)).map(e=>({ from:e.from, to:e.to, label:cleanText(e.label||'') }));
+  state.sourceType = source || state.sourceType || 'manual';
+  renderAll();
+}
+function typeFromShape(shape, label=''){
+  const s = String(shape||'').toLowerCase();
+  const l = String(label||'').trim();
+  if(/rhombus|diamond|decision|condition/.test(s)) return 'decision';
+  if(/ellipse|oval|terminator|start|end/.test(s)) return /end|stop|finish/i.test(l) ? 'end' : 'start';
+  if(/document/.test(s)) return 'document';
+  if(/database|cylinder/.test(s)) return 'database';
+  return 'process';
+}
+
+async function parseAnyText(text, filename='pasted text'){
+  state.warnings = [];
+  const t = String(text||'').trim();
+  if(!t){ toast('Nothing to parse.'); return; }
+  if(/<mxfile[\s>]/i.test(t) || /<mxGraphModel[\s>]/i.test(t)){
+    await parseDrawio(t);
+  } else if(/<svg[\s>]/i.test(t)){
+    parseSVG(t);
+  } else if(/\b(flowchart|graph)\s+(TD|LR|BT|RL)/i.test(t) || /-->|---|==>/i.test(t)){
+    parseMermaidText(t);
+  } else {
+    parseEdgeList(t);
+  }
+  els.fileStatus.innerHTML = `<b>Parsed:</b> ${escapeHtml(filename)} (${state.nodes.length} nodes, ${state.edges.length} edges)`;
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function parseDrawio(xmlText){
+  const parser = new DOMParser();
+  let xml = parser.parseFromString(xmlText, 'application/xml');
+  if(xml.querySelector('parsererror')) throw new Error('XML parse error. Try exporting the diagram as uncompressed XML or SVG.');
+  const diagram = xml.querySelector('diagram');
+  let graphDoc = xml;
+  if(diagram && !xml.querySelector('mxGraphModel')){
+    const raw = diagram.textContent.trim();
+    if(raw.startsWith('<')){
+      graphDoc = parser.parseFromString(raw, 'application/xml');
+    } else if(raw.length){
+      const decoded = await decodeDrawioPayload(raw);
+      graphDoc = parser.parseFromString(decoded, 'application/xml');
+      if(graphDoc.querySelector('parsererror')) throw new Error('Could not decode compressed draw.io content. In diagrams.net, use File → Export as → XML and disable compression if available.');
+    }
+  }
+  const cells = Array.from(graphDoc.querySelectorAll('mxCell'));
+  const nodes = [];
+  const edges = [];
+  cells.forEach(c=>{
+    const id = c.getAttribute('id'); if(!id) return;
+    const val = cleanText(c.getAttribute('value') || '');
+    const style = c.getAttribute('style') || '';
+    const geo = c.querySelector('mxGeometry');
+    if(c.getAttribute('vertex') === '1'){
+      nodes.push({ id, label: val || id, type:typeFromShape(style,val), x:num(geo,'x'), y:num(geo,'y'), w:num(geo,'width',120), h:num(geo,'height',60) });
+    } else if(c.getAttribute('edge') === '1'){
+      const from = c.getAttribute('source');
+      const to = c.getAttribute('target');
+      if(from && to) edges.push({from, to, label:val});
+    }
+  });
+  state.nodes = nodes;
+  state.edges = edges;
+  if(!nodes.length) state.warnings.push('No vertex nodes were found in the diagrams.net XML. Try exporting as uncompressed XML or SVG.');
+  normalizeModel('draw.io / mxGraph XML');
+}
+function num(el, attr, fallback=0){ const v = el ? parseFloat(el.getAttribute(attr)) : NaN; return Number.isFinite(v) ? v : fallback; }
+async function decodeDrawioPayload(payload){
+  // diagrams.net stores compressed diagram text as URL-encoded raw deflate, base64 encoded.
+  let b64 = payload.replace(/\s/g,'');
+  let bytes;
+  try { bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0)); } catch(e) { throw new Error('Invalid draw.io base64 payload.'); }
+  const tryStreams = ['deflate-raw', 'deflate'];
+  for(const fmt of tryStreams){
+    if(typeof DecompressionStream === 'undefined') break;
+    try{
+      const ds = new DecompressionStream(fmt);
+      const stream = new Blob([bytes]).stream().pipeThrough(ds);
+      const arr = await new Response(stream).arrayBuffer();
+      const text = new TextDecoder().decode(arr);
+      return decodeURIComponent(text.replace(/\+/g, '%20'));
+    }catch(e){}
+  }
+  // Some exports are merely URI encoded.
+  try { return decodeURIComponent(new TextDecoder().decode(bytes)); } catch(e){}
+  throw new Error('This browser cannot decompress compressed draw.io files offline. Export uncompressed XML or SVG.');
+}
+
+function parseSVG(svgText){
+  state.warnings = [];
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgText, 'image/svg+xml');
+  if(doc.querySelector('parsererror')) throw new Error('SVG parse error.');
+  const svg = doc.querySelector('svg'); if(!svg) throw new Error('No SVG element found.');
+  const textItems = getSvgTexts(svg);
+  const shapes = [];
+  let idx = 1;
+  Array.from(svg.querySelectorAll('rect,ellipse,circle,polygon,path')).forEach(el=>{
+    const tag = el.tagName.toLowerCase();
+    const bb = svgBBoxApprox(el);
+    if(!bb || bb.w < 22 || bb.h < 16) return;
+    const fill = (el.getAttribute('fill')||'').toLowerCase();
+    const stroke = (el.getAttribute('stroke')||'').toLowerCase();
+    const style = (el.getAttribute('style')||'').toLowerCase();
+    if(fill==='none' && stroke==='none' && !style.includes('stroke')) return;
+    // Avoid huge background rectangles.
+    const area = bb.w * bb.h;
+    const svgSize = svgViewBox(svg);
+    if(area > svgSize.w * svgSize.h * 0.75) return;
+    const insideTexts = textItems.filter(t=>pointInBox(t.cx,t.cy,bb,12));
+    const label = cleanText(insideTexts.map(t=>t.text).join(' '));
+    if(!label && tag==='path' && area < 500) return;
+    const id = 'N' + idx++;
+    shapes.push({ id, label: label || id, type: typeFromShape(tag==='polygon' ? polygonType(el) : tag, label), x:bb.x, y:bb.y, w:bb.w, h:bb.h, _el:el });
+  });
+  // If no shapes were detected, make nodes from text blocks.
+  if(!shapes.length && textItems.length){
+    textItems.forEach((t,i)=> shapes.push({id:'N'+(i+1), label:t.text, type:'process', x:t.cx-60, y:t.cy-20, w:120, h:40}));
+    state.warnings.push('SVG shapes were not detected; text blocks were converted into nodes. You may need to add connections manually.');
+  }
+  const edges = inferSvgEdges(svg, shapes);
+  state.nodes = shapes.map(({_el,...n})=>n);
+  state.edges = edges;
+  if(!edges.length) state.warnings.push('No SVG arrows/lines were confidently detected. Review and add connections manually if needed.');
+  normalizeModel('SVG');
+}
+function svgViewBox(svg){
+  const vb = (svg.getAttribute('viewBox')||'').split(/[ ,]+/).map(Number);
+  if(vb.length===4 && vb.every(Number.isFinite)) return {x:vb[0],y:vb[1],w:vb[2],h:vb[3]};
+  return {x:0,y:0,w:parseFloat(svg.getAttribute('width'))||1000,h:parseFloat(svg.getAttribute('height'))||800};
+}
+function getSvgTexts(svg){
+  const arr=[];
+  Array.from(svg.querySelectorAll('text,tspan')).forEach(el=>{
+    const text = cleanText(el.textContent || ''); if(!text) return;
+    let x = parseFloat(el.getAttribute('x')); let y = parseFloat(el.getAttribute('y'));
+    if(!Number.isFinite(x) || !Number.isFinite(y)){
+      const p = getTranslate(el); x = p.x; y = p.y;
+    }
+    if(Number.isFinite(x) && Number.isFinite(y)) arr.push({text,cx:x,cy:y});
+  });
+  // De-duplicate tspans nested in text.
+  const seen=new Set();
+  return arr.filter(a=>{ const k=a.text+'|'+Math.round(a.cx)+'|'+Math.round(a.cy); if(seen.has(k)) return false; seen.add(k); return true; });
+}
+function getTranslate(el){
+  let node = el, x=0, y=0;
+  while(node && node.getAttribute){
+    const tr = node.getAttribute('transform') || '';
+    const m = tr.match(/translate\(([-0-9.]+)[ ,]+([-0-9.]+)\)/);
+    if(m){ x += parseFloat(m[1]); y += parseFloat(m[2]); }
+    node = node.parentNode;
+  }
+  return {x,y};
+}
+function svgBBoxApprox(el){
+  const tag=el.tagName.toLowerCase();
+  const tr=getTranslate(el);
+  if(tag==='rect'){
+    return {x:(parseFloat(el.getAttribute('x'))||0)+tr.x,y:(parseFloat(el.getAttribute('y'))||0)+tr.y,w:parseFloat(el.getAttribute('width'))||0,h:parseFloat(el.getAttribute('height'))||0};
+  }
+  if(tag==='circle'){
+    const cx=(parseFloat(el.getAttribute('cx'))||0)+tr.x, cy=(parseFloat(el.getAttribute('cy'))||0)+tr.y, r=parseFloat(el.getAttribute('r'))||0;
+    return {x:cx-r,y:cy-r,w:r*2,h:r*2};
+  }
+  if(tag==='ellipse'){
+    const cx=(parseFloat(el.getAttribute('cx'))||0)+tr.x, cy=(parseFloat(el.getAttribute('cy'))||0)+tr.y, rx=parseFloat(el.getAttribute('rx'))||0, ry=parseFloat(el.getAttribute('ry'))||0;
+    return {x:cx-rx,y:cy-ry,w:rx*2,h:ry*2};
+  }
+  if(tag==='polygon' || tag==='polyline'){
+    const pts=(el.getAttribute('points')||'').trim().split(/[\s,]+/).map(Number).filter(Number.isFinite);
+    if(pts.length<4) return null; const xs=[],ys=[]; for(let i=0;i<pts.length;i+=2){xs.push(pts[i]+tr.x);ys.push(pts[i+1]+tr.y)}
+    return {x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};
+  }
+  if(tag==='path'){
+    const pts = pathPoints(el.getAttribute('d')||'').map(p=>({x:p.x+tr.x,y:p.y+tr.y}));
+    if(pts.length<2) return null; const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+    return {x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};
+  }
+  return null;
+}
+function polygonType(el){
+  const pts=(el.getAttribute('points')||'').trim().split(/[\s,]+/).map(Number).filter(Number.isFinite);
+  if(pts.length===8) return 'diamond';
+  return 'polygon';
+}
+function pathPoints(d){
+  const nums = String(d).match(/[-+]?(?:\d*\.\d+|\d+)(?:e[-+]?\d+)?/ig) || [];
+  const points=[]; for(let i=0;i+1<nums.length;i+=2){ points.push({x:parseFloat(nums[i]), y:parseFloat(nums[i+1])}); }
+  return points.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));
+}
+function pointInBox(x,y,b,pad=0){return x>=b.x-pad&&x<=b.x+b.w+pad&&y>=b.y-pad&&y<=b.y+b.h+pad}
+function center(n){ return {x:n.x+n.w/2, y:n.y+n.h/2}; }
+function inferSvgEdges(svg, nodes){
+  const lines=[];
+  Array.from(svg.querySelectorAll('line,polyline,path')).forEach(el=>{
+    const tag=el.tagName.toLowerCase(); const tr=getTranslate(el); let pts=[];
+    if(tag==='line'){
+      pts=[{x:(parseFloat(el.getAttribute('x1'))||0)+tr.x,y:(parseFloat(el.getAttribute('y1'))||0)+tr.y},{x:(parseFloat(el.getAttribute('x2'))||0)+tr.x,y:(parseFloat(el.getAttribute('y2'))||0)+tr.y}];
+    } else if(tag==='polyline'){
+      const arr=(el.getAttribute('points')||'').trim().split(/[\s,]+/).map(Number).filter(Number.isFinite); for(let i=0;i+1<arr.length;i+=2) pts.push({x:arr[i]+tr.x,y:arr[i+1]+tr.y});
+    } else if(tag==='path'){
+      pts=pathPoints(el.getAttribute('d')||'').map(p=>({x:p.x+tr.x,y:p.y+tr.y}));
+    }
+    if(pts.length<2) return;
+    const bb={x:Math.min(...pts.map(p=>p.x)),y:Math.min(...pts.map(p=>p.y)),w:Math.max(...pts.map(p=>p.x))-Math.min(...pts.map(p=>p.x)),h:Math.max(...pts.map(p=>p.y))-Math.min(...pts.map(p=>p.y))};
+    if(bb.w<4 && bb.h<4) return;
+    // exclude shape-like paths that contain text; mostly use thin-ish lines
+    lines.push({start:pts[0], end:pts[pts.length-1], el});
+  });
+  const edges=[]; const seen=new Set();
+  lines.forEach(l=>{
+    const a=nearestNode(l.start,nodes), b=nearestNode(l.end,nodes);
+    if(!a || !b || a.id===b.id) return;
+    const markerEnd = (l.el.getAttribute('marker-end')||'') + (l.el.getAttribute('style')||'');
+    let from=a.id,to=b.id;
+    if(!/arrow|marker-end|url\(#/i.test(markerEnd)){
+      // Without arrow marker, keep likely top/left to bottom/right direction.
+      const ca=center(a), cb=center(b); if(cb.y<ca.y || cb.x<ca.x-100){ from=b.id; to=a.id; }
+    }
+    const k=from+'>'+to; if(!seen.has(k)){seen.add(k);edges.push({from,to,label:''});}
+  });
+  return edges;
+}
+function nearestNode(pt,nodes){
+  let best=null,bestD=Infinity;
+  nodes.forEach(n=>{
+    const c=center(n); const dx=Math.max(Math.abs(pt.x-c.x)-n.w/2,0), dy=Math.max(Math.abs(pt.y-c.y)-n.h/2,0); const d=Math.hypot(dx,dy);
+    if(d<bestD){bestD=d;best=n;}
+  });
+  return bestD<90?best:null;
+}
+
+function parseMermaidText(text){
+  state.warnings=[];
+  const nodesById = new Map(); const edges=[];
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith('%%'));
+  function ensure(id,label,type='process'){
+    id = id.trim(); if(!id) return null;
+    const existing = nodesById.get(id);
+    if(existing){ if(label && existing.label===id) existing.label=cleanText(label); if(type && existing.type==='process') existing.type=type; return existing; }
+    const n={id,label:cleanText(label)||id,type}; nodesById.set(id,n); return n;
+  }
+  function parseNodeToken(tok){
+    tok=tok.trim().replace(/;$/,'');
+    let m=tok.match(/^([A-Za-z0-9_:.\-]+)\s*\{(.+)\}$/); if(m) return {id:m[1],label:m[2],type:'decision'};
+    m=tok.match(/^([A-Za-z0-9_:.\-]+)\s*\(\((.+)\)\)$/); if(m) return {id:m[1],label:m[2],type:/end|stop|finish/i.test(m[2])?'end':'start'};
+    m=tok.match(/^([A-Za-z0-9_:.\-]+)\s*\[(.+)\]$/); if(m) return {id:m[1],label:m[2],type:'process'};
+    m=tok.match(/^([A-Za-z0-9_:.\-]+)\s*\((.+)\)$/); if(m) return {id:m[1],label:m[2],type:'process'};
+    return {id:tok,label:tok,type:'process'};
+  }
+  lines.forEach(line=>{
+    if(/^\s*(flowchart|graph)\b/i.test(line)) return;
+    const edgeMatch = line.match(/^(.+?)\s*(-->|---|==>|-.->|--\s*([^\-]+?)\s*-->|--\|([^|]+)\|-->)\s*(.+)$/);
+    if(edgeMatch){
+      let left = edgeMatch[1].trim(); let right = edgeMatch[5].trim(); let label = edgeMatch[3] || edgeMatch[4] || '';
+      // handle A -- label --> B form not fully captured
+      const alt=line.match(/^(.+?)\s*--\s*(.*?)\s*-->\s*(.+)$/); if(alt){left=alt[1];label=alt[2];right=alt[3];}
+      const a=parseNodeToken(left), b=parseNodeToken(right);
+      ensure(a.id,a.label,a.type); ensure(b.id,b.label,b.type); edges.push({from:a.id,to:b.id,label:cleanText(label)});
+    } else {
+      const n=parseNodeToken(line); ensure(n.id,n.label,n.type);
+    }
+  });
+  state.nodes=Array.from(nodesById.values()); state.edges=edges;
+  normalizeModel('Mermaid / text');
+}
+function parseEdgeList(text){
+  state.warnings=[];
+  const nodes=new Map(); const edges=[];
+  function ensure(label){ const clean=cleanText(label); if(!clean) return null; let id = 'N'+(nodes.size+1); for(const n of nodes.values()) if(n.label.toLowerCase()===clean.toLowerCase()) return n; const n={id,label:clean,type:/\?$/.test(clean)?'decision':/start/i.test(clean)?'start':/end|stop|finish/i.test(clean)?'end':'process'}; nodes.set(id,n); return n; }
+  text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(line=>{
+    let parts=null,label='';
+    if(line.includes('->')) parts=line.split('->'); else if(line.includes('=>')) parts=line.split('=>'); else if(line.includes('|')) parts=line.split('|');
+    if(parts && parts.length>=2){
+      const a=ensure(parts[0]); const b=ensure(parts.slice(1).join('->'));
+      if(a&&b) edges.push({from:a.id,to:b.id,label});
+    } else ensure(line.replace(/^[-*\d.)\s]+/,''));
+  });
+  state.nodes=Array.from(nodes.values()); state.edges=edges;
+  if(!edges.length) state.warnings.push('Plain text was converted into standalone steps. Add connections manually if this is a sequence or flow.');
+  normalizeModel('plain text');
+}
+
+function renderAll(){ renderTables(); renderImageOverlays(); renderMarkdown(); }
+function renderTables(){
+  els.nodeCount.textContent=state.nodes.length; els.edgeCount.textContent=state.edges.length; els.sourceType.textContent=state.sourceType;
+  els.nodesTable.innerHTML='';
+  state.nodes.forEach((n,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><input value="${escapeHtml(n.id)}" data-node-field="id" data-i="${i}"></td><td><input value="${escapeHtml(n.label)}" data-node-field="label" data-i="${i}"></td><td><select data-node-field="type" data-i="${i}">${['start','process','decision','document','database','end'].map(t=>`<option ${n.type===t?'selected':''}>${t}</option>`).join('')}</select></td><td><button class="small danger" data-del-node="${i}">×</button></td>`;
+    els.nodesTable.appendChild(tr);
+  });
+  els.edgesTable.innerHTML='';
+  state.edges.forEach((e,i)=>{
+    const opt = state.nodes.map(n=>`<option value="${escapeHtml(n.id)}">${escapeHtml(n.id)} — ${escapeHtml(n.label.slice(0,25))}</option>`).join('');
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td><select data-edge-field="from" data-i="${i}">${opt}</select></td><td><select data-edge-field="to" data-i="${i}">${opt}</select></td><td><input value="${escapeHtml(e.label||'')}" data-edge-field="label" data-i="${i}"></td><td><button class="small danger" data-del-edge="${i}">×</button></td>`;
+    els.edgesTable.appendChild(tr);
+    tr.querySelector('[data-edge-field="from"]').value=e.from;
+    tr.querySelector('[data-edge-field="to"]').value=e.to;
+  });
+}
+function renderMarkdown(){ els.markdownOut.textContent = buildMarkdown(); }
+function buildMarkdown(){
+  const title = 'Flowchart Conversion';
+  const date = new Date().toISOString().slice(0,10);
+  const lines=[];
+  if(els.includeFrontMatter.checked){ lines.push('---',`title: ${title}`,`source_type: ${state.sourceType}`,`converted_on: ${date}`,'---',''); }
+  lines.push(`# ${title}`,'');
+  lines.push(`**Source type:** ${state.sourceType || 'unknown'}`); lines.push(`**Nodes:** ${state.nodes.length}  `); lines.push(`**Connections:** ${state.edges.length}`,'');
+  if(els.includeWarnings.checked && state.warnings.length){ lines.push('## Conversion Notes',''); state.warnings.forEach(w=>lines.push(`- ${w}`)); lines.push(''); }
+  if(els.includeMermaid.checked){ lines.push('## Mermaid Diagram','','```mermaid',`flowchart ${els.mermaidDir.value}`);
+    state.nodes.forEach(n=> lines.push(`  ${mermaidNode(n)}`));
+    state.edges.forEach(e=> lines.push(`  ${sanitizeMermaidId(e.from)} ${e.label ? `-- "${mermaidLabel(e.label)}" -->` : '-->'} ${sanitizeMermaidId(e.to)}`));
+    lines.push('```','');
+  }
+  const style=els.mdStyle.value;
+  if(style==='table' || style==='narrative'){
+    lines.push('## Nodes','','| ID | Type | Label |','|---|---|---|');
+    state.nodes.forEach(n=> lines.push(`| ${escMd(n.id)} | ${escMd(n.type)} | ${escMd(n.label)} |`)); lines.push('');
+    lines.push('## Connections','','| From | Label | To |','|---|---|---|');
+    state.edges.forEach(e=> lines.push(`| ${escMd(nodeName(e.from))} | ${escMd(e.label||'')} | ${escMd(nodeName(e.to))} |`)); lines.push('');
+  }
+  if(style==='compact' || style==='narrative'){
+    if(els.useBullets.checked){
+      lines.push('## Flow Summary','');
+      const starts = findStartNodes();
+      const visited=new Set();
+      if(starts.length){ starts.forEach(s=>walkLines(s.id,0,visited,lines)); }
+      state.nodes.filter(n=>!visited.has(n.id)).forEach(n=>walkLines(n.id,0,visited,lines));
+      lines.push('');
+    }
+    lines.push('## Edge List','');
+    state.edges.forEach(e=> lines.push(`- **${nodeName(e.from)}**${e.label?` — _${e.label}_ →`:' →'} **${nodeName(e.to)}**`));
+    if(!state.edges.length) state.nodes.forEach(n=>lines.push(`- **${n.label}** (${n.type})`));
+    lines.push('');
+  }
+  return lines.join('\n').trim()+"\n";
+}
+function mermaidNode(n){
+  const id=sanitizeMermaidId(n.id), label=mermaidLabel(n.label);
+  if(n.type==='decision') return `${id}{"${label}"}`;
+  if(n.type==='start' || n.type==='end') return `${id}(("${label}"))`;
+  if(n.type==='database') return `${id}[("${label}")]`;
+  if(n.type==='document') return `${id}[/"${label}"/]`;
+  return `${id}["${label}"]`;
+}
+function nodeName(id){ const n=state.nodes.find(n=>n.id===id); return n ? n.label : id; }
+function findStartNodes(){
+  const incoming=new Set(state.edges.map(e=>e.to));
+  const explicit=state.nodes.filter(n=>n.type==='start'); if(explicit.length) return explicit;
+  const roots=state.nodes.filter(n=>!incoming.has(n.id)); return roots.length ? roots : state.nodes.slice(0,1);
+}
+function walkLines(id, depth, visited, lines){
+  const n=state.nodes.find(n=>n.id===id); if(!n) return;
+  const indent='  '.repeat(Math.min(depth,6));
+  if(visited.has(id)){ lines.push(`${indent}- ↩ ${n.label} (repeat)`); return; }
+  visited.add(id);
+  const outs=state.edges.filter(e=>e.from===id);
+  if(!outs.length){ lines.push(`${indent}- ${n.label}${n.type==='end'?'':' (end of branch)'}`); return; }
+  lines.push(`${indent}- ${n.label}`);
+  outs.forEach(e=>{
+    const tgt=state.nodes.find(n=>n.id===e.to); if(!tgt) return;
+    if(e.label) lines.push(`${indent}  - If/when **${e.label}**:`);
+    walkLines(e.to, depth+(e.label?2:1), visited, lines);
+  });
+}
+
+function addNode(label='New step', type='process', x=40,y=40,w=140,h=70){ const n={id:uid('N'),label,type,x,y,w,h}; state.nodes.push(n); normalizeModel(state.sourceType || 'manual'); return n; }
+function addEdge(from=null,to=null,label=''){
+  if(state.nodes.length<2){ toast('Add at least two nodes first.'); return; }
+  state.edges.push({from:from||state.nodes[0].id,to:to||state.nodes[1].id,label}); normalizeModel(state.sourceType || 'manual');
+}
+function setActiveTab(name){ $$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name)); $$('.panel').forEach(p=>p.classList.remove('active')); $('#'+name+'Panel').classList.add('active'); }
+
+// Image canvas/manual markup
+function loadImageFile(file){
+  const url=URL.createObjectURL(file); const img=new Image();
+  img.onload=()=>{
+    state.image=img; state.sourceType='image OCR/manual markup'; state.warnings=['Raster image labels are extracted with local OCR assist and/or manual review. OCR accuracy depends on image quality; review labels before exporting.'];
+    const maxW=Math.min(1200, Math.max(650, els.canvasBox.clientWidth-30));
+    state.imageScale=Math.min(1, maxW/img.width);
+    els.canvas.width=Math.round(img.width*state.imageScale); els.canvas.height=Math.round(img.height*state.imageScale);
+    els.canvasStage.style.width=els.canvas.width+'px'; els.canvasStage.style.height=els.canvas.height+'px';
+    drawImage(); setActiveTab('image'); renderAll(); URL.revokeObjectURL(url);
+    els.fileStatus.innerHTML=`<b>Loaded image:</b> ${escapeHtml(file.name)}. Use Image markup, auto-detect, and OCR to identify nodes and connections.`;
+  };
+  img.onerror=()=>toast('Could not load image.'); img.src=url;
+}
+function drawImage(){
+  ctx.clearRect(0,0,els.canvas.width,els.canvas.height);
+  if(state.image) ctx.drawImage(state.image,0,0,els.canvas.width,els.canvas.height); else { ctx.fillStyle='#fff'; ctx.fillRect(0,0,els.canvas.width,els.canvas.height); ctx.fillStyle='#111827'; ctx.font='20px system-ui'; ctx.fillText('Load an image to use markup mode.',30,50); }
+  renderImageOverlays();
+}
+function renderImageOverlays(){
+  // remove overlays
+  Array.from(els.canvasStage.querySelectorAll('.nodeOverlay')).forEach(x=>x.remove());
+  els.edgeSvg.setAttribute('width', els.canvas.width); els.edgeSvg.setAttribute('height', els.canvas.height); els.edgeSvg.innerHTML = '<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#22c55e" /></marker></defs>';
+  state.edges.forEach(e=>{
+    const a=state.nodes.find(n=>n.id===e.from), b=state.nodes.find(n=>n.id===e.to); if(!a||!b) return;
+    const ca=center(a), cb=center(b);
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',ca.x); line.setAttribute('y1',ca.y); line.setAttribute('x2',cb.x); line.setAttribute('y2',cb.y); line.setAttribute('stroke','#22c55e'); line.setAttribute('stroke-width','3'); line.setAttribute('marker-end','url(#arrow)');
+    els.edgeSvg.appendChild(line);
+    if(e.label){ const txt=document.createElementNS('http://www.w3.org/2000/svg','text'); txt.setAttribute('x',(ca.x+cb.x)/2); txt.setAttribute('y',(ca.y+cb.y)/2-6); txt.setAttribute('fill','#166534'); txt.setAttribute('font-size','13'); txt.setAttribute('font-weight','700'); txt.textContent=e.label; els.edgeSvg.appendChild(txt); }
+  });
+  state.nodes.forEach(n=>{
+    const d=document.createElement('div'); d.className='nodeOverlay '+(n.type==='decision'?'decision':'')+(state.selectedNodeId===n.id?' selected':''); d.dataset.nodeId=n.id;
+    d.style.left=n.x+'px'; d.style.top=n.y+'px'; d.style.width=n.w+'px'; d.style.height=n.h+'px';
+    d.innerHTML=`<span>${escapeHtml(n.label||n.id)}</span>`;
+    d.addEventListener('click', ev=>{ ev.stopPropagation(); handleNodeClick(n.id); });
+    els.canvasStage.appendChild(d);
+  });
+}
+function handleNodeClick(id){
+  if(state.imageMode==='connect'){
+    if(!state.connectFrom){ state.connectFrom=id; state.selectedNodeId=id; toast('Select the target node.'); }
+    else if(state.connectFrom!==id){ const label=prompt('Connection label (optional):','')||''; addEdge(state.connectFrom,id,label); state.connectFrom=null; state.selectedNodeId=id; toast('Connection added.'); }
+  } else {
+    state.selectedNodeId=id; renderAll();
+    const n=state.nodes.find(n=>n.id===id); if(n && state.imageMode==='select'){
+      const label=prompt('Edit node label:', n.label); if(label!==null) n.label=cleanText(label)||n.label;
+      const type=prompt('Node type: start, process, decision, document, database, end', n.type); if(type!==null && ['start','process','decision','document','database','end'].includes(type.trim())) n.type=type.trim();
+      normalizeModel(state.sourceType||'image manual markup');
+    }
+  }
+}
+function canvasPoint(evt){
+  const rect=els.canvas.getBoundingClientRect();
+  const touch=evt.touches&&evt.touches[0] ? evt.touches[0] : evt;
+  return {x:(touch.clientX-rect.left)*(els.canvas.width/rect.width), y:(touch.clientY-rect.top)*(els.canvas.height/rect.height)};
+}
+function startDraw(evt){
+  if(state.imageMode!=='draw') return;
+  evt.preventDefault(); const p=canvasPoint(evt); state.drag={x0:p.x,y0:p.y,x1:p.x,y1:p.y}; updateResizeHint();
+}
+function moveDraw(evt){
+  if(!state.drag) return; evt.preventDefault(); const p=canvasPoint(evt); state.drag.x1=p.x; state.drag.y1=p.y; updateResizeHint();
+}
+function endDraw(evt){
+  if(!state.drag) return; evt.preventDefault(); const d=state.drag; state.drag=null; els.resizeHint.style.display='none';
+  const x=Math.min(d.x0,d.x1), y=Math.min(d.y0,d.y1), w=Math.abs(d.x1-d.x0), h=Math.abs(d.y1-d.y0);
+  if(w<20||h<20){ toast('Node area too small.'); return; }
+  const label=prompt('Node label:','') || uid('Step ');
+  const typeGuess = Math.abs(w-h)<25 ? 'decision' : (/start/i.test(label)?'start':/end|stop|finish/i.test(label)?'end':'process');
+  const type=prompt('Node type: start, process, decision, document, database, end', typeGuess) || typeGuess;
+  addNode(label, ['start','process','decision','document','database','end'].includes(type)?type:typeGuess, x,y,w,h);
+}
+function updateResizeHint(){ const d=state.drag;if(!d)return; const x=Math.min(d.x0,d.x1), y=Math.min(d.y0,d.y1), w=Math.abs(d.x1-d.x0), h=Math.abs(d.y1-d.y0); Object.assign(els.resizeHint.style,{display:'block',left:x+'px',top:y+'px',width:w+'px',height:h+'px'}); }
+function autoDetectBoxes(){
+  if(!state.image){ toast('Load an image first.'); return; }
+  const w=els.canvas.width,h=els.canvas.height; const img=ctx.getImageData(0,0,w,h).data; const dark=new Uint8Array(w*h);
+  for(let i=0,p=0;i<img.length;i+=4,p++){ const r=img[i],g=img[i+1],b=img[i+2]; const gray=(r+g+b)/3; dark[p]=(gray<110 && !(r<80&&g<80&&b>120))?1:0; }
+  const seen=new Uint8Array(w*h); const comps=[]; const stack=[];
+  for(let y=0;y<h;y+=2){ for(let x=0;x<w;x+=2){ const idx=y*w+x; if(!dark[idx]||seen[idx]) continue; let minx=x,maxx=x,miny=y,maxy=y,count=0; stack.push(idx); seen[idx]=1; while(stack.length){ const cur=stack.pop(); const cy=Math.floor(cur/w), cx=cur%w; count++; if(cx<minx)minx=cx;if(cx>maxx)maxx=cx;if(cy<miny)miny=cy;if(cy>maxy)maxy=cy; const neigh=[cur-1,cur+1,cur-w,cur+w]; for(const ni of neigh){ if(ni>=0&&ni<w*h&&!seen[ni]&&dark[ni]){seen[ni]=1;stack.push(ni);} } if(count>8000) break; }
+      const bw=maxx-minx,bh=maxy-miny; if(count>100 && bw>40 && bh>24 && bw<w*.8 && bh<h*.8){ comps.push({x:minx-8,y:miny-8,w:bw+16,h:bh+16,count}); }
+    }}
+  // Merge overlapping candidate components.
+  const merged=[];
+  comps.sort((a,b)=>b.count-a.count).slice(0,80).forEach(c=>{
+    if(merged.some(m=>iou(m,c)>.35 || contains(m,c))) return;
+    merged.push(c);
+  });
+  let added=0;
+  merged.slice(0,25).forEach((b,i)=>{
+    if(state.nodes.some(n=>iou(n,b)>.2)) return;
+    state.nodes.push({id:uid('N'),label:'Detected node '+(i+1),type:Math.abs(b.w-b.h)<20?'decision':'process',x:Math.max(0,b.x),y:Math.max(0,b.y),w:b.w,h:b.h}); added++;
+  });
+  if(added){ state.warnings.push('Auto-detected image boxes need OCR/manual label review.'); normalizeModel('image auto/OCR/manual markup'); toast(`Auto-detected ${added} candidate nodes.`); }
+  else toast('No clear boxes detected. Use Draw node mode.');
+}
+
+function iou(a,b){ const x1=Math.max(a.x,b.x),y1=Math.max(a.y,b.y),x2=Math.min(a.x+a.w,b.x+b.w),y2=Math.min(a.y+a.h,b.y+b.h); const inter=Math.max(0,x2-x1)*Math.max(0,y2-y1); return inter/((a.w*a.h)+(b.w*b.h)-inter+1); }
+function contains(a,b){ return b.x>=a.x&&b.y>=a.y&&b.x+b.w<=a.x+a.w&&b.y+b.h<=a.y+a.h; }
+
+// Embedded OCR assist -------------------------------------------------------
+// Version 2: multi-pass local OCR for clean flowchart screenshots. This is still
+// dependency-free, but it now uses contrast normalization, Otsu/adaptive
+// thresholding, border/rule removal, multi-font templates, split repair, and
+// flowchart-word post-correction.
+const OCR_ENGINE_VERSION = 'embedded-template-v2-multipass';
+const OCR_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&-/_.:,()[]#%+?!= ';
+const OCR_LEXICON = [
+  'start','end','stop','finish','process','decision','review','approve','approved','reject','rejected','yes','no','true','false','input','output','document','database','data','manual','system','user','send','receive','create','update','delete','validate','verify','check','complete','completed','error','retry','next','previous','flow','chart','request','response','submit','return','notify','archive','export','import','analyze','analysis','risk','control','step','condition','case','open','close','closed','pending','assigned','resolved','pass','fail','success','failure'
+];
+let OCR_TEMPLATES = null;
+function setOcrStatus(msg){ if(els.ocrStatus) els.ocrStatus.textContent='OCR status: '+msg; }
+function ensureOcrTemplates(){
+  if(OCR_TEMPLATES) return OCR_TEMPLATES;
+  const fonts=['Arial','Verdana','Tahoma','Trebuchet MS','Segoe UI','Georgia','Times New Roman','Courier New','monospace','serif','sans-serif'];
+  const sizes=[14,16,18,20,22,24,28,32,36];
+  const weights=['400','600','700'];
+  const tmp=document.createElement('canvas'); tmp.width=72; tmp.height=72;
+  const tctx=tmp.getContext('2d',{willReadFrequently:true});
+  OCR_TEMPLATES=[];
+  for(const ch of OCR_CHARS.replace(/ /g,'')){
+    for(const font of fonts){ for(const size of sizes){ for(const weight of weights){
+      tctx.clearRect(0,0,tmp.width,tmp.height); tctx.fillStyle='#fff'; tctx.fillRect(0,0,tmp.width,tmp.height); tctx.fillStyle='#000';
+      tctx.textAlign='center'; tctx.textBaseline='middle'; tctx.font=`${weight} ${size}px ${font}`; tctx.fillText(ch,36,38);
+      const data=tctx.getImageData(0,0,tmp.width,tmp.height);
+      const b=trimBinary(toBinary(data,72,72,{method:'otsu',polarity:'dark'}),1);
+      if(b && b.w>2 && b.h>6) OCR_TEMPLATES.push({ch,font,size,weight,vec:resizeBinary(b,18,24),aspect:b.w/Math.max(1,b.h),density:binaryDensity(b)});
+    }}}
+  }
+  return OCR_TEMPLATES;
+}
+function grayFromImageData(imageData){
+  const d=imageData.data, w=imageData.width, h=imageData.height, gray=new Uint8ClampedArray(w*h); let min=255,max=0,sum=0;
+  for(let i=0,p=0;i<d.length;i+=4,p++){
+    let g=Math.round(d[i]*.299+d[i+1]*.587+d[i+2]*.114);
+    gray[p]=g; if(g<min)min=g; if(g>max)max=g; sum+=g;
+  }
+  return {gray,w,h,min,max,mean:sum/(w*h)};
+}
+function contrastGray(gobj){
+  const {gray,w,h}=gobj; const hist=new Array(256).fill(0); for(const g of gray) hist[g]++;
+  const total=gray.length; let lo=0,hi=255,c=0;
+  for(let i=0;i<256;i++){ c+=hist[i]; if(c>=total*.01){lo=i;break;} }
+  c=0; for(let i=255;i>=0;i--){ c+=hist[i]; if(c>=total*.01){hi=i;break;} }
+  const out=new Uint8ClampedArray(gray.length); const denom=Math.max(1,hi-lo);
+  for(let i=0;i<gray.length;i++) out[i]=Math.max(0,Math.min(255,Math.round((gray[i]-lo)*255/denom)));
+  return {gray:out,w,h,min:0,max:255,mean:out.reduce((a,b)=>a+b,0)/out.length};
+}
+function blurGray(gobj){
+  const {gray,w,h}=gobj; const out=new Uint8ClampedArray(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    let sum=0,n=0; for(let yy=Math.max(0,y-1);yy<=Math.min(h-1,y+1);yy++) for(let xx=Math.max(0,x-1);xx<=Math.min(w-1,x+1);xx++){sum+=gray[yy*w+xx];n++;}
+    out[y*w+x]=Math.round(sum/n);
+  }
+  return {gray:out,w,h,min:gobj.min,max:gobj.max,mean:gobj.mean};
+}
+function otsuThreshold(gray){
+  const hist=new Array(256).fill(0); for(const g of gray) hist[g]++;
+  const total=gray.length; let sum=0; for(let i=0;i<256;i++) sum+=i*hist[i];
+  let sumB=0,wB=0,maxVar=-1,threshold=128;
+  for(let t=0;t<256;t++){
+    wB+=hist[t]; if(!wB) continue; const wF=total-wB; if(!wF) break;
+    sumB+=t*hist[t]; const mB=sumB/wB, mF=(sum-sumB)/wF; const between=wB*wF*(mB-mF)*(mB-mF);
+    if(between>maxVar){maxVar=between; threshold=t;}
+  }
+  return threshold;
+}
+function binaryDensity(bin){ let c=0; for(const v of bin.data)c+=v; return c/Math.max(1,bin.data.length); }
+function toBinary(imageDataOrGray,w,h,opts={}){
+  let grayObj;
+  if(imageDataOrGray && imageDataOrGray.data && imageDataOrGray.data.length===w*h*4) grayObj=grayFromImageData(imageDataOrGray);
+  else grayObj={gray:imageDataOrGray.gray||imageDataOrGray.data||imageDataOrGray,w,h,mean:128,min:0,max:255};
+  const method=opts.method||'auto'; const polarity=opts.polarity||'auto';
+  const gray=grayObj.gray; let threshold=opts.threshold;
+  if(threshold==null) threshold=otsuThreshold(gray);
+  let darkCount=0, lightCount=0; for(const g of gray){ if(g<threshold) darkCount++; else lightCount++; }
+  const darkText = polarity==='dark' ? true : polarity==='light' ? false : darkCount < lightCount;
+  const out=new Uint8Array(w*h);
+  if(method==='adaptive'){
+    const radius=Math.max(6, Math.round(Math.min(w,h)/18)); const integral=new Float64Array((w+1)*(h+1));
+    for(let y=1;y<=h;y++) for(let x=1;x<=w;x++) integral[y*(w+1)+x]=gray[(y-1)*w+(x-1)] + integral[y*(w+1)+x-1] + integral[(y-1)*(w+1)+x] - integral[(y-1)*(w+1)+x-1];
+    for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+      const x0=Math.max(0,x-radius), y0=Math.max(0,y-radius), x1=Math.min(w-1,x+radius), y1=Math.min(h-1,y+radius);
+      const area=(x1-x0+1)*(y1-y0+1);
+      const local=(integral[(y1+1)*(w+1)+(x1+1)]-integral[y0*(w+1)+(x1+1)]-integral[(y1+1)*(w+1)+x0]+integral[y0*(w+1)+x0])/area;
+      const margin=opts.margin==null?10:opts.margin;
+      const g=gray[y*w+x]; out[y*w+x]=darkText ? (g<local-margin?1:0) : (g>local+margin?1:0);
+    }
+  } else {
+    const margin=opts.margin||0;
+    for(let p=0;p<gray.length;p++){ const g=gray[p]; out[p]=darkText ? (g<threshold-margin?1:0) : (g>threshold+margin?1:0); }
+  }
+  return {data:out,w,h,meta:{threshold,darkText,method}};
+}
+function trimBinary(bin,pad=1){
+  let minx=bin.w,miny=bin.h,maxx=-1,maxy=-1; const d=bin.data;
+  for(let y=0;y<bin.h;y++) for(let x=0;x<bin.w;x++) if(d[y*bin.w+x]){ if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y; }
+  if(maxx<0) return null;
+  minx=Math.max(0,minx-pad); miny=Math.max(0,miny-pad); maxx=Math.min(bin.w-1,maxx+pad); maxy=Math.min(bin.h-1,maxy+pad);
+  const w=maxx-minx+1,h=maxy-miny+1,out=new Uint8Array(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) out[y*w+x]=bin.data[(miny+y)*bin.w+(minx+x)];
+  return {data:out,w,h,meta:bin.meta||{}};
+}
+function cropBinary(bin,x,y,w,h){
+  x=Math.max(0,Math.floor(x)); y=Math.max(0,Math.floor(y)); w=Math.max(1,Math.min(bin.w-x,Math.ceil(w))); h=Math.max(1,Math.min(bin.h-y,Math.ceil(h)));
+  const out=new Uint8Array(w*h); for(let yy=0;yy<h;yy++) for(let xx=0;xx<w;xx++) out[yy*w+xx]=bin.data[(y+yy)*bin.w+(x+xx)];
+  return {data:out,w,h,meta:bin.meta||{}};
+}
+function resizeBinary(bin,tw,th){
+  const out=new Float32Array(tw*th);
+  for(let y=0;y<th;y++) for(let x=0;x<tw;x++){
+    const sx0=Math.floor(x*bin.w/tw), sx1=Math.max(sx0+1,Math.floor((x+1)*bin.w/tw));
+    const sy0=Math.floor(y*bin.h/th), sy1=Math.max(sy0+1,Math.floor((y+1)*bin.h/th)); let c=0,n=0;
+    for(let yy=sy0;yy<Math.min(bin.h,sy1);yy++) for(let xx=sx0;xx<Math.min(bin.w,sx1);xx++){ c+=bin.data[yy*bin.w+xx]; n++; }
+    out[y*tw+x]=n?c/n:0;
+  }
+  return out;
+}
+function morphBinary(bin,mode='open'){
+  const erode=(src)=>{ const out=new Uint8Array(src.w*src.h); for(let y=1;y<src.h-1;y++) for(let x=1;x<src.w-1;x++){ let ok=1; for(let yy=-1;yy<=1;yy++) for(let xx=-1;xx<=1;xx++) if(!src.data[(y+yy)*src.w+x+xx]) ok=0; out[y*src.w+x]=ok; } return {data:out,w:src.w,h:src.h,meta:src.meta||{}}; };
+  const dilate=(src)=>{ const out=new Uint8Array(src.w*src.h); for(let y=1;y<src.h-1;y++) for(let x=1;x<src.w-1;x++){ let ok=0; for(let yy=-1;yy<=1;yy++) for(let xx=-1;xx<=1;xx++) if(src.data[(y+yy)*src.w+x+xx]) ok=1; out[y*src.w+x]=ok; } return {data:out,w:src.w,h:src.h,meta:src.meta||{}}; };
+  if(mode==='close') return erode(dilate(bin));
+  return dilate(erode(bin));
+}
+function removeFrameAndRules(bin){
+  const out=new Uint8Array(bin.data); const w=bin.w,h=bin.h;
+  const marginX=Math.max(1,Math.round(w*.025)), marginY=Math.max(1,Math.round(h*.05));
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) if(x<marginX||x>=w-marginX||y<marginY||y>=h-marginY) out[y*w+x]=0;
+  const rowCut=Math.max(20, w*.55), colCut=Math.max(18, h*.55);
+  for(let y=0;y<h;y++){ let c=0; for(let x=0;x<w;x++) c+=out[y*w+x]; if(c>rowCut){ for(let yy=Math.max(0,y-1);yy<=Math.min(h-1,y+1);yy++) for(let x=0;x<w;x++) out[yy*w+x]=0; } }
+  for(let x=0;x<w;x++){ let c=0; for(let y=0;y<h;y++) c+=out[y*w+x]; if(c>colCut){ for(let xx=Math.max(0,x-1);xx<=Math.min(w-1,x+1);xx++) for(let y=0;y<h;y++) out[y*w+xx]=0; } }
+  return {data:out,w,h,meta:bin.meta||{}};
+}
+function removeTinyNoise(bin){
+  const w=bin.w,h=bin.h,seen=new Uint8Array(w*h),out=new Uint8Array(w*h),stack=[];
+  for(let p=0;p<w*h;p++){
+    if(!bin.data[p]||seen[p]) continue; let minx=w,maxx=0,miny=h,maxy=0,count=0; stack.push(p); seen[p]=1; const pts=[];
+    while(stack.length){ const cur=stack.pop(); pts.push(cur); count++; const y=Math.floor(cur/w),x=cur%w; if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y; const ns=[cur-1,cur+1,cur-w,cur+w]; for(const n of ns){ if(n>=0&&n<w*h&&!seen[n]&&bin.data[n]){ const nx=n%w, ny=Math.floor(n/w); if(Math.abs(nx-x)+Math.abs(ny-y)===1){seen[n]=1;stack.push(n);} } }
+    }
+    const bw=maxx-minx+1,bh=maxy-miny+1;
+    const keep = count>=2 || (bw>=2&&bh>=2) || (count===1&&h<26);
+    if(keep) for(const q of pts) out[q]=1;
+  }
+  return {data:out,w,h,meta:bin.meta||{}};
+}
+function upscaleImageData(imageData,factor){
+  if(factor<=1) return imageData;
+  const src=document.createElement('canvas'); src.width=imageData.width; src.height=imageData.height;
+  const sctx=src.getContext('2d'); sctx.putImageData(imageData,0,0);
+  const dst=document.createElement('canvas'); dst.width=imageData.width*factor; dst.height=imageData.height*factor;
+  const dctx=dst.getContext('2d',{willReadFrequently:true}); dctx.imageSmoothingEnabled=false; dctx.drawImage(src,0,0,dst.width,dst.height);
+  return dctx.getImageData(0,0,dst.width,dst.height);
+}
+function makeOcrVariants(imageData){
+  const variants=[];
+  for(const scale of [1,2]){
+    if(scale===2 && Math.max(imageData.width,imageData.height)>900) continue;
+    const id=upscaleImageData(imageData,scale);
+    const g0=grayFromImageData(id), g1=contrastGray(g0), g2=blurGray(g1);
+    const grays=[['contrast',g1],['smooth',g2],['raw',g0]];
+    for(const [gname,g] of grays){
+      for(const polarity of ['auto','dark','light']){
+        for(const method of ['otsu','adaptive']){
+          let b=toBinary(g,g.w,g.h,{method,polarity,margin:method==='adaptive'?7:0});
+          b=removeFrameAndRules(b); b=removeTinyNoise(b);
+          const t=trimBinary(b,1);
+          if(t && binaryDensity(t)>.004 && binaryDensity(t)<.55) variants.push({bin:t,name:`${OCR_ENGINE_VERSION}/${gname}/${method}/${polarity}/x${scale}`});
+        }
+      }
+    }
+  }
+  return variants;
+}
+function splitLines(bin){
+  const rows=[]; for(let y=0;y<bin.h;y++){ let c=0; for(let x=0;x<bin.w;x++) c+=bin.data[y*bin.w+x]; rows.push(c); }
+  const maxRow=Math.max(1,...rows); const threshold=Math.max(1, Math.min(bin.w*.035, maxRow*.16)); const raw=[]; let inRun=false,start=0,gap=0;
+  for(let y=0;y<bin.h;y++){
+    if(rows[y]>threshold){ if(!inRun){start=y;inRun=true;} gap=0; }
+    else if(inRun){ gap++; if(gap>2){ raw.push([start,y-gap]); inRun=false; } }
+  }
+  if(inRun) raw.push([start,bin.h-1]);
+  const merged=[];
+  for(const r of raw){ if(!merged.length || r[0]-merged[merged.length-1][1]>4) merged.push(r); else merged[merged.length-1][1]=r[1]; }
+  return merged.filter(r=>r[1]-r[0]>3).map(r=>cropBinary(bin,0,Math.max(0,r[0]-1),bin.w,Math.min(bin.h-r[0]+1,r[1]-r[0]+3)));
+}
+function verticalSegments(line){
+  const cols=[]; for(let x=0;x<line.w;x++){ let c=0; for(let y=0;y<line.h;y++) c+=line.data[y*line.w+x]; cols.push(c); }
+  const maxCol=Math.max(1,...cols); const threshold=Math.max(1, Math.min(line.h*.06, maxCol*.18)); const ranges=[]; let inRun=false,start=0,gap=0;
+  for(let x=0;x<line.w;x++){
+    if(cols[x]>threshold){ if(!inRun){start=x;inRun=true;} gap=0; }
+    else if(inRun){ gap++; if(gap>1){ ranges.push([start,x-gap]); inRun=false; } }
+  }
+  if(inRun) ranges.push([start,line.w-1]);
+  return {cols,ranges};
+}
+function splitWideRange(line,range){
+  const [a,b]=range, width=b-a+1; if(width<Math.max(12,line.h*.82)) return [range];
+  const cols=[]; for(let x=a;x<=b;x++){ let c=0; for(let y=0;y<line.h;y++) c+=line.data[y*line.w+x]; cols.push(c); }
+  const pieces=[]; let start=a; const target=Math.max(5,Math.round(line.h*.45));
+  while((b-start+1)>Math.max(line.h*1.15,18)){
+    let lo=start+target, hi=Math.min(b-2,start+Math.round(line.h*.95)); if(lo>=hi) break;
+    let best=lo,bestVal=Infinity; for(let x=lo;x<=hi;x++){ const v=cols[x-a]+(cols[x-a-1]||0)+(cols[x-a+1]||0); if(v<bestVal){bestVal=v; best=x;} }
+    if(bestVal>line.h*.22) break;
+    pieces.push([start,best-1]); start=best+1;
+  }
+  pieces.push([start,b]); return pieces.filter(r=>r[1]-r[0]+1>1);
+}
+function splitCharacters(line){
+  const {ranges}=verticalSegments(line); const merged=[];
+  for(const r of ranges){
+    for(const sr of splitWideRange(line,r)){
+      if(!merged.length){ merged.push(sr); continue; }
+      const prev=merged[merged.length-1]; const gap=sr[0]-prev[1]-1; const rw=sr[1]-sr[0]+1, pw=prev[1]-prev[0]+1;
+      if(gap<=1 && (rw<=2 || pw<=2 || rw<line.h*.12 || pw<line.h*.12)) prev[1]=sr[1]; else merged.push(sr);
+    }
+  }
+  return merged.map(r=>({bin:cropBinary(line,r[0],0,r[1]-r[0]+1,line.h),x0:r[0],x1:r[1]}));
+}
+function classifyChar(charBin){
+  const t=ensureOcrTemplates(); const trimmed=trimBinary(charBin,0); if(!trimmed) return {ch:'',score:0};
+  const vec=resizeBinary(trimmed,18,24); const aspect=trimmed.w/Math.max(1,trimmed.h); const density=binaryDensity(trimmed); let best={ch:'',score:-1};
+  for(const temp of t){
+    const aspectPenalty=Math.min(.38, Math.abs(aspect-temp.aspect)*.20);
+    const densityPenalty=Math.min(.18, Math.abs(density-temp.density)*.35);
+    let same=0,total=0;
+    for(let i=0;i<vec.length;i++){ same += 1-Math.abs(vec[i]-temp.vec[i]); total++; }
+    let score=(same/total)-aspectPenalty-densityPenalty;
+    if(score>best.score) best={ch:temp.ch,score};
+  }
+  return repairCommonChar(best, trimmed);
+}
+function repairCommonChar(best,bin){
+  // Keep corrections conservative. These help template matching on flowchart screenshots.
+  if(!best.ch) return best;
+  const aspect=bin.w/Math.max(1,bin.h);
+  if(best.ch==='|' && aspect>.35) best.ch='I';
+  if(best.ch==='0' && aspect<.42) best.ch='O';
+  return best;
+}
+function readBinary(bin){
+  const lines=splitLines(bin); const out=[]; const scores=[];
+  for(const line of lines){
+    const chars=splitCharacters(line); if(!chars.length) continue;
+    const gaps=[]; for(let i=1;i<chars.length;i++) gaps.push(chars[i].x0-chars[i-1].x1-1);
+    const posGaps=gaps.filter(g=>g>1).sort((a,b)=>a-b); const medGap=posGaps.length?posGaps[Math.floor(posGaps.length/2)]:3;
+    let s='';
+    for(let i=0;i<chars.length;i++){
+      if(i>0){ const gap=chars[i].x0-chars[i-1].x1-1; if(gap>Math.max(medGap*2.2,line.h*.30,7)) s+=' '; }
+      const c=classifyChar(chars[i].bin); if(c.ch){ s+=c.ch; scores.push(c.score); }
+    }
+    s=postProcessOcr(s); if(s) out.push(s);
+  }
+  return {text:postProcessOcr(out.join(' / ')), scores};
+}
+function scoreOcrText(text,confidence){
+  const s=String(text||'').trim(); if(!s) return -1;
+  const letters=(s.match(/[A-Za-z]/g)||[]).length, digits=(s.match(/[0-9]/g)||[]).length, bad=(s.match(/[^A-Za-z0-9&\-\/_.:,()\[\]#%+?!= ]/g)||[]).length;
+  const words=s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean); let lex=0; for(const w of words) if(OCR_LEXICON.includes(w)) lex++;
+  const lenScore=Math.min(1,s.length/8); const alphaScore=Math.min(1,(letters+digits)/Math.max(1,s.length)); const lexScore=words.length?Math.min(1,lex/Math.max(1,words.length*.45)):0;
+  return confidence*.62 + lenScore*.10 + alphaScore*.15 + lexScore*.13 - bad*.08;
+}
+function ocrImageData(imageData){
+  const variants=makeOcrVariants(imageData); let best={text:'',confidence:0,method:OCR_ENGINE_VERSION,score:-1,variants:variants.length};
+  for(const v of variants){
+    const result=readBinary(v.bin); const conf=result.scores.length ? result.scores.reduce((a,b)=>a+b,0)/result.scores.length : 0;
+    const text=correctFlowchartWords(result.text); const score=scoreOcrText(text,conf);
+    if(score>best.score) best={text,confidence:Math.max(0,Math.min(1,conf)),method:v.name,score,variants:variants.length};
+  }
+  if(best.text) best.text=postProcessOcr(best.text);
+  return best;
+}
+function postProcessOcr(s){
+  return String(s||'')
+    .replace(/\s+([,.:;!?])/g,'$1')
+    .replace(/\s*\/\s*/g,' / ')
+    .replace(/[|]{2,}/g,'I')
+    .replace(/\b0(?=[A-Za-z])/g,'O')
+    .replace(/(?<=[A-Za-z])0\b/g,'O')
+    .replace(/\b1(?=[A-Za-z])/g,'I')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function editDistance(a,b){
+  a=String(a||''); b=String(b||''); const dp=Array.from({length:a.length+1},()=>new Array(b.length+1).fill(0));
+  for(let i=0;i<=a.length;i++) dp[i][0]=i; for(let j=0;j<=b.length;j++) dp[0][j]=j;
+  for(let i=1;i<=a.length;i++) for(let j=1;j<=b.length;j++) dp[i][j]=Math.min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return dp[a.length][b.length];
+}
+function matchCase(src,repl){
+  if(src.toUpperCase()===src) return repl.toUpperCase();
+  if(src[0]&&src[0].toUpperCase()===src[0]) return repl[0].toUpperCase()+repl.slice(1);
+  return repl;
+}
+function correctFlowchartWords(s){
+  return postProcessOcr(s).replace(/[A-Za-z]{4,}/g, tok=>{
+    const low=tok.toLowerCase(); if(OCR_LEXICON.includes(low)) return tok;
+    let best=null,bd=99; for(const w of OCR_LEXICON){ if(Math.abs(w.length-low.length)>2) continue; const d=editDistance(low,w); if(d<bd){bd=d;best=w;} }
+    return best && bd<=Math.max(1,Math.floor(low.length/4)) ? matchCase(tok,best) : tok;
+  });
+}
+async function nativeOcrCanvas(canvas){
+  try{
+    // Chromium-based browsers may expose the Shape Detection TextDetector API.
+    // Most browsers still do not; the embedded engine is the normal fallback.
+    const TD = window.TextDetector || null;
+    if(!TD) return null;
+    const detector=new TD(); const results=await detector.detect(canvas); if(!results || !results.length) return null;
+    return results.map(r=>r.rawValue || r.text || '').filter(Boolean).join(' ');
+  }catch(e){ return null; }
+}
+async function ocrNode(n){
+  if(!state.image){ toast('Load an image first.'); return null; }
+  const pad=4; const x=Math.max(0,Math.floor(n.x+pad)), y=Math.max(0,Math.floor(n.y+pad));
+  const w=Math.max(1,Math.min(els.canvas.width-x,Math.floor(n.w-pad*2))); const h=Math.max(1,Math.min(els.canvas.height-y,Math.floor(n.h-pad*2)));
+  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tctx=tmp.getContext('2d',{willReadFrequently:true}); tctx.drawImage(els.canvas,x,y,w,h,0,0,w,h);
+  const nativeText=await nativeOcrCanvas(tmp);
+  if(nativeText && nativeText.trim()) return {text:cleanText(nativeText),confidence:1,method:'browser-native'};
+  return ocrImageData(tctx.getImageData(0,0,w,h));
+}
+async function ocrSelectedNode(){
+  if(!state.selectedNodeId){ toast('Select a node first.'); return; }
+  const n=state.nodes.find(n=>n.id===state.selectedNodeId); if(!n) return;
+  setOcrStatus('reading selected node...'); const r=await ocrNode(n);
+  if(r && r.text){ n.label=r.text; state.ocrLog.push({node:n.id,text:r.text,confidence:r.confidence,method:r.method}); state.warnings.push(`OCR label read for ${n.id} using ${r.method}; review for accuracy.`); normalizeModel('image OCR/manual markup'); setOcrStatus(`selected node read as “${r.text}” (${Math.round((r.confidence||0)*100)}%).`); }
+  else { setOcrStatus('no text found in selected node.'); toast('No text found. Tighten the box around the label and retry.'); }
+}
+async function ocrAllNodes(){
+  if(!state.image || !state.nodes.length){ toast('Load an image and add/detect nodes first.'); return; }
+  let changed=0; setOcrStatus('reading all nodes...');
+  for(const n of state.nodes){
+    const r=await ocrNode(n); if(r && r.text && r.text.length>0){ n.label=r.text; changed++; state.ocrLog.push({node:n.id,text:r.text,confidence:r.confidence,method:r.method}); }
+    await new Promise(res=>setTimeout(res,0));
+  }
+  if(changed){ state.warnings.push(`OCR attempted on ${state.nodes.length} node boxes; ${changed} labels were filled. Review labels for accuracy.`); normalizeModel('image OCR/manual markup'); setOcrStatus(`completed: ${changed}/${state.nodes.length} labels filled.`); }
+  else { setOcrStatus('completed: no labels found.'); toast('No labels found. Try tighter boxes or higher-contrast image.'); }
+}
+async function ocrWholeImage(){
+  if(!state.image){ toast('Load an image first.'); return; }
+  setOcrStatus('reading whole image...');
+  const nativeText=await nativeOcrCanvas(els.canvas);
+  let r=nativeText ? {text:nativeText,confidence:1,method:'browser-native'} : ocrImageData(ctx.getImageData(0,0,els.canvas.width,els.canvas.height));
+  const text=cleanText(r.text||'');
+  if(text){
+    const label='OCR text block'; const n=addNode(text,'process',40,40,Math.min(360,els.canvas.width-60),90); state.selectedNodeId=n.id;
+    state.warnings.push(`Whole-image OCR created a text block using ${r.method}. For accurate flow structure, draw or auto-detect nodes and connect them.`);
+    normalizeModel('image whole-image OCR/manual markup'); setOcrStatus(`whole image text captured (${Math.round((r.confidence||0)*100)}%).`);
+  } else { setOcrStatus('no whole-image text found.'); toast('No text found.'); }
+}
+
+
+// Maximum-practical offline OCR upgrade ------------------------------------
+// Version 3: still no external dependencies, but adds border/arrow stripping,
+// Sauvola/Bradley thresholding, sharpening/equalization, small-angle deskew,
+// multi-scale recognition, candidate consensus voting, and a larger flowchart
+// correction lexicon. It intentionally stays lightweight enough to run inside
+// a single HTML file on ordinary locked-down machines.
+const OCR_V3_VERSION = 'embedded-template-v3-max-local';
+(function extendOcrLexiconV3(){
+  const extra = [
+    'accept','accepted','access','account','action','activity','actor','add','address','admin','administrator','alert','allow','allowed','answer','api','application','assessment','assign','authorize','authorized','backup','batch','branch','business','calculate','cancel','capture','change','clean','clear','client','collect','compare','condition','confirm','connect','convert','copy','create','critical','dashboard','debug','decline','default','deliver','deploy','detect','detected','determine','diagram','direction','dispatch','display','download','draft','edit','email','enable','encrypt','enter','error','escalate','evaluate','event','exception','execute','exit','extract','feedback','field','file','filter','final','find','finish','flag','follow','format','gateway','generate','go','hold','identify','image','import','index','initial','input','inspect','issue','label','load','login','logout','loop','manual','map','markdown','match','merge','message','method','monitor','node','normal','notification','ocr','offline','operator','option','output','parse','pass','path','pause','perform','permission','policy','prepare','previous','priority','process','queue','read','record','refresh','region','remove','render','reply','report','request','reset','resolve','result','return','review','risk','route','run','save','scan','score','screen','search','select','send','server','service','share','sort','source','start','status','stop','store','submit','success','sync','system','task','template','test','then','ticket','timeout','trigger','update','upload','user','valid','validate','verification','verify','view','wait','warning','workflow','write'
+  ];
+  for(const w of extra){ if(!OCR_LEXICON.includes(w)) OCR_LEXICON.push(w); }
+})();
+
+function clampV3(n,a,b){ return Math.max(a,Math.min(b,n)); }
+function imageDataToCanvasV3(imageData){ const c=document.createElement('canvas'); c.width=imageData.width; c.height=imageData.height; c.getContext('2d',{willReadFrequently:true}).putImageData(imageData,0,0); return c; }
+function canvasToImageDataV3(canvas){ return canvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,canvas.width,canvas.height); }
+function cropImageDataV3(imageData,x,y,w,h){
+  x=clampV3(Math.floor(x),0,imageData.width-1); y=clampV3(Math.floor(y),0,imageData.height-1);
+  w=clampV3(Math.ceil(w),1,imageData.width-x); h=clampV3(Math.ceil(h),1,imageData.height-y);
+  const src=imageDataToCanvasV3(imageData); const dst=document.createElement('canvas'); dst.width=w; dst.height=h;
+  const dctx=dst.getContext('2d',{willReadFrequently:true}); dctx.fillStyle='#fff'; dctx.fillRect(0,0,w,h); dctx.drawImage(src,x,y,w,h,0,0,w,h);
+  return dctx.getImageData(0,0,w,h);
+}
+function upscaleImageDataV3(imageData,factor,smooth=false){
+  if(factor<=1) return imageData;
+  const src=imageDataToCanvasV3(imageData); const dst=document.createElement('canvas'); dst.width=Math.max(1,Math.round(imageData.width*factor)); dst.height=Math.max(1,Math.round(imageData.height*factor));
+  const dctx=dst.getContext('2d',{willReadFrequently:true}); dctx.fillStyle='#fff'; dctx.fillRect(0,0,dst.width,dst.height); dctx.imageSmoothingEnabled=!!smooth; dctx.imageSmoothingQuality='high'; dctx.drawImage(src,0,0,dst.width,dst.height);
+  return dctx.getImageData(0,0,dst.width,dst.height);
+}
+function rotateImageDataV3(imageData,degrees){
+  if(!degrees) return imageData;
+  const rad=degrees*Math.PI/180, sw=imageData.width, sh=imageData.height;
+  const dw=Math.ceil(Math.abs(sw*Math.cos(rad))+Math.abs(sh*Math.sin(rad)))+4;
+  const dh=Math.ceil(Math.abs(sw*Math.sin(rad))+Math.abs(sh*Math.cos(rad)))+4;
+  const src=imageDataToCanvasV3(imageData); const dst=document.createElement('canvas'); dst.width=dw; dst.height=dh;
+  const dctx=dst.getContext('2d',{willReadFrequently:true}); dctx.fillStyle='#fff'; dctx.fillRect(0,0,dw,dh); dctx.translate(dw/2,dh/2); dctx.rotate(rad); dctx.drawImage(src,-sw/2,-sh/2);
+  return dctx.getImageData(0,0,dw,dh);
+}
+function grayObjV3(gray,w,h){ let min=255,max=0,sum=0; for(const g of gray){ if(g<min)min=g;if(g>max)max=g;sum+=g; } return {gray,w,h,min,max,mean:sum/Math.max(1,gray.length)}; }
+function equalizeGrayV3(gobj){
+  const {gray,w,h}=gobj, hist=new Array(256).fill(0); for(const g of gray) hist[g]++;
+  const cdf=new Array(256).fill(0); cdf[0]=hist[0]; for(let i=1;i<256;i++) cdf[i]=cdf[i-1]+hist[i];
+  let cdfMin=0; for(let i=0;i<256;i++){ if(cdf[i]){cdfMin=cdf[i];break;} }
+  const total=gray.length, out=new Uint8ClampedArray(gray.length), denom=Math.max(1,total-cdfMin);
+  for(let i=0;i<gray.length;i++) out[i]=clampV3(Math.round((cdf[gray[i]]-cdfMin)*255/denom),0,255);
+  return grayObjV3(out,w,h);
+}
+function gammaGrayV3(gobj,gamma){
+  const {gray,w,h}=gobj, out=new Uint8ClampedArray(gray.length); const inv=1/Math.max(.1,gamma);
+  for(let i=0;i<gray.length;i++) out[i]=clampV3(Math.round(255*Math.pow(gray[i]/255,inv)),0,255);
+  return grayObjV3(out,w,h);
+}
+function sharpenGrayV3(gobj){
+  const {gray,w,h}=gobj, out=new Uint8ClampedArray(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const c=gray[y*w+x]*5;
+    const n=(y>0?gray[(y-1)*w+x]:gray[y*w+x])+(y<h-1?gray[(y+1)*w+x]:gray[y*w+x])+(x>0?gray[y*w+x-1]:gray[y*w+x])+(x<w-1?gray[y*w+x+1]:gray[y*w+x]);
+    out[y*w+x]=clampV3(Math.round(c-n),0,255);
+  }
+  return grayObjV3(out,w,h);
+}
+function invertGrayV3(gobj){ const {gray,w,h}=gobj, out=new Uint8ClampedArray(gray.length); for(let i=0;i<gray.length;i++) out[i]=255-gray[i]; return grayObjV3(out,w,h); }
+function integralStatsV3(gray,w,h){
+  const iw=w+1, sum=new Float64Array(iw*(h+1)), sq=new Float64Array(iw*(h+1));
+  for(let y=1;y<=h;y++) for(let x=1;x<=w;x++){
+    const g=gray[(y-1)*w+(x-1)], idx=y*iw+x;
+    sum[idx]=g+sum[idx-1]+sum[idx-iw]-sum[idx-iw-1];
+    sq[idx]=g*g+sq[idx-1]+sq[idx-iw]-sq[idx-iw-1];
+  }
+  return {sum,sq,iw};
+}
+function rectSumV3(integ,x0,y0,x1,y1){ const {sum,iw}=integ; return sum[(y1+1)*iw+(x1+1)]-sum[y0*iw+(x1+1)]-sum[(y1+1)*iw+x0]+sum[y0*iw+x0]; }
+function rectSqV3(integ,x0,y0,x1,y1){ const {sq,iw}=integ; return sq[(y1+1)*iw+(x1+1)]-sq[y0*iw+(x1+1)]-sq[(y1+1)*iw+x0]+sq[y0*iw+x0]; }
+function binaryFromGrayV3(gobj,opts={}){
+  const {gray,w,h}=gobj, method=opts.method||'otsu', polarity=opts.polarity||'auto', out=new Uint8Array(w*h);
+  const otsu=otsuThreshold(gray); let darkCount=0, lightCount=0; for(const g of gray){ if(g<otsu) darkCount++; else lightCount++; }
+  const darkText = polarity==='dark' ? true : polarity==='light' ? false : darkCount <= lightCount;
+  if(method==='sauvola' || method==='bradley'){
+    const radius=Math.max(5,Math.round(Math.min(w,h)/(method==='sauvola'?10:8))); const integ=integralStatsV3(gray,w,h);
+    for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+      const x0=Math.max(0,x-radius),y0=Math.max(0,y-radius),x1=Math.min(w-1,x+radius),y1=Math.min(h-1,y+radius),area=(x1-x0+1)*(y1-y0+1);
+      const mean=rectSumV3(integ,x0,y0,x1,y1)/area; let threshold=mean;
+      if(method==='sauvola'){
+        const variance=Math.max(0,rectSqV3(integ,x0,y0,x1,y1)/area-mean*mean); const std=Math.sqrt(variance); threshold=mean*(1+.32*(std/128-1));
+      } else threshold=mean*(1-(opts.t||.12));
+      const g=gray[y*w+x]; out[y*w+x]=darkText ? (g<threshold-(opts.margin||0)?1:0) : (g>threshold+(opts.margin||0)?1:0);
+    }
+  } else if(method==='adaptive'){
+    return toBinary(gobj,w,h,{method:'adaptive',polarity,margin:opts.margin==null?8:opts.margin});
+  } else {
+    const threshold=opts.threshold==null?otsu:opts.threshold, margin=opts.margin||0;
+    for(let p=0;p<gray.length;p++) out[p]=darkText ? (gray[p]<threshold-margin?1:0) : (gray[p]>threshold+margin?1:0);
+  }
+  return {data:out,w,h,meta:{method,polarity,darkText}};
+}
+function removeLongRunsV3(bin){
+  const w=bin.w,h=bin.h,out=new Uint8Array(bin.data); const minH=Math.max(18,Math.round(w*.38)), minV=Math.max(18,Math.round(h*.38));
+  for(let y=0;y<h;y++){
+    let x=0; while(x<w){ while(x<w&&!out[y*w+x]) x++; const start=x; while(x<w&&out[y*w+x]) x++; const len=x-start; if(len>=minH){ for(let xx=Math.max(0,start-1);xx<Math.min(w,x+1);xx++) for(let yy=Math.max(0,y-1);yy<=Math.min(h-1,y+1);yy++) out[yy*w+xx]=0; } }
+  }
+  for(let x=0;x<w;x++){
+    let y=0; while(y<h){ while(y<h&&!out[y*w+x]) y++; const start=y; while(y<h&&out[y*w+x]) y++; const len=y-start; if(len>=minV){ for(let yy=Math.max(0,start-1);yy<Math.min(h,y+1);yy++) for(let xx=Math.max(0,x-1);xx<=Math.min(w-1,x+1);xx++) out[yy*w+xx]=0; } }
+  }
+  return {data:out,w,h,meta:bin.meta||{}};
+}
+function removeComponentNoiseAndLinesV3(bin){
+  const w=bin.w,h=bin.h,seen=new Uint8Array(w*h),out=new Uint8Array(w*h),stack=[];
+  for(let p=0;p<w*h;p++){
+    if(!bin.data[p]||seen[p]) continue; let minx=w,maxx=0,miny=h,maxy=0,count=0; const pts=[]; stack.push(p); seen[p]=1;
+    while(stack.length){ const cur=stack.pop(); pts.push(cur); count++; const y=Math.floor(cur/w),x=cur%w; if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y; const ns=[cur-1,cur+1,cur-w,cur+w,cur-w-1,cur-w+1,cur+w-1,cur+w+1]; for(const n of ns){ if(n>=0&&n<w*h&&!seen[n]&&bin.data[n]){ const nx=n%w,ny=Math.floor(n/w); if(Math.abs(nx-x)<=1&&Math.abs(ny-y)<=1){seen[n]=1;stack.push(n);} } }
+    }
+    const bw=maxx-minx+1,bh=maxy-miny+1,aspect=bw/Math.max(1,bh),area=w*h;
+    const tooSmall=count<2 && area>2500;
+    const likelyLine=(bw>Math.max(22,w*.28)&&bh<=3) || (bh>Math.max(18,h*.28)&&bw<=3) || aspect>18 || aspect<1/18;
+    const likelyBorder=count>area*.25 && (bw>w*.75 || bh>h*.75);
+    const keep=!tooSmall && !likelyLine && !likelyBorder;
+    if(keep) for(const q of pts) out[q]=1;
+  }
+  return {data:out,w,h,meta:bin.meta||{}};
+}
+function stripEdgeInkV3(bin){
+  const w=bin.w,h=bin.h,out=new Uint8Array(bin.data); const mx=Math.max(1,Math.round(w*.018)), my=Math.max(1,Math.round(h*.025));
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++) if(x<mx||x>=w-mx||y<my||y>=h-my) out[y*w+x]=0;
+  return {data:out,w,h,meta:bin.meta||{}};
+}
+function cleanOcrBinaryV3(bin){
+  let b=stripEdgeInkV3(bin); b=removeFrameAndRules(b); b=removeLongRunsV3(b); b=removeComponentNoiseAndLinesV3(b); b=removeTinyNoise(b); const t=trimBinary(b,1); return t || b;
+}
+function stripLikelyBorderImageDataV3(imageData){
+  try{
+    const g=contrastGray(grayFromImageData(imageData)); const b=binaryFromGrayV3(g,{method:'otsu',polarity:'auto'}); const w=b.w,h=b.h;
+    const rowCount=y=>{let c=0;for(let x=0;x<w;x++)c+=b.data[y*w+x];return c;}; const colCount=x=>{let c=0;for(let y=0;y<h;y++)c+=b.data[y*w+x];return c;};
+    let top=0,bottom=h-1,left=0,right=w-1; const rowThresh=w*.45,colThresh=h*.45;
+    for(let y=0;y<Math.min(h*.22,28);y++){ if(rowCount(y)>rowThresh){ top=y+2; break; } }
+    for(let y=h-1;y>=Math.max(0,h-Math.min(h*.22,28));y--){ if(rowCount(y)>rowThresh){ bottom=y-2; break; } }
+    for(let x=0;x<Math.min(w*.18,28);x++){ if(colCount(x)>colThresh){ left=x+2; break; } }
+    for(let x=w-1;x>=Math.max(0,w-Math.min(w*.18,28));x--){ if(colCount(x)>colThresh){ right=x-2; break; } }
+    const nw=right-left+1,nh=bottom-top+1;
+    if(nw>Math.max(12,w*.45)&&nh>Math.max(10,h*.35)&&(left||top||right<w-1||bottom<h-1)) return cropImageDataV3(imageData,left,top,nw,nh);
+  }catch(e){}
+  return imageData;
+}
+function makeOcrVariants(imageData){
+  const variants=[], maxDim=Math.max(imageData.width,imageData.height), small=maxDim<380;
+  const scales=small ? [1,2,3] : (maxDim<800 ? [1,2] : [1]);
+  const rotations=small ? [0,-2,2,-3.5,3.5] : [0,-1.5,1.5];
+  const smoothModes=small ? [false,true] : [false];
+  const seen=new Set();
+  for(const scale of scales){ for(const smooth of smoothModes){
+    const scaled=upscaleImageDataV3(imageData,scale,smooth);
+    for(const deg of rotations){
+      if(deg && Math.max(scaled.width,scaled.height)>1200) continue;
+      const id=rotateImageDataV3(scaled,deg);
+      const g0=grayFromImageData(id), gContrast=contrastGray(g0), gEq=equalizeGrayV3(gContrast), gSharp=sharpenGrayV3(gContrast), gLight=gammaGrayV3(gContrast,1.25), gDark=gammaGrayV3(gContrast,.78);
+      const grays=[['contrast',gContrast],['sharp',gSharp],['equalized',gEq],['gammaL',gLight],['gammaD',gDark],['raw',g0]];
+      for(const [gname,g] of grays){ for(const polarity of ['auto','dark','light']){ for(const method of ['otsu','adaptive','sauvola','bradley']){
+        let b= method==='otsu'||method==='adaptive' ? toBinary(g,g.w,g.h,{method:method==='otsu'?'otsu':'adaptive',polarity,margin:method==='adaptive'?7:0}) : binaryFromGrayV3(g,{method,polarity});
+        b=cleanOcrBinaryV3(b); const density=binaryDensity(b);
+        if(b && density>.0025 && density<.60){
+          const key=`${b.w}x${b.h}:${Math.round(density*1000)}:${gname}:${method}:${polarity}:${scale}:${smooth}:${deg}`;
+          if(!seen.has(key)){ seen.add(key); variants.push({bin:b,name:`${OCR_V3_VERSION}/${gname}/${method}/${polarity}/x${scale}${smooth?'-smooth':''}/rot${deg}`}); }
+        }
+      }}}
+    }
+  }}
+  // Keep runtime bounded while preserving variety: score denser, compact trims first.
+  variants.sort((a,b)=>{
+    const da=binaryDensity(a.bin), db=binaryDensity(b.bin); const sa=(da>.01&&da<.35?1:0)-Math.abs(.12-da); const sb=(db>.01&&db<.35?1:0)-Math.abs(.12-db); return sb-sa;
+  });
+  return variants.slice(0, small ? 220 : 120);
+}
+const OCR_V2_readBinary = readBinary;
+function readBinary(bin){
+  const attempts=[];
+  const base=OCR_V2_readBinary(bin); if(base&&base.text) attempts.push(base);
+  try{ const closed=morphBinary(bin,'close'); const r=OCR_V2_readBinary(closed); if(r&&r.text) attempts.push(r); }catch(e){}
+  try{ const opened=morphBinary(bin,'open'); const r=OCR_V2_readBinary(opened); if(r&&r.text) attempts.push(r); }catch(e){}
+  if(!attempts.length) return {text:'',scores:[]};
+  attempts.sort((a,b)=>scoreOcrText(correctFlowchartWords(b.text),(b.scores||[]).reduce((x,y)=>x+y,0)/Math.max(1,(b.scores||[]).length))-scoreOcrText(correctFlowchartWords(a.text),(a.scores||[]).reduce((x,y)=>x+y,0)/Math.max(1,(a.scores||[]).length)));
+  return attempts[0];
+}
+function normalizeOcrCandidateV3(s){ return postProcessOcr(correctFlowchartWords(String(s||''))).replace(/[^A-Za-z0-9]+/g,' ').trim().toLowerCase(); }
+function similarityV3(a,b){
+  a=normalizeOcrCandidateV3(a); b=normalizeOcrCandidateV3(b); if(!a&&!b) return 1; if(!a||!b) return 0;
+  const d=editDistance(a,b); return 1-d/Math.max(a.length,b.length,1);
+}
+function selectConsensusOcrV3(candidates){
+  candidates=candidates.filter(c=>c && c.text && normalizeOcrCandidateV3(c.text).length);
+  if(!candidates.length) return null;
+  candidates.forEach(c=>{ c.text=postProcessOcr(correctFlowchartWords(c.text)); c.norm=normalizeOcrCandidateV3(c.text); c.weight=(c.score||0)+(c.confidence||0)*.22+Math.min(.15,c.text.length*.006); });
+  const clusters=[];
+  for(const c of candidates){
+    let best=null,bestSim=0; for(const cl of clusters){ const sim=similarityV3(c.text,cl.rep.text); if(sim>bestSim){bestSim=sim;best=cl;} }
+    if(best && bestSim>=.72){ best.items.push(c); best.sum+=c.weight; if(c.weight>best.rep.weight) best.rep=c; }
+    else clusters.push({rep:c,items:[c],sum:c.weight});
+  }
+  clusters.forEach(cl=>{ cl.lex=(cl.rep.text.toLowerCase().split(/[^a-z0-9]+/).filter(w=>OCR_LEXICON.includes(w)).length); cl.total=cl.sum + Math.log2(cl.items.length+1)*.35 + cl.lex*.08; });
+  clusters.sort((a,b)=>b.total-a.total);
+  const winner=clusters[0], alt=clusters.slice(1,4).map(c=>c.rep.text).filter((x,i,a)=>a.indexOf(x)===i);
+  return {text:winner.rep.text,confidence:clampV3((winner.rep.confidence||0)*.72 + Math.min(.28,winner.items.length/12),0,1),method:winner.rep.method + ` + ${OCR_V3_VERSION}/consensus(${winner.items.length}/${candidates.length})`,score:winner.total,alternatives:alt};
+}
+function scoreOcrText(text,confidence){
+  const s=String(text||'').trim(); if(!s) return -1;
+  const letters=(s.match(/[A-Za-z]/g)||[]).length, digits=(s.match(/[0-9]/g)||[]).length, spaces=(s.match(/ /g)||[]).length, bad=(s.match(/[^A-Za-z0-9&\-\/_.:,()\[\]#%+?!= ]/g)||[]).length;
+  const words=s.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean); let lex=0; for(const w of words) if(OCR_LEXICON.includes(w)) lex++;
+  const alphaRatio=(letters+digits)/Math.max(1,s.length), wordBonus=words.length?Math.min(1,lex/Math.max(1,words.length*.42)):0;
+  const lengthPenalty=s.length>80?Math.min(.25,(s.length-80)/220):0; const repeatedPenalty=/(.)\1\1\1/.test(s)?.16:0;
+  return confidence*.56 + Math.min(1,s.length/10)*.10 + alphaRatio*.16 + wordBonus*.18 + Math.min(.05,spaces*.01) - bad*.08 - lengthPenalty - repeatedPenalty;
+}
+function postProcessOcr(s){
+  return String(s||'')
+    .replace(/[“”]/g,'"').replace(/[‘’]/g,"'")
+    .replace(/\s+([,.:;!?])/g,'$1')
+    .replace(/\s*\/\s*/g,' / ')
+    .replace(/[|]{2,}/g,'I')
+    .replace(/\b0(?=[A-Za-z])/g,'O').replace(/(?<=[A-Za-z])0\b/g,'O')
+    .replace(/\b1(?=[A-Za-z])/g,'I').replace(/(?<=[A-Za-z])1(?=[A-Za-z])/g,'l')
+    .replace(/\b5(?=[A-Za-z])/g,'S').replace(/\b8(?=[A-Za-z])/g,'B')
+    .replace(/\bcl0se\b/ig,'close').replace(/\bsubmlt\b/ig,'submit').replace(/\bapprovcd\b/ig,'approved')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function correctFlowchartWords(s){
+  return postProcessOcr(s).replace(/[A-Za-z0-9]{3,}/g, tok=>{
+    const low=tok.toLowerCase(); if(OCR_LEXICON.includes(low)) return tok;
+    let best=null,bd=99; for(const w of OCR_LEXICON){ if(Math.abs(w.length-low.length)>2) continue; const d=editDistance(low,w); if(d<bd){bd=d;best=w;} }
+    return best && bd<=Math.max(1,Math.floor(low.length/3.5)) ? matchCase(tok,best) : tok;
+  });
+}
+function ocrImageData(imageData){
+  imageData=stripLikelyBorderImageDataV3(imageData);
+  const variants=makeOcrVariants(imageData); const candidates=[];
+  for(const v of variants){
+    const result=readBinary(v.bin); const scores=result.scores||[]; const conf=scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : 0;
+    const text=correctFlowchartWords(result.text); const score=scoreOcrText(text,conf);
+    if(text && score>-.15) candidates.push({text,confidence:clampV3(conf,0,1),method:v.name,score});
+  }
+  let best=selectConsensusOcrV3(candidates);
+  if(!best) best={text:'',confidence:0,method:`${OCR_V3_VERSION}/no-candidate`,score:-1,variants:variants.length,alternatives:[]};
+  best.variants=variants.length; best.candidateCount=candidates.length;
+  return best;
+}
+async function ocrNode(n){
+  if(!state.image){ toast('Load an image first.'); return null; }
+  const pad=Math.max(1,Math.round(Math.min(n.w,n.h)*.025)); const x=Math.max(0,Math.floor(n.x+pad)), y=Math.max(0,Math.floor(n.y+pad));
+  const w=Math.max(1,Math.min(els.canvas.width-x,Math.floor(n.w-pad*2))); const h=Math.max(1,Math.min(els.canvas.height-y,Math.floor(n.h-pad*2)));
+  const tmp=document.createElement('canvas'); tmp.width=w; tmp.height=h; const tctx=tmp.getContext('2d',{willReadFrequently:true}); tctx.fillStyle='#fff'; tctx.fillRect(0,0,w,h); tctx.drawImage(els.canvas,x,y,w,h,0,0,w,h);
+  let working=canvasToImageDataV3(tmp); working=stripLikelyBorderImageDataV3(working);
+  const nativeCanvas=imageDataToCanvasV3(working); const nativeText=await nativeOcrCanvas(nativeCanvas);
+  if(nativeText && nativeText.trim()) return {text:cleanText(nativeText),confidence:1,method:'browser-native'};
+  return ocrImageData(working);
+}
+async function ocrSelectedNode(){
+  if(!state.selectedNodeId){ toast('Select a node first.'); return; }
+  const n=state.nodes.find(n=>n.id===state.selectedNodeId); if(!n) return;
+  setOcrStatus('reading selected node with maximum offline OCR...'); const r=await ocrNode(n);
+  if(r && r.text){ n.label=r.text; state.ocrLog.push({node:n.id,text:r.text,confidence:r.confidence,method:r.method,alternatives:r.alternatives||[],variants:r.variants,candidates:r.candidateCount}); state.warnings.push(`OCR label read for ${n.id} using ${r.method}; review for accuracy. Alternatives: ${(r.alternatives||[]).join(' | ') || 'none'}.`); normalizeModel('image OCR/manual markup'); setOcrStatus(`selected node read as “${r.text}” (${Math.round((r.confidence||0)*100)}%; ${r.candidateCount||0} candidates, ${r.variants||0} passes).`); }
+  else { setOcrStatus('no text found in selected node.'); toast('No text found. Tighten the box around the label and retry.'); }
+}
+async function ocrAllNodes(){
+  if(!state.image || !state.nodes.length){ toast('Load an image and add/detect nodes first.'); return; }
+  let changed=0; setOcrStatus('reading all nodes with maximum offline OCR...');
+  for(let i=0;i<state.nodes.length;i++){
+    const n=state.nodes[i]; setOcrStatus(`reading node ${i+1}/${state.nodes.length}...`);
+    const r=await ocrNode(n); if(r && r.text && r.text.length>0){ n.label=r.text; changed++; state.ocrLog.push({node:n.id,text:r.text,confidence:r.confidence,method:r.method,alternatives:r.alternatives||[],variants:r.variants,candidates:r.candidateCount}); }
+    await new Promise(res=>setTimeout(res,0));
+  }
+  if(changed){ state.warnings.push(`Maximum offline OCR attempted on ${state.nodes.length} node boxes; ${changed} labels were filled. Review labels and alternatives in JSON export for accuracy.`); normalizeModel('image OCR/manual markup'); setOcrStatus(`completed: ${changed}/${state.nodes.length} labels filled.`); }
+  else { setOcrStatus('completed: no labels found.'); toast('No labels found. Try tighter boxes or higher-contrast image.'); }
+}
+async function ocrWholeImage(){
+  if(!state.image){ toast('Load an image first.'); return; }
+  setOcrStatus('reading whole image with maximum offline OCR...');
+  const nativeText=await nativeOcrCanvas(els.canvas);
+  let r=nativeText ? {text:nativeText,confidence:1,method:'browser-native'} : ocrImageData(ctx.getImageData(0,0,els.canvas.width,els.canvas.height));
+  const text=cleanText(r.text||'');
+  if(text){
+    const n=addNode(text,'process',40,40,Math.min(420,els.canvas.width-60),100); state.selectedNodeId=n.id;
+    state.ocrLog.push({node:n.id,text,confidence:r.confidence,method:r.method,alternatives:r.alternatives||[],variants:r.variants,candidates:r.candidateCount});
+    state.warnings.push(`Whole-image OCR created a text block using ${r.method}. For accurate flow structure, draw or auto-detect nodes and connect them; whole-image OCR can mix labels, arrows, and headings.`);
+    normalizeModel('image whole-image OCR/manual markup'); setOcrStatus(`whole image text captured (${Math.round((r.confidence||0)*100)}%; ${r.candidateCount||0} candidates, ${r.variants||0} passes).`);
+  } else { setOcrStatus('no whole-image text found.'); toast('No text found.'); }
+}
+
+// Event bindings
+els.drop.addEventListener('dragover',e=>{e.preventDefault();els.drop.classList.add('drag')});
+els.drop.addEventListener('dragleave',()=>els.drop.classList.remove('drag'));
+els.drop.addEventListener('drop',e=>{e.preventDefault();els.drop.classList.remove('drag'); const f=e.dataTransfer.files[0]; if(f) handleFile(f);});
+els.fileInput.addEventListener('change',e=>{ const f=e.target.files[0]; if(f) handleFile(f); });
+async function handleFile(file){
+  try{
+    if(/^image\//.test(file.type) || /\.(png|jpe?g|webp)$/i.test(file.name)){ loadImageFile(file); return; }
+    const text = await file.text(); await parseAnyText(text, file.name); setActiveTab('review');
+  }catch(err){ console.error(err); els.fileStatus.innerHTML=`<span class="badText">${escapeHtml(err.message||err)}</span>`; toast('Could not parse file.'); }
+}
+els.parsePasteBtn.addEventListener('click',async()=>{ try{ await parseAnyText(els.pasteBox.value, 'pasted text'); setActiveTab('review'); }catch(err){ toast(err.message||String(err)); }});
+els.clearBtn.addEventListener('click',()=>{ state.nodes=[]; state.edges=[]; state.warnings=[]; state.ocrLog=[]; state.sourceType='none'; state.selectedNodeId=null; state.connectFrom=null; els.pasteBox.value=''; els.fileStatus.textContent='No file loaded.'; ctx.clearRect(0,0,els.canvas.width,els.canvas.height); drawImage(); if(els.ocrStatus) els.ocrStatus.textContent='OCR status: idle.'; renderAll(); });
+$$('.tab').forEach(t=>t.addEventListener('click',()=>setActiveTab(t.dataset.tab)));
+els.addNodeBtn.addEventListener('click',()=>{ const label=prompt('Node label:','New step'); if(label!==null) addNode(label); });
+els.addEdgeBtn.addEventListener('click',()=>addEdge());
+els.renumberBtn.addEventListener('click',()=>{
+  const map=new Map(); state.nodes.forEach((n,i)=>{map.set(n.id,'N'+(i+1)); n.id='N'+(i+1);}); state.edges.forEach(e=>{e.from=map.get(e.from)||e.from;e.to=map.get(e.to)||e.to;}); normalizeModel(state.sourceType);
+});
+els.nodesTable.addEventListener('input',e=>{ const i=+e.target.dataset.i, f=e.target.dataset.nodeField; if(!f)return; const old=state.nodes[i].id; state.nodes[i][f]=e.target.value; if(f==='id'){ state.edges.forEach(ed=>{if(ed.from===old)ed.from=e.target.value;if(ed.to===old)ed.to=e.target.value;}); } renderMarkdown(); renderImageOverlays(); });
+els.nodesTable.addEventListener('change',e=>{ const i=+e.target.dataset.i, f=e.target.dataset.nodeField; if(f){ state.nodes[i][f]=e.target.value; renderAll(); }});
+els.nodesTable.addEventListener('click',e=>{ const i=e.target.dataset.delNode; if(i!==undefined){ const id=state.nodes[+i].id; state.nodes.splice(+i,1); state.edges=state.edges.filter(ed=>ed.from!==id&&ed.to!==id); normalizeModel(state.sourceType); }});
+els.edgesTable.addEventListener('input',e=>{ const i=+e.target.dataset.i, f=e.target.dataset.edgeField; if(f){ state.edges[i][f]=e.target.value; renderMarkdown(); renderImageOverlays(); }});
+els.edgesTable.addEventListener('change',e=>{ const i=+e.target.dataset.i, f=e.target.dataset.edgeField; if(f){ state.edges[i][f]=e.target.value; renderAll(); }});
+els.edgesTable.addEventListener('click',e=>{ const i=e.target.dataset.delEdge; if(i!==undefined){ state.edges.splice(+i,1); normalizeModel(state.sourceType); }});
+els.generateBtn.addEventListener('click',renderMarkdown);
+els.copyBtn.addEventListener('click',async()=>{ await navigator.clipboard.writeText(els.markdownOut.textContent); toast('Markdown copied.'); });
+els.downloadMdBtn.addEventListener('click',()=>download('flowchart_conversion.md', els.markdownOut.textContent, 'text/markdown'));
+els.downloadJsonBtn.addEventListener('click',()=>download('flowchart_conversion.json', JSON.stringify({sourceType:state.sourceType,warnings:state.warnings,ocrLog:state.ocrLog,nodes:state.nodes,edges:state.edges},null,2), 'application/json'));
+[els.mdStyle,els.mermaidDir,els.includeMermaid,els.includeFrontMatter,els.includeWarnings,els.useBullets].forEach(el=>el.addEventListener('change',renderMarkdown));
+function download(name, content, type){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content],{type})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000); }
+
+els.imgAddNodeBtn.addEventListener('click',()=>{state.imageMode='draw'; state.connectFrom=null; toast('Drag around a flowchart node.');});
+els.imgConnectBtn.addEventListener('click',()=>{state.imageMode='connect'; state.connectFrom=null; toast('Tap the source node, then the target node.');});
+els.imgSelectBtn.addEventListener('click',()=>{state.imageMode='select'; state.connectFrom=null; toast('Tap a node to edit it.');});
+els.autoDetectBtn.addEventListener('click',autoDetectBoxes);
+els.ocrSelectedBtn.addEventListener('click',ocrSelectedNode);
+els.ocrAllBtn.addEventListener('click',ocrAllNodes);
+els.ocrWholeBtn.addEventListener('click',ocrWholeImage);
+els.deleteSelectedBtn.addEventListener('click',()=>{ if(!state.selectedNodeId){toast('No node selected.');return;} const id=state.selectedNodeId; state.nodes=state.nodes.filter(n=>n.id!==id); state.edges=state.edges.filter(e=>e.from!==id&&e.to!==id); state.selectedNodeId=null; normalizeModel(state.sourceType); });
+els.canvas.addEventListener('mousedown',startDraw); els.canvas.addEventListener('mousemove',moveDraw); window.addEventListener('mouseup',endDraw);
+els.canvas.addEventListener('touchstart',startDraw,{passive:false}); els.canvas.addEventListener('touchmove',moveDraw,{passive:false}); window.addEventListener('touchend',endDraw,{passive:false});
+
+// Demo seed
+state.nodes=[{id:'N1',label:'Start',type:'start',x:70,y:70,w:120,h:60},{id:'N2',label:'Review flowchart file',type:'process',x:240,y:70,w:180,h:60},{id:'N3',label:'Structured source?',type:'decision',x:490,y:58,w:120,h:90},{id:'N4',label:'Generate Markdown',type:'process',x:690,y:70,w:170,h:60},{id:'N5',label:'Manual image markup',type:'process',x:490,y:210,w:180,h:60}];
+state.edges=[{from:'N1',to:'N2',label:''},{from:'N2',to:'N3',label:''},{from:'N3',to:'N4',label:'Yes'},{from:'N3',to:'N5',label:'No image only'},{from:'N5',to:'N4',label:''}];
+state.sourceType='demo'; drawImage(); normalizeModel('demo');
+})();
+</script>
+</body>
+</html>

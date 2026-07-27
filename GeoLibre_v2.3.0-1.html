@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="description" content="Single-file launcher for the GeoLibre web GIS application, prepared for the v2.3.0 release." />
+  <title>GeoLibre v2.3.0 — HTML Launcher</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(15, 23, 42, .96);
+      --panel2: rgba(30, 41, 59, .95);
+      --text: #f8fafc;
+      --muted: #a8b3c7;
+      --accent: #37d67a;
+      --accent2: #22c55e;
+      --danger: #fb7185;
+      --line: rgba(255,255,255,.14);
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --bar-h: 48px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, a { font: inherit; }
+    #app {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: var(--bar-h) 1fr;
+    }
+    #toolbar {
+      position: relative;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 6px 10px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 2px 12px rgba(0,0,0,.18);
+      user-select: none;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+      margin-right: auto;
+    }
+    .logo {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      background: linear-gradient(145deg, var(--accent), #10b981);
+      color: #052e16;
+      font-weight: 900;
+      box-shadow: 0 4px 14px rgba(34,197,94,.25);
+    }
+    .title {
+      min-width: 0;
+      line-height: 1.05;
+    }
+    .title strong {
+      display: block;
+      font-size: 14px;
+      letter-spacing: .01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .title span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .badge {
+      flex: 0 0 auto;
+      padding: 3px 7px;
+      border: 1px solid rgba(55,214,122,.35);
+      border-radius: 999px;
+      color: #bbf7d0;
+      background: rgba(34,197,94,.1);
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn {
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--panel2);
+      color: var(--text);
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    }
+    .btn:hover {
+      background: rgba(51,65,85,.98);
+      border-color: rgba(255,255,255,.25);
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary {
+      color: #052e16;
+      border-color: transparent;
+      background: var(--accent);
+      font-weight: 800;
+    }
+    .btn.primary:hover { background: var(--accent2); }
+    .btn .label { font-size: 12px; }
+    .icon { font-size: 16px; line-height: 1; }
+    #workspace {
+      position: relative;
+      min-height: 0;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(34,197,94,.14), transparent 30%),
+        radial-gradient(circle at 80% 80%, rgba(59,130,246,.12), transparent 34%),
+        var(--bg);
+    }
+    #geolibreFrame {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #fff;
+    }
+    #loading {
+      position: absolute;
+      inset: 0;
+      z-index: 8;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 50% 40%, rgba(34,197,94,.16), transparent 36%),
+        var(--bg);
+      transition: opacity .25s ease, visibility .25s ease;
+    }
+    #loading.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .loading-card {
+      width: min(470px, 94vw);
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(15,23,42,.92);
+      box-shadow: var(--shadow);
+      text-align: center;
+      backdrop-filter: blur(14px);
+    }
+    .spinner {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 16px;
+      border: 4px solid rgba(255,255,255,.14);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .85s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-card h1 {
+      margin: 0;
+      font-size: 21px;
+    }
+    .loading-card p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    #connectionHelp {
+      display: none;
+      margin-top: 17px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    #connectionHelp.visible { display: block; }
+    #connectionHelp .btn { margin-top: 10px; }
+    #toast {
+      position: fixed;
+      z-index: 100;
+      left: 50%;
+      bottom: 20px;
+      transform: translate(-50%, 16px);
+      max-width: min(540px, calc(100vw - 24px));
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(15,23,42,.96);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      font-size: 12px;
+      opacity: 0;
+      visibility: hidden;
+      transition: .2s ease;
+    }
+    #toast.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translate(-50%, 0);
+    }
+    dialog {
+      width: min(560px, calc(100vw - 24px));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 0;
+      color: var(--text);
+      background: #111827;
+      box-shadow: var(--shadow);
+    }
+    dialog::backdrop { background: rgba(0,0,0,.58); }
+    .dialog-head, .dialog-body, .dialog-foot { padding: 16px 18px; }
+    .dialog-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+    }
+    .dialog-head h2 { margin: 0; font-size: 17px; }
+    .dialog-body {
+      color: #dbe4f0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .dialog-body p { margin: 0 0 12px; }
+    .dialog-body p:last-child { margin-bottom: 0; }
+    .dialog-body code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: rgba(255,255,255,.08);
+      color: #bbf7d0;
+    }
+    .dialog-body a { color: #86efac; }
+    .dialog-foot {
+      display: flex;
+      justify-content: flex-end;
+      border-top: 1px solid var(--line);
+    }
+    .mobile-only { display: none; }
+    @media (max-width: 740px) {
+      :root { --bar-h: 46px; }
+      #toolbar { padding: 5px 7px; }
+      .title span, .badge { display: none; }
+      .btn { width: 34px; padding: 0; }
+      .btn .label { display: none; }
+      .mobile-only { display: inline; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header id="toolbar">
+      <div class="brand" title="GeoLibre v2.3.0 HTML launcher">
+        <div class="logo" aria-hidden="true">G</div>
+        <div class="title">
+          <strong>GeoLibre</strong>
+          <span>Browser GIS launcher</span>
+        </div>
+        <span class="badge">v2.3.0 target</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="reloadBtn" type="button" title="Reload GeoLibre">
+          <span class="icon" aria-hidden="true">↻</span><span class="label">Reload</span>
+        </button>
+        <button class="btn" id="fullscreenBtn" type="button" title="Enter fullscreen">
+          <span class="icon" aria-hidden="true">⛶</span><span class="label">Fullscreen</span>
+        </button>
+        <button class="btn" id="aboutBtn" type="button" title="About this file">
+          <span class="icon" aria-hidden="true">ⓘ</span><span class="label">About</span>
+        </button>
+        <a class="btn primary" id="directBtn" href="https://web.geolibre.app/" target="_blank" rel="noopener noreferrer" title="Open GeoLibre directly">
+          <span class="icon" aria-hidden="true">↗</span><span class="label">Open Directly</span>
+        </a>
+      </div>
+    </header>
+
+    <main id="workspace">
+      <iframe
+        id="geolibreFrame"
+        title="GeoLibre web GIS"
+        src="https://web.geolibre.app/"
+        allow="geolocation; clipboard-read; clipboard-write; fullscreen; camera; microphone"
+        allowfullscreen
+        referrerpolicy="strict-origin-when-cross-origin">
+      </iframe>
+
+      <section id="loading" aria-live="polite">
+        <div class="loading-card">
+          <div class="spinner" aria-hidden="true"></div>
+          <h1>Loading GeoLibre</h1>
+          <p>
+            This single HTML file loads the official GeoLibre browser application.
+            Internet access is required for the application, map tiles, web services,
+            and its WebAssembly components.
+          </p>
+          <div id="connectionHelp">
+            <p>
+              Loading is taking longer than expected. The site may be blocked from
+              running inside an embedded frame by your browser or network.
+            </p>
+            <a class="btn primary" href="https://web.geolibre.app/" target="_blank" rel="noopener noreferrer">
+              <span class="icon" aria-hidden="true">↗</span><span class="label">Open GeoLibre Directly</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" role="status"></div>
+
+  <dialog id="aboutDialog">
+    <div class="dialog-head">
+      <h2>About this HTML file</h2>
+      <button class="btn" id="closeAboutX" type="button" aria-label="Close">×</button>
+    </div>
+    <div class="dialog-body">
+      <p>
+        This is a self-contained launcher for the official GeoLibre web application,
+        prepared from the <strong>v2.3.0</strong> release reference.
+      </p>
+      <p>
+        GeoLibre itself is a large React/TypeScript application that uses separate
+        JavaScript modules, Web Workers, WebAssembly binaries, JupyterLite files,
+        map resources, and optional remote services. Those components cannot be
+        reliably collapsed into a conventional single offline HTML document without
+        changing or disabling substantial functionality.
+      </p>
+      <p>
+        The embedded application is served by <code>https://web.geolibre.app/</code>.
+        Because that deployment can be updated by its maintainers, this launcher
+        targets the v2.3.0 release but cannot permanently pin the hosted application
+        to that version.
+      </p>
+      <p>
+        GeoLibre is maintained by <a href="https://github.com/opengeos/GeoLibre" target="_blank" rel="noopener noreferrer">opengeos</a>
+        and is distributed under the MIT License. View the
+        <a href="https://github.com/opengeos/GeoLibre/releases/tag/v2.3.0" target="_blank" rel="noopener noreferrer">v2.3.0 release page</a>.
+      </p>
+    </div>
+    <div class="dialog-foot">
+      <button class="btn primary" id="closeAboutBtn" type="button">Close</button>
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const frame = document.getElementById("geolibreFrame");
+      const loading = document.getElementById("loading");
+      const help = document.getElementById("connectionHelp");
+      const toast = document.getElementById("toast");
+      const about = document.getElementById("aboutDialog");
+      const directUrl = "https://web.geolibre.app/";
+
+      // Preserve supported GeoLibre query parameters when this file is opened
+      // with a query string, while excluding launcher-only parameters.
+      const current = new URL(window.location.href);
+      const target = new URL(directUrl);
+      current.searchParams.forEach((value, key) => {
+        if (!["direct", "embed"].includes(key.toLowerCase())) {
+          target.searchParams.set(key, value);
+        }
+      });
+      frame.src = target.toString();
+      document.getElementById("directBtn").href = target.toString();
+
+      if (current.searchParams.get("direct") === "1") {
+        window.location.replace(target.toString());
+        return;
+      }
+
+      let loaded = false;
+      let toastTimer = null;
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("visible");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("visible"), 2600);
+      }
+
+      frame.addEventListener("load", () => {
+        loaded = true;
+        setTimeout(() => loading.classList.add("hidden"), 350);
+      });
+
+      setTimeout(() => {
+        if (!loaded) help.classList.add("visible");
+      }, 10000);
+
+      document.getElementById("reloadBtn").addEventListener("click", () => {
+        loading.classList.remove("hidden");
+        help.classList.remove("visible");
+        loaded = false;
+        frame.src = frame.src;
+        setTimeout(() => {
+          if (!loaded) help.classList.add("visible");
+        }, 10000);
+      });
+
+      document.getElementById("fullscreenBtn").addEventListener("click", async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+            showToast("Fullscreen enabled");
+          } else {
+            await document.exitFullscreen();
+          }
+        } catch (error) {
+          showToast("Fullscreen was blocked by the browser");
+        }
+      });
+
+      document.getElementById("aboutBtn").addEventListener("click", () => about.showModal());
+      document.getElementById("closeAboutX").addEventListener("click", () => about.close());
+      document.getElementById("closeAboutBtn").addEventListener("click", () => about.close());
+      about.addEventListener("click", (event) => {
+        const rect = about.getBoundingClientRect();
+        const outside =
+          event.clientX < rect.left || event.clientX > rect.right ||
+          event.clientY < rect.top || event.clientY > rect.bottom;
+        if (outside) about.close();
+      });
+
+      window.addEventListener("offline", () => {
+        loading.classList.remove("hidden");
+        help.classList.add("visible");
+        showToast("Internet connection lost");
+      });
+      window.addEventListener("online", () => showToast("Internet connection restored"));
+    })();
+  </script>
+</body>
+</html>

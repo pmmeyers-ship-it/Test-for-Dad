@@ -1,0 +1,1392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data: blob:; style-src 'unsafe-inline'; script-src 'unsafe-inline' blob:; worker-src blob:; connect-src 'none'; font-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+<title>The Statistian</title>
+<style>
+:root{--bg:#eef2f6;--panel:#fff;--panel2:#f7f9fc;--text:#182230;--muted:#607083;--border:#c8d1dc;--accent:#0b5cab;--accent2:#e8f2ff;--danger:#b42318;--warn:#9a6700;--ok:#067647;--focus:#ffbf47;--shadow:0 8px 24px rgba(16,24,40,.12);--rowh:28px;--menubar:34px;--toolbar:44px;--status:28px}
+[data-theme="dark"]{--bg:#111820;--panel:#18222d;--panel2:#202d3a;--text:#edf2f7;--muted:#a9b7c6;--border:#3b4b5c;--accent:#62aef7;--accent2:#183b5f;--danger:#ff8a80;--warn:#ffd166;--ok:#59d6a2;--shadow:0 8px 24px rgba(0,0,0,.35)}
+[data-theme="high"]{--bg:#000;--panel:#000;--panel2:#111;--text:#fff;--muted:#fff;--border:#fff;--accent:#00ffff;--accent2:#002d2d;--danger:#ff6b6b;--warn:#ffff00;--ok:#00ff66;--focus:#ff00ff}
+*{box-sizing:border-box} html,body{height:100%;margin:0;overflow:hidden;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit;color:inherit} button{cursor:pointer} button:disabled{cursor:not-allowed;opacity:.48} :focus-visible{outline:3px solid var(--focus);outline-offset:1px}
+#app{height:100%;display:grid;grid-template-rows:var(--menubar) var(--toolbar) 1fr var(--status)}
+.titlebar{display:flex;align-items:center;gap:8px;padding:0 10px;background:linear-gradient(90deg,var(--panel),var(--panel2));border-bottom:1px solid var(--border);min-width:0}
+.logo{width:25px;height:25px;flex:none}.brand{font-weight:700;white-space:nowrap}.projectTitle{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.spacer{flex:1}.titleActions{display:flex;gap:4px}
+.menubar{height:100%;display:flex;align-items:center;gap:0}.menuWrap{position:relative}.menuBtn{height:31px;border:0;background:transparent;padding:0 9px;border-radius:4px}.menuBtn:hover,.menuBtn[aria-expanded=true]{background:var(--accent2)}
+.menu{display:none;position:absolute;top:32px;left:0;min-width:235px;background:var(--panel);border:1px solid var(--border);box-shadow:var(--shadow);z-index:1000;padding:5px;border-radius:6px}.menu.open{display:block}.menu button{width:100%;display:flex;justify-content:space-between;gap:16px;border:0;background:transparent;padding:7px 8px;text-align:left;border-radius:4px}.menu button:hover:not(:disabled){background:var(--accent2)}.sep{border-top:1px solid var(--border);margin:4px}
+.toolbar{display:flex;align-items:center;gap:5px;padding:5px 8px;background:var(--panel);border-bottom:1px solid var(--border);overflow-x:auto}.toolbtn{border:1px solid var(--border);background:var(--panel2);height:32px;min-width:34px;padding:0 9px;border-radius:5px}.toolbtn:hover:not(:disabled){background:var(--accent2);border-color:var(--accent)}.toolbtn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.toolsep{height:25px;border-left:1px solid var(--border);margin:0 3px}
+.workspace{min-height:0;display:grid;grid-template-columns:230px 1fr 260px}.side{background:var(--panel2);border-right:1px solid var(--border);min-width:0;overflow:auto}.side.right{border-right:0;border-left:1px solid var(--border)}.side.hidden{display:none}.side h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin:0;padding:10px;color:var(--muted);border-bottom:1px solid var(--border)}
+.datasetList,.outlineList{list-style:none;margin:0;padding:5px}.datasetList button,.outlineList button{width:100%;border:0;background:transparent;text-align:left;padding:7px;border-radius:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.datasetList button.active,.outlineList button.active{background:var(--accent2);color:var(--accent);font-weight:700}.datasetList button:hover,.outlineList button:hover{background:var(--accent2)}
+.main{min-width:0;min-height:0;display:grid;grid-template-rows:36px 1fr}.tabs{display:flex;background:var(--panel);border-bottom:1px solid var(--border);overflow-x:auto}.tab{border:0;border-right:1px solid var(--border);background:var(--panel2);padding:0 14px;white-space:nowrap}.tab.active{background:var(--panel);color:var(--accent);font-weight:700;border-bottom:3px solid var(--accent)}
+.view{display:none;min-height:0;background:var(--panel)}.view.active{display:block}.gridShell{height:100%;display:grid;grid-template-rows:34px 1fr}.formulaBar{display:grid;grid-template-columns:90px 1fr 72px;gap:5px;padding:4px;border-bottom:1px solid var(--border);background:var(--panel2)}.formulaBar input{border:1px solid var(--border);background:var(--panel);padding:3px 6px;border-radius:3px;min-width:0}
+.gridViewport{position:relative;overflow:auto;height:100%;background:var(--panel)}table.dataGrid{border-collapse:separate;border-spacing:0;table-layout:fixed;min-width:100%;font-size:12px}.dataGrid th,.dataGrid td{height:var(--rowh);border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--panel)}.dataGrid thead th{position:sticky;top:0;z-index:5;background:var(--panel2);font-weight:700}.dataGrid .rownum{position:sticky;left:0;z-index:4;width:54px;min-width:54px;text-align:right;background:var(--panel2);color:var(--muted)}.dataGrid thead .rownum{z-index:6}.dataGrid td.selected,.dataGrid th.selected{background:var(--accent2);box-shadow:inset 0 0 0 2px var(--accent)}.dataGrid td[contenteditable=true]:focus{background:var(--accent2);outline:2px solid var(--accent);outline-offset:-2px}.colHead{cursor:pointer;user-select:none}.colHead .meta{font-size:9px;color:var(--muted);margin-left:4px}
+#variableView{overflow:auto}.varTable{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px}.varTable th,.varTable td{border:1px solid var(--border);padding:4px;min-width:96px}.varTable th{position:sticky;top:0;background:var(--panel2);z-index:2}.varTable td:first-child,.varTable th:first-child{position:sticky;left:0;background:var(--panel2);z-index:3;min-width:42px;text-align:right}.varTable input,.varTable select{width:100%;border:1px solid transparent;background:transparent;padding:3px}.varTable input:focus,.varTable select:focus{border-color:var(--accent);background:var(--panel)}
+.editorWrap{height:100%;display:grid;grid-template-rows:34px 1fr}.editorToolbar{display:flex;gap:5px;align-items:center;padding:4px;background:var(--panel2);border-bottom:1px solid var(--border)}#syntaxEditor{width:100%;height:100%;resize:none;border:0;padding:14px;background:var(--panel);color:var(--text);font-family:Consolas,Monaco,monospace;line-height:1.5;tab-size:2}
+.outputWrap{height:100%;overflow:auto;padding:16px}.outputBlock{border:1px solid var(--border);border-radius:7px;margin:0 0 14px;background:var(--panel);box-shadow:0 2px 5px rgba(0,0,0,.05)}.outputHead{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel2);border-bottom:1px solid var(--border)}.outputHead h3{margin:0;font-size:15px}.outputBody{padding:12px;overflow:auto}.outputMeta{font-size:11px;color:var(--muted);margin-bottom:8px}.resultTable{border-collapse:collapse;font-size:12px;margin:8px 0;min-width:430px}.resultTable th,.resultTable td{border:1px solid var(--border);padding:5px 8px;text-align:right}.resultTable th{background:var(--panel2)}.resultTable th:first-child,.resultTable td:first-child{text-align:left}.note{padding:8px 10px;border-left:4px solid var(--accent);background:var(--accent2);margin:8px 0;font-size:12px}.warning{border-left-color:var(--warn)}.error{border-left-color:var(--danger)}.ok{border-left-color:var(--ok)}.syntaxEcho{font-family:Consolas,monospace;font-size:11px;background:var(--panel2);border:1px solid var(--border);padding:8px;white-space:pre-wrap}
+.chartStage{height:100%;display:grid;grid-template-rows:46px 1fr}.chartControls{display:flex;align-items:center;gap:6px;padding:6px;background:var(--panel2);border-bottom:1px solid var(--border);overflow-x:auto}.chartCanvasWrap{display:flex;align-items:center;justify-content:center;overflow:auto;padding:12px}.chartCanvasWrap canvas{background:#fff;border:1px solid var(--border);max-width:100%;height:auto}
+.statusbar{display:flex;align-items:center;gap:12px;padding:0 8px;background:var(--panel2);border-top:1px solid var(--border);font-size:11px;white-space:nowrap;overflow:hidden}.statusbar .msg{overflow:hidden;text-overflow:ellipsis}.statusPill{padding:2px 6px;border:1px solid var(--border);border-radius:9px}.memory{margin-left:auto}
+.inspector{padding:10px;font-size:12px}.inspector dl{display:grid;grid-template-columns:90px 1fr;gap:5px;margin:0}.inspector dt{color:var(--muted)}.inspector dd{margin:0;overflow-wrap:anywhere}
+.modalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.42);display:none;align-items:center;justify-content:center;z-index:2000;padding:18px}.modalBackdrop.open{display:flex}.modal{background:var(--panel);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);width:min(780px,96vw);max-height:92vh;display:grid;grid-template-rows:auto 1fr auto}.modal.large{width:min(1050px,97vw)}.modalHead{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--panel2)}.modalHead h2{font-size:16px;margin:0}.modalBody{padding:14px;overflow:auto}.modalFoot{display:flex;justify-content:flex-end;gap:7px;padding:10px 14px;border-top:1px solid var(--border);background:var(--panel2)}.btn{border:1px solid var(--border);background:var(--panel2);padding:7px 12px;border-radius:5px}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.danger{color:var(--danger)}
+.formGrid{display:grid;grid-template-columns:170px 1fr;gap:10px;align-items:center}.formGrid label{font-weight:600}.formGrid input,.formGrid select,.formGrid textarea{width:100%;border:1px solid var(--border);background:var(--panel);padding:7px;border-radius:4px}.formGrid textarea{min-height:90px;resize:vertical}.checks{display:flex;flex-wrap:wrap;gap:10px}.fieldHelp{font-size:11px;color:var(--muted);grid-column:2}.varPicker{display:grid;grid-template-columns:1fr 56px 1fr;gap:8px;min-height:220px}.varPicker select{width:100%;min-height:210px;border:1px solid var(--border);background:var(--panel)}.moveBtns{display:flex;flex-direction:column;justify-content:center;gap:5px}.preview{border:1px solid var(--border);background:var(--panel2);padding:8px;overflow:auto;max-height:230px}
+.toastHost{position:fixed;right:12px;bottom:40px;z-index:3000;display:flex;flex-direction:column;gap:7px}.toast{background:var(--panel);border:1px solid var(--border);border-left:5px solid var(--accent);box-shadow:var(--shadow);padding:9px 12px;border-radius:5px;max-width:390px;font-size:12px}.toast.error{border-left-color:var(--danger)}.toast.ok{border-left-color:var(--ok)}
+.helpGrid{display:grid;grid-template-columns:220px 1fr;min-height:450px}.helpNav{border-right:1px solid var(--border);padding-right:10px}.helpNav button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:7px}.helpNav button:hover{background:var(--accent2)}.helpContent{padding-left:14px;line-height:1.45}.helpContent h3{margin-top:0}
+.splitHead{margin:14px 0 6px;padding:4px 8px;background:var(--accent2);border-left:4px solid var(--accent);border-radius:3px}
+.diagPass{color:var(--ok)}.diagFail{color:var(--danger)}.hiddenFile{display:none}.srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:900px){.workspace{grid-template-columns:0 1fr 0}.side{display:none}.brand{font-size:13px}.toolbtn .label{display:none}.formulaBar{grid-template-columns:70px 1fr 48px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+@media print{body{overflow:visible;background:#fff;color:#000}#app{display:block}.titlebar,.toolbar,.tabs,.side,.statusbar,.outputHead button{display:none!important}.workspace,.main{display:block}.view{display:none!important}#outputView{display:block!important}.outputWrap{overflow:visible;padding:0}.outputBlock{break-inside:avoid;box-shadow:none;border:1px solid #999}}
+</style>
+</head>
+<body>
+<div id="app" data-theme="light">
+<header class="titlebar">
+<svg class="logo" viewBox="0 0 64 64" role="img" aria-label="The Statistian icon"><rect x="3" y="3" width="58" height="58" rx="12" fill="#0b5cab"/><path d="M15 46h34M20 42V28m12 14V17m12 25V23" stroke="#fff" stroke-width="6" stroke-linecap="round"/></svg>
+<span class="brand">The Statistian</span><span class="projectTitle" id="projectTitle">Untitled Project</span><span class="spacer"></span>
+<nav class="menubar" aria-label="Application menu" id="menubar"></nav>
+<div class="titleActions"><button class="menuBtn" id="themeBtn" title="Cycle theme">◐</button><button class="menuBtn" id="helpBtn" title="Help">?</button></div>
+</header>
+<div class="toolbar" role="toolbar" aria-label="Main toolbar">
+<button class="toolbtn" data-action="newProject" title="New project">＋ <span class="label">New</span></button>
+<button class="toolbtn" data-action="openProject" title="Open project">📂 <span class="label">Open</span></button>
+<button class="toolbtn" data-action="saveProject" title="Save project">💾 <span class="label">Save</span></button><span class="toolsep"></span>
+<button class="toolbtn" data-action="undo" title="Undo">↶</button><button class="toolbtn" data-action="redo" title="Redo">↷</button><span class="toolsep"></span>
+<button class="toolbtn" data-action="importData" title="Import data">⇩ <span class="label">Import</span></button><button class="toolbtn" data-action="exportData" title="Export active data">⇧ <span class="label">Export</span></button><span class="toolsep"></span>
+<button class="toolbtn" data-action="descriptives" title="Descriptive statistics">Σ <span class="label">Descriptives</span></button><button class="toolbtn" data-action="frequencies" title="Frequencies">▤ <span class="label">Frequencies</span></button><button class="toolbtn" data-action="correlation" title="Correlation">r <span class="label">Correlation</span></button><button class="toolbtn primary" data-action="runSyntax" title="Run syntax">▶ <span class="label">Run</span></button>
+</div>
+<div class="workspace">
+<aside class="side" id="leftSide"><h2>Project</h2><ul class="datasetList" id="datasetList"></ul><h2>Output Outline</h2><ul class="outlineList" id="outlineList"></ul></aside>
+<main class="main">
+<div class="tabs" role="tablist" id="tabs">
+<button class="tab active" data-view="dataView" role="tab">Data View</button><button class="tab" data-view="variableView" role="tab">Variable View</button><button class="tab" data-view="syntaxView" role="tab">Syntax</button><button class="tab" data-view="outputView" role="tab">Output</button><button class="tab" data-view="chartView" role="tab">Chart Editor</button>
+</div>
+<section class="view active" id="dataView" role="tabpanel"><div class="gridShell"><div class="formulaBar"><input id="cellRef" aria-label="Cell reference" readonly><input id="formulaInput" aria-label="Cell value"><button class="btn" id="applyCell">Apply</button></div><div class="gridViewport" id="gridViewport"><table class="dataGrid" id="dataGrid"></table></div></div></section>
+<section class="view" id="variableView" role="tabpanel"><table class="varTable" id="varTable"></table></section>
+<section class="view" id="syntaxView" role="tabpanel"><div class="editorWrap"><div class="editorToolbar"><button class="btn primary" data-action="runSyntax">Run All</button><button class="btn" id="runSelection">Run Selection</button><button class="btn" id="clearSyntax">Clear</button><span class="spacer"></span><span id="syntaxStatus" class="projectTitle">Ready</span></div><textarea id="syntaxEditor" spellcheck="false" aria-label="Syntax editor"></textarea></div></section>
+<section class="view" id="outputView" role="tabpanel"><div class="outputWrap" id="outputWrap"><div class="note">Run an analysis to create output. Demonstration data are synthetic and not suitable for substantive conclusions.</div></div></section>
+<section class="view" id="chartView" role="tabpanel"><div class="chartStage"><div class="chartControls"><label>Type <select id="chartType"><option value="histogram">Histogram</option><option value="bar">Bar</option><option value="scatter">Scatter</option><option value="box">Boxplot</option><option value="qq">Normal Q-Q</option></select></label><label>X <select id="chartX"></select></label><label>Y <select id="chartY"></select></label><button class="btn primary" id="drawChart">Draw</button><button class="btn" id="exportChart">Export PNG</button><button class="btn" id="chartAlt">Text alternative</button></div><div class="chartCanvasWrap"><canvas id="chartCanvas" width="900" height="560" aria-label="Chart"></canvas></div></div></section>
+</main>
+<aside class="side right" id="rightSide"><h2>Inspector</h2><div class="inspector" id="inspector"></div><h2>Analysis State</h2><div class="inspector" id="stateInspector"></div></aside>
+</div>
+<footer class="statusbar"><span class="msg" id="statusMsg">Ready</span><span class="statusPill" id="filterStatus">Filter: Off</span><span class="statusPill" id="weightStatus">Weight: Off</span><span class="statusPill" id="splitStatus">Split: Off</span><span class="memory" id="memoryStatus">0 rows × 0 variables</span></footer>
+</div>
+<input class="hiddenFile" id="dataFile" type="file" accept=".csv,.tsv,.txt,.json,.statistian">
+<input class="hiddenFile" id="projectFile" type="file" accept=".statistian,.json">
+<div class="modalBackdrop" id="modalBackdrop" role="presentation"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modalHead"><h2 id="modalTitle">Dialog</h2><span class="spacer"></span><button class="menuBtn" id="modalClose" aria-label="Close dialog">✕</button></div><div class="modalBody" id="modalBody"></div><div class="modalFoot" id="modalFoot"></div></div></div>
+<div class="toastHost" id="toastHost" aria-live="polite"></div>
+<script>
+'use strict';
+/* The Statistian: original single-file statistical workbench. No network calls. */
+const TS = (()=>{
+  const VERSION='2.0.1';
+  const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+  const uid=()=>crypto.getRandomValues(new Uint32Array(2)).join('-');
+  const now=()=>new Date().toISOString();
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const deepClone=o=>JSON.parse(JSON.stringify(o));
+  const fmt=(x,d=3)=>{if(x===null||x===undefined||Number.isNaN(x))return '—';if(!Number.isFinite(x))return x>0?'∞':'−∞';const ax=Math.abs(x);if(ax!==0&&(ax>=1e7||ax<1e-5))return x.toExponential(d);return Number(x).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:0});};
+  const pFmt=p=>p==null||Number.isNaN(p)?'—':p<.001?'p < .001':`p = ${p.toFixed(3).replace(/^0/,'')}`;
+  const download=(name,content,type='text/plain')=>{const b=content instanceof Blob?content:new Blob([content],{type});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+  const toast=(msg,type='')=>{const d=document.createElement('div');d.className='toast '+type;d.textContent=msg;$('#toastHost').append(d);setTimeout(()=>d.remove(),4200)};
+  const setStatus=msg=>$('#statusMsg').textContent=msg;
+
+  const state={project:{id:uid(),name:'Untitled Project',created:now(),modified:now(),version:VERSION,datasets:[],activeDatasetId:null,syntax:'',outputs:[],settings:{theme:'light',precision:3,autosave:true,showValueLabels:true,logSyntax:true},analysis:{filter:null,weight:null,split:null,splitLevel:null},journal:[],audit:[]},undo:[],redo:[],selection:{row:0,col:0},activeView:'dataView',dirty:false};
+  const active=()=>state.project.datasets.find(d=>d.id===state.project.activeDatasetId)||null;
+  function newVariable(name,type='numeric',label=''){return{id:uid(),name, type,width:10,decimals:type==='numeric'?2:0,label,valueLabels:{},missing:{discrete:[],range:null},columns:10,alignment:type==='numeric'?'right':'left',measure:type==='numeric'?'scale':'nominal',role:'input',notes:'',format:'general',hidden:false};}
+  function makeDataset(name,vars=[],rows=[]){return{id:uid(),name,variables:vars,rows,created:now(),modified:now(),history:[],source:'manual'};}
+  function snapshot(label){state.undo.push({label,project:deepClone(state.project)});if(state.undo.length>40)state.undo.shift();state.redo=[];}
+  function restore(s){state.project=deepClone(s.project);state.dirty=true;renderAll();toast(`Restored: ${s.label}`,'ok');}
+  function markDirty(action='Change'){state.dirty=true;state.project.modified=now();state.project.audit.push({time:now(),action});if(state.project.audit.length>300)state.project.audit.shift();scheduleAutosave();}
+  let autoTimer; function scheduleAutosave(){if(!state.project.settings.autosave)return;clearTimeout(autoTimer);autoTimer=setTimeout(()=>{try{localStorage.setItem('statistian.autosave',JSON.stringify(state.project));setStatus('Autosaved locally');}catch(e){setStatus('Autosave unavailable: '+e.message)}},900)}
+
+  /* Numerical core */
+  const Num={
+    sum(a){let s=0,c=0;for(const x of a){const y=x-c,t=s+y;c=(t-s)-y;s=t}return s},
+    mean(a){return a.length?this.sum(a)/a.length:NaN},
+    variance(a,sample=true){if(a.length<(sample?2:1))return NaN;const m=this.mean(a);let s=0;for(const x of a){const d=x-m;s+=d*d}return s/(a.length-(sample?1:0))},
+    sd(a,sample=true){return Math.sqrt(this.variance(a,sample))},
+    median(a){if(!a.length)return NaN;const b=[...a].sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2},
+    quantile(a,q){if(!a.length)return NaN;const b=[...a].sort((x,y)=>x-y),p=(b.length-1)*q,i=Math.floor(p),f=p-i;return b[i]+(b[Math.min(i+1,b.length-1)]-b[i])*f},
+    rank(a){const ix=a.map((v,i)=>({v,i})).sort((x,y)=>x.v-y.v);const r=Array(a.length);for(let i=0;i<ix.length;){let j=i+1;while(j<ix.length&&ix[j].v===ix[i].v)j++;const rr=(i+j+1)/2;for(let k=i;k<j;k++)r[ix[k].i]=rr;i=j}return r},
+    erf(x){const sign=x<0?-1:1; x=Math.abs(x);const t=1/(1+.3275911*x),a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429;return sign*(1-((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t*Math.exp(-x*x))},
+    normalCDF(x){return .5*(1+this.erf(x/Math.SQRT2))},
+    logGamma(z){const p=[.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.6150291621406,12.507343278686905,-.13857109526572012,9.984369578019571e-6,1.5056327351493116e-7];if(z<.5)return Math.log(Math.PI)-Math.log(Math.sin(Math.PI*z))-this.logGamma(1-z);z-=1;let x=p[0];for(let i=1;i<p.length;i++)x+=p[i]/(z+i);const t=z+p.length-1.5;return .5*Math.log(2*Math.PI)+(z+.5)*Math.log(t)-t+Math.log(x)},
+    betaCF(a,b,x){let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<3e-14)d=3e-14;d=1/d;let h=d;for(let m=1;m<=200;m++){let m2=2*m,aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<3e-14)d=3e-14;c=1+aa/c;if(Math.abs(c)<3e-14)c=3e-14;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<3e-14)d=3e-14;c=1+aa/c;if(Math.abs(c)<3e-14)c=3e-14;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-12)break}return h},
+    ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(this.logGamma(a+b)-this.logGamma(a)-this.logGamma(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*this.betaCF(a,b,x)/a:1-bt*this.betaCF(b,a,1-x)/b},
+    tCDF(t,df){if(!Number.isFinite(t))return t<0?0:1;const x=df/(df+t*t),ib=this.ibeta(x,df/2,.5);return t>=0?1-.5*ib:.5*ib},
+    fCDF(f,d1,d2){if(f<=0)return 0;return this.ibeta((d1*f)/(d1*f+d2),d1/2,d2/2)},
+    gammaP(a,x){if(x<=0)return 0;if(x<a+1){let ap=a,sum=1/a,del=sum;for(let n=1;n<200;n++){ap++;del*=x/ap;sum+=del;if(Math.abs(del)<Math.abs(sum)*1e-14)break}return sum*Math.exp(-x+a*Math.log(x)-this.logGamma(a))}let b=x+1-a,c=1/1e-30,d=1/b,h=d;for(let i=1;i<200;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-30)d=1e-30;c=b+an/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-14)break}return 1-Math.exp(-x+a*Math.log(x)-this.logGamma(a))*h},
+    chiCDF(x,df){return this.gammaP(df/2,x/2)},
+    inverse(A){const n=A.length,M=A.map((r,i)=>[...r,...Array.from({length:n},(_,j)=>i===j?1:0)]);for(let i=0;i<n;i++){let p=i;for(let r=i+1;r<n;r++)if(Math.abs(M[r][i])>Math.abs(M[p][i]))p=r;if(Math.abs(M[p][i])<1e-12)throw Error('Singular matrix');[M[i],M[p]]=[M[p],M[i]];const q=M[i][i];for(let j=0;j<2*n;j++)M[i][j]/=q;for(let r=0;r<n;r++)if(r!==i){const f=M[r][i];for(let j=0;j<2*n;j++)M[r][j]-=f*M[i][j]}}return M.map(r=>r.slice(n))},
+    matMul(A,B){return A.map(r=>B[0].map((_,j)=>this.sum(r.map((x,k)=>x*B[k][j]))))},
+    transpose(A){return A[0].map((_,j)=>A.map(r=>r[j]))},
+    qrSolve(A,b){const m=A.length,n=A[0].length;if(m<n)throw Error('Underdetermined system');const R=A.map(r=>r.slice()),q=b.slice();for(let k=0;k<n;k++){let norm=0;for(let i=k;i<m;i++)norm=Math.hypot(norm,R[i][k]);if(norm<1e-12)throw Error('Rank-deficient design matrix');const alpha=R[k][k]>=0?-norm:norm,v=[];for(let i=k;i<m;i++)v.push(R[i][k]);v[0]-=alpha;const vv=this.sum(v.map(x=>x*x));if(vv<1e-24)continue;const beta=2/vv;for(let j=k;j<n;j++){let dot=0;for(let i=k;i<m;i++)dot+=v[i-k]*R[i][j];dot*=beta;for(let i=k;i<m;i++)R[i][j]-=dot*v[i-k]}let dot=0;for(let i=k;i<m;i++)dot+=v[i-k]*q[i];dot*=beta;for(let i=k;i<m;i++)q[i]-=dot*v[i-k];R[k][k]=alpha;for(let i=k+1;i<m;i++)R[i][k]=0}const x=Array(n).fill(0);for(let i=n-1;i>=0;i--){let z=q[i];for(let j=i+1;j<n;j++)z-=R[i][j]*x[j];if(Math.abs(R[i][i])<1e-12)throw Error('Rank-deficient design matrix');x[i]=z/R[i][i]}return x},
+    eigenSym(A,max=200){const n=A.length,V=Array.from({length:n},(_,i)=>Array.from({length:n},(_,j)=>i===j?1:0)),D=A.map(r=>[...r]);for(let iter=0;iter<max;iter++){let p=0,q=1,m=0;for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(Math.abs(D[i][j])>m){m=Math.abs(D[i][j]);p=i;q=j}if(m<1e-10)break;const phi=.5*Math.atan2(2*D[p][q],D[q][q]-D[p][p]),c=Math.cos(phi),s=Math.sin(phi);for(let k=0;k<n;k++){const dpk=D[p][k],dqk=D[q][k];D[p][k]=c*dpk-s*dqk;D[q][k]=s*dpk+c*dqk}for(let k=0;k<n;k++){const dkp=D[k][p],dkq=D[k][q];D[k][p]=c*dkp-s*dkq;D[k][q]=s*dkp+c*dkq}for(let k=0;k<n;k++){const vkp=V[k][p],vkq=V[k][q];V[k][p]=c*vkp-s*vkq;V[k][q]=s*vkp+c*vkq}}const vals=D.map((r,i)=>r[i]),ord=vals.map((v,i)=>({v,i})).sort((a,b)=>b.v-a.v);return{values:ord.map(o=>o.v),vectors:V.map(r=>ord.map(o=>r[o.i]))}},
+    normalQuantile(p){if(p<=0)return-Infinity;if(p>=1)return Infinity;const a=[-39.6968302866538,220.946098424521,-275.928510446969,138.357751867269,-30.6647980661472,2.50662827745924],b=[-54.4760987982241,161.585836858041,-155.698979859887,66.8013118877197,-13.2806815528857],c=[-.00778489400243029,-.322396458041136,-2.40075827716184,-2.54973253934373,4.37466414146497,2.93816398269878],d=[.00778469570904146,.32246712907004,2.445134137143,3.75440866190742],pl=.02425,ph=1-pl;let q,r;if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)}if(p>ph){q=Math.sqrt(-2*Math.log(1-p));return-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)}q=p-.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1)}
+  };
+
+  /* Data helpers */
+  function coerce(v,type){if(v===null||v===undefined||v==='')return null;if(type==='numeric'||type==='currency'||type==='percentage'||type==='scientific'){const n=Number(String(v).replace(/[$,%]/g,''));return Number.isFinite(n)?n:null}if(type==='boolean'){if(typeof v==='boolean')return v;return /^(1|true|yes|y)$/i.test(String(v))}if(type==='date'||type==='datetime'||type==='time'){const t=Date.parse(v);return Number.isNaN(t)?String(v):new Date(t).toISOString()}return String(v)}
+  function isMissing(v,val){if(val===null||val===undefined||val==='')return true;if(v?.missing?.discrete?.some(x=>String(x)===String(val)))return true;if(v?.missing?.range&&Number.isFinite(Number(val))){const [lo,hi]=v.missing.range;if(Number(val)>=Number(lo)&&Number(val)<=Number(hi))return true}return false}
+  const WEIGHT_CAP=500000;
+  function validRows(ds=active(),opts={}){if(!ds)return[];let rows=ds.rows.map((r,i)=>({r,i}));const A=state.project.analysis,f=A.filter;
+    if(f&&f.variable){const vi=ds.variables.findIndex(v=>v.name===f.variable);rows=rows.filter(o=>{const x=o.r[vi];switch(f.op){case'==':return x==f.value;case'!=':return x!=f.value;case'>':return x>f.value;case'>=':return x>=f.value;case'<':return x<f.value;case'<=':return x<=f.value;case'contains':return String(x??'').includes(String(f.value));default:return true}})}
+    if(!opts.raw&&A.split&&A.splitLevel!=null){const sj=ds.variables.findIndex(v=>v.name===A.split);if(sj>=0)rows=rows.filter(o=>String(o.r[sj])===String(A.splitLevel))}
+    if(!opts.raw&&!opts.unweighted&&A.weight){const wj=ds.variables.findIndex(v=>v.name===A.weight);
+      if(wj>=0){const out=[];let tot=0;
+        for(const o of rows){const w=Number(o.r[wj]);if(!Number.isFinite(w)||w<=0)continue;const reps=Math.round(w);if(reps<=0)continue;tot+=reps;
+          if(tot>WEIGHT_CAP)throw Error(`Weighting by ${A.weight} would expand the working file beyond ${WEIGHT_CAP.toLocaleString()} cases. Rescale the weight variable.`);
+          for(let q=0;q<reps;q++)out.push(o)}
+        rows=out}}
+    return rows}
+  function col(name,opts={}){const ds=active();if(!ds)return[];const j=ds.variables.findIndex(v=>v.name===name);if(j<0)return[];const variable=ds.variables[j];return validRows(ds).map(o=>({v:o.r[j],i:o.i,missing:isMissing(variable,o.r[j])})).filter(o=>opts.keepMissing||!o.missing);}
+  function numeric(name){return col(name).map(o=>Number(o.v)).filter(Number.isFinite)}
+  function paired(names){const ds=active(),idx=names.map(n=>ds.variables.findIndex(v=>v.name===n));if(idx.some(j=>j<0))throw Error('A selected variable was not found');return validRows(ds).filter(o=>idx.every(j=>!isMissing(ds.variables[j],o.r[j]))).map(o=>idx.map(j=>Number(o.r[j]))).filter(r=>r.every(Number.isFinite))}
+  function pairedWithCategory(catName,numNames){const ds=active();if(!ds)throw Error('No active dataset');const ci=ds.variables.findIndex(v=>v.name===catName),idx=numNames.map(n=>ds.variables.findIndex(v=>v.name===n));if(ci<0||idx.some(j=>j<0))throw Error('A selected variable was not found');const out=[];validRows(ds).forEach(o=>{if(isMissing(ds.variables[ci],o.r[ci]))return;if(!idx.every(j=>!isMissing(ds.variables[j],o.r[j])))return;const xs=idx.map(j=>Number(o.r[j]));if(!xs.every(Number.isFinite))return;out.push([o.r[ci],...xs])});return out}
+  function uniqueName(base,ds=active()){let n=base.replace(/[^A-Za-z0-9_]/g,'_').replace(/^[^A-Za-z_]/,'V_')||'VAR';let x=n,i=1;while(ds&&ds.variables.some(v=>v.name.toLowerCase()===x.toLowerCase()))x=n+'_'+i++;return x}
+  function inferType(values){const non=values.filter(v=>v!==''&&v!=null);if(!non.length)return'string';const nums=non.filter(v=>Number.isFinite(Number(String(v).replace(/[$,%]/g,'')))).length;if(nums/non.length>.9)return'numeric';const dates=non.filter(v=>!Number.isNaN(Date.parse(v))).length;if(dates/non.length>.9)return'date';return'string'}
+
+  /* Import/export */
+  function parseDelimited(text,delim){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(q){if(c==='"'&&text[i+1]==='"'){cell+='"';i++}else if(c==='"')q=false;else cell+=c}else if(c==='"')q=true;else if(c===delim){row.push(cell);cell=''}else if(c==='\n'){row.push(cell);rows.push(row);row=[];cell=''}else if(c!=='\r')cell+=c}row.push(cell);if(row.some(x=>x!==''))rows.push(row);return rows}
+  function importText(text,name,delim=',',header=true){const arr=parseDelimited(text,delim);if(!arr.length)throw Error('No records found');const heads=header?arr.shift():arr[0].map((_,i)=>'V'+(i+1));const width=Math.max(heads.length,...arr.map(r=>r.length));const vars=[];for(let j=0;j<width;j++){const vals=arr.slice(0,500).map(r=>r[j]);const type=inferType(vals),nm=uniqueName(heads[j]||'V'+(j+1),{variables:vars});vars.push(newVariable(nm,type,heads[j]||nm))}const rows=arr.map(r=>vars.map((v,j)=>coerce(r[j],v.type)));const ds=makeDataset(name,vars,rows);ds.source='delimited import';return ds}
+  function importJSON(text,name){const obj=JSON.parse(text);if(obj&&obj.format==='The Statistian Project')return{project:obj.project};const arr=Array.isArray(obj)?obj:(Array.isArray(obj.records)?obj.records:null);if(!arr)throw Error('JSON must be an array of records');const keys=[...new Set(arr.flatMap(o=>Object.keys(o)))],vars=[];for(const k of keys)vars.push(newVariable(uniqueName(k,{variables:vars}),inferType(arr.map(o=>o[k])),k));const rows=arr.map(o=>keys.map((k,j)=>coerce(o[k],vars[j].type)));return makeDataset(name,vars,rows)}
+  function csvEscape(v){if(v==null)return'';const s=String(v);return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+  function exportCSV(ds=active(),delim=','){const lines=[ds.variables.map(v=>csvEscape(v.name)).join(delim),...ds.rows.map(r=>r.map(csvEscape).join(delim))];return lines.join('\r\n')}
+
+  /* Expression parser for COMPUTE */
+  const Expr={
+    funcs:{ABS:Math.abs,SQRT:Math.sqrt,LN:Math.log,LOG10:Math.log10,EXP:Math.exp,ROUND:Math.round,FLOOR:Math.floor,CEIL:Math.ceil,SIN:Math.sin,COS:Math.cos,TAN:Math.tan,MIN:Math.min,MAX:Math.max},
+    tokens(s){const out=[];const re=/\s*(>=|<=|!=|==|&&|\|\||[()+\-*/^,<>=]|\d*\.?\d+(?:e[+\-]?\d+)?|[A-Za-z_][A-Za-z0-9_]*|'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*")\s*/gy;let m,pos=0;while((m=re.exec(s))){if(m.index!==pos)throw Error('Unexpected token near '+s.slice(pos,pos+12));out.push(m[1]);pos=re.lastIndex}if(pos!==s.length)throw Error('Unexpected token near '+s.slice(pos));return out},
+    parse(s){
+      const t=this.tokens(s),prec={'||':1,'&&':2,'==':3,'!=':3,'>':3,'<':3,'>=':3,'<=':3,'+':4,'-':4,'*':5,'/':5,'^':6},right={'^':1},out=[],ops=[];
+      let prev='start';
+      for(let i=0;i<t.length;i++){
+        const x=t[i],nx=t[i+1];
+        if(/^\d/.test(x))out.push({k:'num',v:Number(x)});
+        else if(/^['"]/.test(x))out.push({k:'str',v:x.slice(1,-1)});
+        else if(/^[A-Za-z_]/.test(x)){if(nx==='(')ops.push({k:'fun',v:x.toUpperCase()});else out.push({k:'var',v:x})}
+        else if(x===','){while(ops.length&&ops.at(-1).v!=='(')out.push(ops.pop())}
+        else if(x==='(')ops.push({k:'op',v:x});
+        else if(x===')'){
+          while(ops.length&&ops.at(-1).v!=='(')out.push(ops.pop());
+          if(!ops.length)throw Error('Mismatched parenthesis');
+          ops.pop();
+          if(ops.length&&ops.at(-1).k==='fun')out.push(ops.pop());
+        } else {
+          let op=x;
+          if(op==='-'&&(prev==='start'||prev==='op'||prev==='('||prev===','))op='NEG';
+          const p=op==='NEG'?7:prec[op];
+          while(ops.length&&ops.at(-1).v!=='('){
+            const top=ops.at(-1),tp=top.v==='NEG'?7:(prec[top.v]||0);
+            if(!(right[op]?p<tp:p<=tp))break;
+            out.push(ops.pop());
+          }
+          ops.push({k:'op',v:op});
+        }
+        prev=x==='('?'(':x===','?',':(prec[x]||x==='-'?'op':'val');
+      }
+      while(ops.length){if(ops.at(-1).v==='(')throw Error('Mismatched parenthesis');out.push(ops.pop())}
+      return out;
+    },
+    eval(rpn,env){const st=[];for(const x of rpn){if(x.k==='num'||x.k==='str')st.push(x.v);else if(x.k==='var')st.push(env[x.v]);else if(x.k==='fun'){const fn=this.funcs[x.v];if(!fn)throw Error('Unknown function '+x.v);st.push(fn(st.pop()))}else{if(x.v==='NEG'){st.push(-Number(st.pop()));continue}const b=st.pop(),a=st.pop();switch(x.v){case'+':st.push(typeof a==='string'||typeof b==='string'?String(a??'')+String(b??''):Number(a)+Number(b));break;case'-':st.push(Number(a)-Number(b));break;case'*':st.push(Number(a)*Number(b));break;case'/':st.push(Number(a)/Number(b));break;case'^':st.push(Number(a)**Number(b));break;case'==':st.push(a==b?1:0);break;case'!=':st.push(a!=b?1:0);break;case'>':st.push(a>b?1:0);break;case'<':st.push(a<b?1:0);break;case'>=':st.push(a>=b?1:0);break;case'<=':st.push(a<=b?1:0);break;case'&&':st.push(a&&b?1:0);break;case'||':st.push(a||b?1:0)}}}return st.pop()}
+  };
+
+  /* Statistical procedures */
+  const Stats={
+    descriptives(vars){return vars.map(name=>{const a=numeric(name),n=a.length,m=Num.mean(a),sd=Num.sd(a),se=n?sd/Math.sqrt(n):NaN,sk=n>2&&sd>0?Num.sum(a.map(x=>((x-m)/sd)**3))*n/((n-1)*(n-2)):NaN,ku=n>3&&sd>0?(n*(n+1)*Num.sum(a.map(x=>((x-m)/sd)**4))/((n-1)*(n-2)*(n-3))-3*(n-1)**2/((n-2)*(n-3))):NaN,tcrit=n>1?this.tQuantile(.975,n-1):NaN,min=n?Math.min(...a):NaN,max=n?Math.max(...a):NaN;return{name,n,missing:validRows().length-n,mean:m,se,median:Num.median(a),sd,variance:sd*sd,min,max,range:n?max-min:NaN,sum:n?Num.sum(a):NaN,skewness:sk,kurtosis:ku,ciLow:m-tcrit*se,ciHigh:m+tcrit*se}})},
+    tQuantile(p,df){if(!Number.isFinite(df)||df<=0||!Number.isFinite(p)||p<=0||p>=1)return NaN;let lo=-20,hi=20;for(let i=0;i<90;i++){const mid=(lo+hi)/2;if(Num.tCDF(mid,df)<p)lo=mid;else hi=mid}return(lo+hi)/2},
+    frequencies(name){const entries=col(name,{keepMissing:true}),vals=entries.map(o=>o.v),map=new Map(),missing=entries.filter(o=>o.missing).length;entries.forEach(o=>{if(!o.missing)map.set(String(o.v),(map.get(String(o.v))||0)+1)});const valid=vals.length-missing;let cum=0;return{valid,missing,rows:[...map].sort((a,b)=>String(a[0]).localeCompare(String(b[0]),undefined,{numeric:true})).map(([value,count])=>{cum+=count;return{value,count,percent:count/vals.length*100,validPercent:count/valid*100,cumulative:cum/valid*100}})}},
+    crosstab(a,b){const pairs=pairedCategorical(a,b);if(!pairs.length)throw Error('No complete cases for the selected variables');const ra=[...new Set(pairs.map(x=>x[0]))],cb=[...new Set(pairs.map(x=>x[1]))],obs=ra.map(()=>cb.map(()=>0));pairs.forEach(([x,y])=>obs[ra.indexOf(x)][cb.indexOf(y)]++);const rt=obs.map(r=>Num.sum(r)),ct=cb.map((_,j)=>Num.sum(obs.map(r=>r[j]))),n=Num.sum(rt);let chi=0,minExp=Infinity;const exp=obs.map((r,i)=>r.map((_,j)=>{const e=rt[i]*ct[j]/n;minExp=Math.min(minExp,e);chi+=(obs[i][j]-e)**2/e;return e}));const df=(ra.length-1)*(cb.length-1);if(df<=0)throw Error('Crosstabulation requires at least two distinct categories in each variable');const p=1-Num.chiCDF(chi,df),v=Math.sqrt(chi/(n*Math.min(ra.length-1,cb.length-1)));return{ra,cb,obs,exp,rt,ct,n,chi,df,p,v,minExp}},
+    oneSampleT(name,mu=0){const a=numeric(name),n=a.length;if(n<2)throw Error('At least two valid cases are required');const m=Num.mean(a),sd=Num.sd(a);if(!(sd>0))throw Error('The variable has zero variance');const se=sd/Math.sqrt(n),t=(m-mu)/se,df=n-1,p=2*(1-Num.tCDF(Math.abs(t),df)),crit=this.tQuantile(.975,df),d=(m-mu)/sd;return{name,n,m,sd,se,mu,t,df,p,d,low:m-crit*se,high:m+crit*se}},
+    independentT(outcome,group,g1,g2){const ds=active(),yi=ds.variables.findIndex(v=>v.name===outcome),gi=ds.variables.findIndex(v=>v.name===group),a=[],b=[];validRows().forEach(o=>{if(isMissing(ds.variables[yi],o.r[yi])||isMissing(ds.variables[gi],o.r[gi]))return;const y=Number(o.r[yi]),g=String(o.r[gi]);if(Number.isFinite(y)){if(g===String(g1))a.push(y);if(g===String(g2))b.push(y)}});const n1=a.length,n2=b.length;if(n1<2||n2<2)throw Error('Each group requires at least two valid cases');const m1=Num.mean(a),m2=Num.mean(b),v1=Num.variance(a),v2=Num.variance(b);if(!(v1>0)&&!(v2>0))throw Error('Both groups have zero variance; the t statistic is undefined');const se=Math.sqrt(v1/n1+v2/n2);if(!Number.isFinite(se)||se<=0)throw Error('The standard error of the difference is zero or undefined');const t=(m1-m2)/se,df=(v1/n1+v2/n2)**2/((v1/n1)**2/(n1-1)+(v2/n2)**2/(n2-1));if(!Number.isFinite(df)||df<=0)throw Error('Welch degrees of freedom could not be computed');const p=2*(1-Num.tCDF(Math.abs(t),df)),sp=Math.sqrt(((n1-1)*v1+(n2-1)*v2)/(n1+n2-2)),d=sp>0?(m1-m2)/sp:NaN,J=1-3/(4*(n1+n2)-9),g=d*J,crit=this.tQuantile(.975,df);return{outcome,group,g1,g2,n1,n2,m1,m2,sd1:Math.sqrt(v1),sd2:Math.sqrt(v2),diff:m1-m2,se,t,df,p,d,g,low:m1-m2-crit*se,high:m1-m2+crit*se}},
+    pairedT(a,b){const rows=paired([a,b]);if(rows.length<2)throw Error('At least two complete pairs are required');const x=rows.map(r=>r[0]),y=rows.map(r=>r[1]),d=x.map((v,i)=>v-y[i]),n=d.length,m=Num.mean(d),sd=Num.sd(d),se=sd/Math.sqrt(n),t=m/se,df=n-1,p=2*(1-Num.tCDF(Math.abs(t),df)),crit=this.tQuantile(.975,df);return{a,b,n,meanA:Num.mean(x),meanB:Num.mean(y),meanDiff:m,sdDiff:sd,t,df,p,effect:m/sd,low:m-crit*se,high:m+crit*se,corr:this.correlationArrays(x,y)}},
+    mannWhitney(outcome,group,g1,g2){const ds=active(),yi=ds.variables.findIndex(v=>v.name===outcome),gi=ds.variables.findIndex(v=>v.name===group),vals=[];validRows().forEach(o=>{if(isMissing(ds.variables[yi],o.r[yi])||isMissing(ds.variables[gi],o.r[gi]))return;const y=Number(o.r[yi]),g=String(o.r[gi]);if(Number.isFinite(y)&&(g===String(g1)||g===String(g2)))vals.push({y,g})});const ranks=Num.rank(vals.map(o=>o.y));let n1=0,n2=0,R1=0;vals.forEach((o,i)=>{if(o.g===String(g1)){n1++;R1+=ranks[i]}else n2++});if(!n1||!n2)throw Error('Both groups must contain valid cases');const U1=R1-n1*(n1+1)/2,U2=n1*n2-U1,U=Math.min(U1,U2),N=n1+n2,counts=new Map();vals.forEach(o=>counts.set(o.y,(counts.get(o.y)||0)+1));const tie=[...counts.values()].reduce((a,t)=>a+t*t*t-t,0),sd=Math.sqrt(n1*n2/12*(N+1-tie/(N*(N-1)))),z=(U-n1*n2/2+.5)/sd,p=2*(1-Num.normalCDF(Math.abs(z))),effect=Math.abs(z)/Math.sqrt(N);return{outcome,group,g1,g2,n1,n2,U1,U2,U,z,p,effect}},
+    wilcoxon(a,b){const rows=paired([a,b]),d=rows.map(r=>r[0]-r[1]).filter(x=>x!==0),n=d.length;if(!n)throw Error('All paired differences are zero');const ranks=Num.rank(d.map(Math.abs));let Wp=0,Wm=0;d.forEach((x,i)=>x>0?Wp+=ranks[i]:Wm+=ranks[i]);const T=Math.min(Wp,Wm),mean=n*(n+1)/4,counts=new Map();d.forEach(x=>counts.set(Math.abs(x),(counts.get(Math.abs(x))||0)+1));const tie=[...counts.values()].reduce((a,t)=>a+t*t*t-t,0),sd=Math.sqrt(n*(n+1)*(2*n+1)/24-tie/48),z=(T-mean+.5)/sd,p=2*(1-Num.normalCDF(Math.abs(z))),effect=Math.abs(z)/Math.sqrt(n);return{a,b,n,Wp,Wm,T,z,p,effect,medianDiff:Num.median(d)}},
+    kruskalWallis(outcome,group){const ds=active(),yi=ds.variables.findIndex(v=>v.name===outcome),gi=ds.variables.findIndex(v=>v.name===group),vals=[];validRows().forEach(o=>{const y=Number(o.r[yi]),g=o.r[gi];if(Number.isFinite(y)&&g!=null)vals.push({y,g:String(g)})});const N=vals.length,ranks=Num.rank(vals.map(o=>o.y)),groups=new Map();vals.forEach((o,i)=>{if(!groups.has(o.g))groups.set(o.g,[]);groups.get(o.g).push(ranks[i])});if(groups.size<2)throw Error('At least two groups are required');let H=12/(N*(N+1))*[...groups.values()].reduce((a,r)=>a+Num.sum(r)**2/r.length,0)-3*(N+1);const counts=new Map();vals.forEach(o=>counts.set(o.y,(counts.get(o.y)||0)+1));const C=1-[...counts.values()].reduce((a,t)=>a+t*t*t-t,0)/(N*N*N-N);H/=C;const df=groups.size-1,p=1-Num.chiCDF(H,df);return{outcome,group,N,H,df,p,groups:[...groups].map(([name,r])=>({name,n:r.length,meanRank:Num.mean(r)}))}},
+    explore(vars){return vars.map(name=>{const a=numeric(name);if(!a.length)return{name,n:0,mean:NaN,median:NaN,sd:NaN,q1:NaN,q3:NaN,iqr:NaN,min:NaN,max:NaN,outliers:0,lowerFence:NaN,upperFence:NaN};const q1=Num.quantile(a,.25),q3=Num.quantile(a,.75),iqr=q3-q1,lo=q1-1.5*iqr,hi=q3+1.5*iqr,out=a.filter(x=>x<lo||x>hi);return{name,n:a.length,mean:Num.mean(a),median:Num.median(a),sd:Num.sd(a),q1,q3,iqr,min:Math.min(...a),max:Math.max(...a),outliers:out.length,lowerFence:lo,upperFence:hi}})},
+    anova(outcome,group){const ds=active(),yi=ds.variables.findIndex(v=>v.name===outcome),gi=ds.variables.findIndex(v=>v.name===group),map=new Map();validRows().forEach(o=>{if(isMissing(ds.variables[yi],o.r[yi])||isMissing(ds.variables[gi],o.r[gi]))return;const y=Number(o.r[yi]),g=o.r[gi];if(Number.isFinite(y)){if(!map.has(String(g)))map.set(String(g),[]);map.get(String(g)).push(y)}});const groups=[...map].map(([name,a])=>({name,a,n:a.length,mean:Num.mean(a),sd:Num.sd(a)}));if(groups.length<2||groups.some(g=>g.n<2))throw Error('At least two groups with two valid cases each are required');const all=groups.flatMap(g=>g.a),grand=Num.mean(all),ssb=Num.sum(groups.map(g=>g.n*(g.mean-grand)**2)),ssw=Num.sum(groups.map(g=>Num.sum(g.a.map(x=>(x-g.mean)**2)))),dfb=groups.length-1,dfw=all.length-groups.length,msb=ssb/dfb,msw=ssw/dfw,F=msb/msw,p=1-Num.fCDF(F,dfb,dfw),eta=ssb/(ssb+ssw),omega=(ssb-dfb*msw)/(ssb+ssw+msw);return{outcome,group,groups,N:all.length,grand,ssb,ssw,dfb,dfw,msb,msw,F,p,eta,omega}},
+    correlationArrays(x,y){const n=x.length,mx=Num.mean(x),my=Num.mean(y),sx=Math.sqrt(Num.sum(x.map(v=>(v-mx)**2))),sy=Math.sqrt(Num.sum(y.map(v=>(v-my)**2)));return Num.sum(x.map((v,i)=>(v-mx)*(y[i]-my)))/(sx*sy)},
+    correlation(vars,method='pearson'){const rows=paired(vars);if(rows.length<3)throw Error('At least three complete cases are required');let data=vars.map((_,j)=>rows.map(r=>r[j]));if(data.some(a=>!(Num.sd(a)>0)))throw Error('A selected variable has zero variance');if(method==='spearman')for(let j=0;j<data.length;j++)data[j]=Num.rank(data[j]);const mat=vars.map((_,i)=>vars.map((_,j)=>this.correlationArrays(data[i],data[j]))),p=vars.map((_,i)=>vars.map((_,j)=>{if(i===j)return 0;const r=mat[i][j],n=rows.length,t=r*Math.sqrt((n-2)/(1-r*r));return 2*(1-Num.tCDF(Math.abs(t),n-2))}));return{vars,n:rows.length,method,mat,p}},
+    linearRegression(yName,xNames){const rows=paired([yName,...xNames]),n=rows.length,p=xNames.length+1;if(n<=p)throw Error('Insufficient complete cases');const X=rows.map(r=>[1,...r.slice(1)]),yy=rows.map(r=>r[0]),Xt=Num.transpose(X),XtX=Num.matMul(Xt,X),inv=Num.inverse(XtX),B=Num.qrSolve(X,yy),pred=X.map(r=>Num.sum(r.map((v,j)=>v*B[j]))),mean=Num.mean(yy),sse=Num.sum(yy.map((v,i)=>(v-pred[i])**2)),sst=Num.sum(yy.map(v=>(v-mean)**2)),ssr=sst-sse,dfm=p-1,dfe=n-p,mse=sse/dfe,R2=1-sse/sst,adj=1-(1-R2)*(n-1)/dfe,F=(ssr/dfm)/mse,Fp=1-Num.fCDF(F,dfm,dfe),se=B.map((_,j)=>Math.sqrt(mse*inv[j][j])),t=B.map((b,j)=>b/se[j]),pv=t.map(v=>2*(1-Num.tCDF(Math.abs(v),dfe))),crit=this.tQuantile(.975,dfe);return{yName,xNames,n,p,B,se,t,pv,ci:B.map((b,j)=>[b-crit*se[j],b+crit*se[j]]),pred,resid:yy.map((v,i)=>v-pred[i]),sst,ssr,sse,dfm,dfe,mse,R2,adj,F,Fp,rmse:Math.sqrt(mse)}},
+    logisticRegression(yName,xNames,maxIter=100){const rows=pairedWithCategory(yName,xNames),n=rows.length,p=xNames.length+1;if(n<=p)throw Error('Insufficient complete cases');const norm=v=>typeof v==='boolean'?(v?1:0):v,key=v=>String(norm(v)),raw=rows.map(r=>norm(r[0])),levels=[...new Set(raw.map(key))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{numeric:true,sensitivity:'base'})).map(k=>raw.find(v=>key(v)===k));if(levels.length!==2)throw Error(`The dependent variable must contain exactly two distinct valid levels; ${levels.length} found`);const y=raw.map(v=>key(v)===key(levels[1])?1:0),X=rows.map(r=>[1,...r.slice(1)]);let b=Array(p).fill(0),converged=false,iter=0,inv;for(iter=0;iter<maxIter;iter++){const eta=X.map(r=>Num.sum(r.map((v,j)=>v*b[j]))),pr=eta.map(z=>1/(1+Math.exp(-clamp(z,-35,35)))),W=pr.map(q=>Math.max(1e-8,q*(1-q))),g=Array(p).fill(0);for(let j=0;j<p;j++)g[j]=Num.sum(X.map((r,i)=>r[j]*(y[i]-pr[i])));const H=Array.from({length:p},(_,j)=>Array.from({length:p},(_,k)=>Num.sum(X.map((r,i)=>r[j]*W[i]*r[k]))));inv=Num.inverse(H);const step=Num.matMul(inv,g.map(v=>[v])).map(r=>r[0]);b=b.map((v,j)=>v+step[j]);if(Math.max(...step.map(Math.abs))<1e-7){converged=true;break}}const eta=X.map(r=>Num.sum(r.map((v,j)=>v*b[j]))),pr=eta.map(z=>1/(1+Math.exp(-clamp(z,-35,35)))),ll=Num.sum(y.map((v,i)=>v*Math.log(Math.max(pr[i],1e-15))+(1-v)*Math.log(Math.max(1-pr[i],1e-15)))),mean=Num.mean(y),ll0=Num.sum(y.map(v=>v*Math.log(mean)+(1-v)*Math.log(1-mean))),chi=2*(ll-ll0),df=p-1,modelP=1-Num.chiCDF(chi,df),se=b.map((_,j)=>Math.sqrt(inv[j][j])),z=b.map((v,j)=>v/se[j]),pv=z.map(v=>2*(1-Num.normalCDF(Math.abs(v)))),pred=pr.map(q=>q>=.5?1:0),correct=pred.filter((v,i)=>v===y[i]).length;return{yName,xNames,n,levels,b,se,z,pv,odds:b.map(Math.exp),ll,ll0,chi,df,modelP,accuracy:correct/n,converged,iter:iter+1,prob:pr}},
+    reliability(vars){const rows=paired(vars),k=vars.length,n=rows.length;if(k<2||n<2)throw Error('At least two items and two complete cases are required');const items=vars.map((_,j)=>rows.map(r=>r[j])),varsV=items.map(a=>Num.variance(a)),tot=rows.map(r=>Num.sum(r)),vt=Num.variance(tot);if(!(vt>0))throw Error('Total-score variance is zero');const alpha=k/(k-1)*(1-Num.sum(varsV)/vt),deleted=vars.map((v,j)=>{const sub=rows.map(r=>r.filter((_,q)=>q!==j)),kk=k-1,sv=Num.sum(Array.from({length:kk},(_,q)=>Num.variance(sub.map(r=>r[q])))),tv=Num.variance(sub.map(r=>Num.sum(r)));return kk>1?kk/(kk-1)*(1-sv/tv):NaN});const itemTotal=items.map((a,j)=>this.correlationArrays(a,rows.map(r=>Num.sum(r)-r[j])));return{vars,k,n,alpha,deleted,itemTotal}},
+    pca(vars){const rows=paired(vars),n=rows.length,p=vars.length;if(n<3||p<2)throw Error('PCA requires at least two variables and three complete cases');const means=Array.from({length:p},(_,j)=>Num.mean(rows.map(x=>x[j]))),sds=Array.from({length:p},(_,j)=>Num.sd(rows.map(x=>x[j])));if(sds.some(x=>!(x>0)))throw Error('A selected variable has zero variance');const Z=rows.map(r=>r.map((v,j)=>(v-means[j])/sds[j])),R=Array.from({length:p},(_,i)=>Array.from({length:p},(_,j)=>this.correlationArrays(Z.map(r=>r[i]),Z.map(r=>r[j])))),eig=Num.eigenSym(R),loadings=eig.vectors.map((r,i)=>r.map((v,j)=>v*Math.sqrt(Math.max(0,eig.values[j]))));return{vars,n,R,values:eig.values,vectors:eig.vectors,loadings,variance:eig.values.map(v=>v/p*100),cum:eig.values.map((_,i)=>Num.sum(eig.values.slice(0,i+1))/p*100)}},
+    kmeans(vars,k=3,maxIter=100,seed=12345){const prep=this.kmeansPrep(vars);if(prep.n<k)throw Error('Fewer complete cases than clusters');const core=KERNEL({task:'kmeans',Z:prep.Z,k,maxIter,seed});return this.kmeansFinish(prep,core,vars,k,seed)}
+  };
+  function pairedCategorical(a,b){const ds=active(),ai=ds.variables.findIndex(v=>v.name===a),bi=ds.variables.findIndex(v=>v.name===b);return validRows().filter(o=>!isMissing(ds.variables[ai],o.r[ai])&&!isMissing(ds.variables[bi],o.r[bi])).map(o=>[o.r[ai],o.r[bi]])}
+
+
+  /* ---------------- Compute kernel (shared by main thread and Web Worker) ---------------- */
+  function KERNEL(d){
+    function prng(seed){let s=(seed>>>0)||1;return()=>((s=(1664525*s+1013904223)>>>0)/4294967296)}
+    function mean(a){let s=0;for(let i=0;i<a.length;i++)s+=a[i];return s/a.length}
+    function sdev(a){const m=mean(a);let s=0;for(let i=0;i<a.length;i++){const q=a[i]-m;s+=q*q}return Math.sqrt(s/(a.length-1))}
+    function median(a){const b=a.slice().sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2}
+    function quantile(a,q){const b=a.slice().sort((x,y)=>x-y),p=(b.length-1)*q,i=Math.floor(p),f=p-i;return i+1<b.length?b[i]*(1-f)+b[i+1]*f:b[i]}
+    function pearson(x,y){const n=x.length,mx=mean(x),my=mean(y);let sxy=0,sxx=0,syy=0;for(let i=0;i<n;i++){const a=x[i]-mx,b=y[i]-my;sxy+=a*b;sxx+=a*a;syy+=b*b}return sxy/Math.sqrt(sxx*syy)}
+    function statistic(kind,x,y){
+      if(kind==='mean')return mean(x);
+      if(kind==='median')return median(x);
+      if(kind==='sd')return sdev(x);
+      if(kind==='corr')return pearson(x,y);
+      if(kind==='meandiff')return mean(x)-mean(y);
+      if(kind==='mediandiff')return median(x)-median(y);
+      if(kind==='ratio')return mean(x)/mean(y);
+      throw Error('Unknown statistic '+kind);
+    }
+    function kmeansCore(Z,k,maxIter,seed){
+      const n=Z.length,p=Z[0].length,rnd=prng(seed),used={},cent=[];
+      while(cent.length<k){const i=Math.floor(rnd()*n);if(!used[i]){used[i]=1;cent.push(Z[i].slice())}}
+      const assign=new Array(n).fill(-1);let iter=0,changed=true,reseeds=0;
+      for(;iter<maxIter&&changed;iter++){
+        changed=false;
+        for(let i=0;i<n;i++){let best=0,bd=Infinity;for(let c=0;c<k;c++){let dd=0;for(let j=0;j<p;j++){const q=Z[i][j]-cent[c][j];dd+=q*q}if(dd<bd){bd=dd;best=c}}if(assign[i]!==best){assign[i]=best;changed=true}}
+        const counts=new Array(k).fill(0);for(let i=0;i<n;i++)if(assign[i]>=0)counts[assign[i]]++;
+        for(let c=0;c<k;c++){
+          if(counts[c]){const acc=new Array(p).fill(0);for(let i=0;i<n;i++)if(assign[i]===c)for(let j=0;j<p;j++)acc[j]+=Z[i][j];for(let j=0;j<p;j++)cent[c][j]=acc[j]/counts[c]}
+          else{let far=-1,fd=-1;for(let i=0;i<n;i++){const src=assign[i];if(src<0||counts[src]<=1)continue;let dd=0;for(let j=0;j<p;j++){const q=Z[i][j]-cent[src][j];dd+=q*q}if(dd>fd){fd=dd;far=i}}
+            if(far<0)far=Math.floor(rnd()*n);
+            if(assign[far]>=0)counts[assign[far]]--;
+            cent[c]=Z[far].slice();assign[far]=c;counts[c]=1;reseeds++;changed=true}
+        }
+      }
+      let wss=0;for(let i=0;i<n;i++)for(let j=0;j<p;j++){const q=Z[i][j]-cent[assign[i]][j];wss+=q*q}
+      return{assign,cent,iter,reseeds,wss};
+    }
+    if(d.task==='bootstrap'){
+      const {kind,x,y,B,seed,level}=d,rnd=prng(seed),n=x.length,m=y?y.length:0,reps=new Array(B);
+      const obs=statistic(kind,x,y);
+      for(let b=0;b<B;b++){
+        const xs=new Array(n);for(let i=0;i<n;i++)xs[i]=x[Math.floor(rnd()*n)];
+        let ys=null;
+        if(y){ys=new Array(m);
+          if(kind==='corr'){for(let i=0;i<n;i++){const k2=Math.floor(rnd()*n);xs[i]=x[k2];ys[i]=y[k2]}}
+          else for(let i=0;i<m;i++)ys[i]=y[Math.floor(rnd()*m)];}
+        reps[b]=statistic(kind,xs,ys);
+      }
+      const clean=reps.filter(v=>Number.isFinite(v)).sort((a,b)=>a-b),alpha=(1-level)/2;
+      const lo=quantile(clean,alpha),hi=quantile(clean,1-alpha),bmean=mean(clean);
+      return{obs,lo,hi,se:sdev(clean),bias:bmean-obs,B:clean.length,level};
+    }
+    if(d.task==='permutation'){
+      const {kind,x,y,B,seed}=d,rnd=prng(seed),obs=statistic(kind,x,y);
+      const pool=kind==='corr'?null:x.concat(y),n1=x.length;let ge=0;
+      for(let b=0;b<B;b++){
+        let s;
+        if(kind==='corr'){const ys=y.slice();for(let i=ys.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));const t=ys[i];ys[i]=ys[j];ys[j]=t}s=statistic('corr',x,ys)}
+        else{const p2=pool.slice();for(let i=p2.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));const t=p2[i];p2[i]=p2[j];p2[j]=t}s=statistic(kind,p2.slice(0,n1),p2.slice(n1))}
+        if(Math.abs(s)>=Math.abs(obs)-1e-12)ge++;
+      }
+      return{obs,p:(ge+1)/(B+1),B};
+    }
+    if(d.task==='kmeans')return kmeansCore(d.Z,d.k,d.maxIter,d.seed);
+    throw Error('Unknown task '+d.task);
+  }
+
+  const WORKER_SRC=`const KERNEL=${KERNEL.toString()};self.onmessage=function(e){var d=e.data;try{self.postMessage({id:d.id,ok:true,result:KERNEL(d)})}catch(err){self.postMessage({id:d.id,ok:false,error:String((err&&err.message)||err)})}};`;
+  let _worker=null,_workerBroken=false,_taskId=0;const _pending=new Map();
+  function getWorker(){
+    if(_workerBroken||typeof Worker==='undefined'||typeof Blob==='undefined')return null;
+    if(_worker)return _worker;
+    try{
+      const url=URL.createObjectURL(new Blob([WORKER_SRC],{type:'text/javascript'}));
+      _worker=new Worker(url);
+      _worker.onmessage=e=>{const p=_pending.get(e.data.id);if(!p)return;_pending.delete(e.data.id);e.data.ok?p.resolve(e.data.result):p.reject(Error(e.data.error))};
+      _worker.onerror=()=>{_workerBroken=true;_worker=null;_pending.forEach(p=>p.fallback());_pending.clear()};
+      return _worker;
+    }catch(err){_workerBroken=true;return null}
+  }
+  function computeAsync(payload){
+    const w=getWorker();
+    if(!w)return Promise.resolve().then(()=>KERNEL(payload));
+    const id=++_taskId;payload.id=id;
+    return new Promise((resolve,reject)=>{
+      const fallback=()=>{try{resolve(KERNEL(payload))}catch(e){reject(e)}};
+      _pending.set(id,{resolve,reject,fallback});
+      const timer=setTimeout(()=>{if(_pending.has(id)){_pending.delete(id);fallback()}},20000);
+      const wrap=_pending.get(id);
+      wrap.resolve=v=>{clearTimeout(timer);resolve(v)};
+      wrap.reject=e=>{clearTimeout(timer);reject(e)};
+      try{w.postMessage(payload)}catch(err){clearTimeout(timer);_pending.delete(id);fallback()}
+    });
+  }
+  const workerStatus=()=>_workerBroken||typeof Worker==='undefined'?'main thread':(_worker?'background worker':'background worker (idle)');
+
+  /* ---------------- Value-label display helpers ---------------- */
+  function varByName(name){const ds=active();return ds?ds.variables.find(v=>v.name===name)||null:null}
+  function labelText(v,val){
+    if(val===null||val===undefined||val==='')return '';
+    const key=String(val);
+    if(v&&v.valueLabels&&Object.prototype.hasOwnProperty.call(v.valueLabels,key))return `${v.valueLabels[key]} (${key})`;
+    return key;
+  }
+  const labelOf=(name,val)=>labelText(varByName(name),val);
+
+  /* ---------------- Multiple-comparison adjustment ---------------- */
+  function adjustP(ps,method='none'){
+    const n=ps.length;if(method==='none'||!n)return ps.slice();
+    const ix=ps.map((p,i)=>({p,i})).filter(o=>Number.isFinite(o.p));
+    const out=ps.slice();
+    if(method==='holm'){
+      ix.sort((a,b)=>a.p-b.p);let running=0;
+      ix.forEach((o,r)=>{const adj=Math.min(1,(ix.length-r)*o.p);running=Math.max(running,adj);out[o.i]=running});
+    }else if(method==='bh'){
+      ix.sort((a,b)=>b.p-a.p);let running=1;
+      ix.forEach((o,r)=>{const rank=ix.length-r,adj=Math.min(1,o.p*ix.length/rank);running=Math.min(running,adj);out[o.i]=running});
+    }
+    return out;
+  }
+  const ADJUST_LABEL={none:'None',holm:'Holm–Bonferroni',bh:'Benjamini–Hochberg FDR'};
+
+  /* ---------------- Split-file execution ---------------- */
+  function splitLevels(){
+    const a=state.project.analysis,ds=active();
+    if(!a.split||!ds)return[];
+    const j=ds.variables.findIndex(v=>v.name===a.split);if(j<0)return[];
+    const prev=a.splitLevel;a.splitLevel=null;
+    const seen=new Set();
+    validRows(ds,{raw:true}).forEach(o=>{if(!isMissing(ds.variables[j],o.r[j]))seen.add(String(o.r[j]))});
+    a.splitLevel=prev;
+    return[...seen].sort((x,y)=>String(x).localeCompare(String(y),undefined,{numeric:true}));
+  }
+  function bySplit(build){
+    const a=state.project.analysis;
+    if(!a.split)return build();
+    const levels=splitLevels();
+    if(!levels.length)return build();
+    const v=varByName(a.split),prev=a.splitLevel;let html='';
+    for(const lv of levels){
+      a.splitLevel=lv;
+      let part;
+      try{part=build()}catch(e){part=`<div class="note error">${esc(e.message)}</div>`}
+      html+=`<h4 class="splitHead">${esc(a.split)} = ${esc(labelText(v,lv))}</h4>`+part;
+    }
+    a.splitLevel=prev;
+    return `<div class="note">Results are reported separately for each level of the split variable ${esc(a.split)}.</div>`+html;
+  }
+
+  /* ---------------- Extended numerical routines ---------------- */
+  Object.assign(Num,{
+    normalPDF(z){return Math.exp(-.5*z*z)/Math.sqrt(2*Math.PI)},
+    rangeCDF(w,k){
+      if(!(w>0))return 0;
+      const lo=-8.5,hi=8.5,n=240,h=(hi-lo)/n;let s=0;
+      for(let i=0;i<=n;i++){
+        const z=lo+i*h,base=this.normalCDF(z)-this.normalCDF(z-w);
+        const f=this.normalPDF(z)*Math.pow(Math.max(0,base),k-1);
+        s+=((i===0||i===n)?1:(i%2?4:2))*f;
+      }
+      return Math.min(1,Math.max(0,k*s*h/3));
+    },
+    studentizedRangeCDF(q,k,df){
+      if(!(q>0))return 0;
+      if(!Number.isFinite(df)||df>20000)return this.rangeCDF(q,k);
+      const a=df/2,logC=a*Math.log(df)-this.logGamma(a)-(a-1)*Math.LN2;
+      const smax=Math.min(8,1+12/Math.sqrt(df)),n=200,h=smax/n;let acc=0;
+      for(let i=0;i<=n;i++){
+        const s=Math.max(1e-9,i*h);
+        const logf=logC+(df-1)*Math.log(s)-df*s*s/2;
+        const f=Math.exp(logf)*this.rangeCDF(q*s,k);
+        acc+=((i===0||i===n)?1:(i%2?4:2))*f;
+      }
+      return Math.min(1,Math.max(0,acc*h/3));
+    },
+    studentizedRangeQuantile(p,k,df){
+      let lo=0,hi=20;
+      for(let i=0;i<60;i++){const mid=(lo+hi)/2;if(this.studentizedRangeCDF(mid,k,df)<p)lo=mid;else hi=mid}
+      return(lo+hi)/2;
+    },
+    logChoose(n,k){return this.logGamma(n+1)-this.logGamma(k+1)-this.logGamma(n-k+1)}
+  });
+
+  /* ---------------- Extended statistical procedures ---------------- */
+  function groupedNumeric(outcome,group){
+    const ds=active(),yi=ds.variables.findIndex(v=>v.name===outcome),gi=ds.variables.findIndex(v=>v.name===group);
+    if(yi<0||gi<0)throw Error('A selected variable was not found');
+    const map=new Map();
+    validRows().forEach(o=>{
+      if(isMissing(ds.variables[yi],o.r[yi])||isMissing(ds.variables[gi],o.r[gi]))return;
+      const y=Number(o.r[yi]);if(!Number.isFinite(y))return;
+      const g=String(o.r[gi]);if(!map.has(g))map.set(g,[]);map.get(g).push(y);
+    });
+    return[...map].map(([name,a])=>({name,a,n:a.length,mean:Num.mean(a),sd:Num.sd(a),variance:Num.variance(a)}))
+      .sort((x,y)=>String(x.name).localeCompare(String(y.name),undefined,{numeric:true}));
+  }
+
+  Object.assign(Stats,{
+    groupedNumeric,
+    welchAnova(outcome,group){
+      const g=groupedNumeric(outcome,group),k=g.length;
+      if(k<2)throw Error('At least two groups are required');
+      if(g.some(x=>x.n<2||!(x.variance>0)))throw Error('Welch F requires two or more cases and non-zero variance in every group');
+      const w=g.map(x=>x.n/x.variance),sw=Num.sum(w),mw=Num.sum(g.map((x,i)=>w[i]*x.mean))/sw,
+        A=Num.sum(g.map((x,i)=>w[i]*(x.mean-mw)**2))/(k-1),
+        lam=Num.sum(g.map((x,i)=>(1-w[i]/sw)**2/(x.n-1))),
+        B=1+2*(k-2)/(k*k-1)*lam,F=A/B,df1=k-1,df2=(k*k-1)/(3*lam);
+      return{F,df1,df2,p:1-Num.fCDF(F,df1,df2),k};
+    },
+    levene(outcome,group,center='median'){
+      const groups=groupedNumeric(outcome,group);
+      if(groups.length<2||groups.some(g=>g.n<2))throw Error('At least two groups with two valid cases each are required');
+      const z=groups.map(g=>{const c=center==='mean'?Num.mean(g.a):Num.median(g.a);return{name:g.name,n:g.n,a:g.a.map(x=>Math.abs(x-c))}});
+      const all=z.flatMap(g=>g.a),N=all.length,k=z.length,grand=Num.mean(all);
+      const num=Num.sum(z.map(g=>g.n*(Num.mean(g.a)-grand)**2))*(N-k);
+      const den=Num.sum(z.map(g=>{const m=Num.mean(g.a);return Num.sum(g.a.map(x=>(x-m)**2))}))*(k-1);
+      if(!(den>0))throw Error('Levene test undefined: no within-group spread');
+      const W=num/den,df1=k-1,df2=N-k,p=1-Num.fCDF(W,df1,df2);
+      return{outcome,group,center,W,df1,df2,p,k,N};
+    },
+    shapiroWilk(x){
+      const a=[...x].sort((p,q)=>p-q),n=a.length;
+      if(n<3)throw Error('Shapiro–Wilk requires at least three valid cases');
+      if(n>5000)throw Error('Shapiro–Wilk is limited to 5,000 cases in this build');
+      const m=Array.from({length:n},(_,i)=>Num.normalQuantile((i+1-.375)/(n+.25)));
+      const ssumm2=Num.sum(m.map(v=>v*v)),rsn=1/Math.sqrt(n),c=m.map(v=>v/Math.sqrt(ssumm2));
+      const w=new Array(n).fill(0);
+      const an=-2.706056*rsn**5+4.434685*rsn**4-2.071190*rsn**3-.147981*rsn**2+.221157*rsn+c[n-1];
+      w[n-1]=an;w[0]=-an;
+      let phi;
+      if(n>5){
+        const an1=-3.582633*rsn**5+5.682633*rsn**4-1.752461*rsn**3-.293762*rsn**2+.042981*rsn+c[n-2];
+        w[n-2]=an1;w[1]=-an1;
+        phi=(ssumm2-2*m[n-1]**2-2*m[n-2]**2)/(1-2*an*an-2*an1*an1);
+        for(let i=2;i<n-2;i++)w[i]=m[i]/Math.sqrt(phi);
+      }else{
+        phi=(ssumm2-2*m[n-1]**2)/(1-2*an*an);
+        for(let i=1;i<n-1;i++)w[i]=m[i]/Math.sqrt(phi);
+      }
+      const mean=Num.mean(a),ss=Num.sum(a.map(v=>(v-mean)**2));
+      if(!(ss>0))throw Error('Shapiro–Wilk undefined: the variable has zero variance');
+      const num=Num.sum(w.map((v,i)=>v*a[i]))**2,W=Math.min(1,num/ss);
+      let p;
+      if(n===3){p=Math.max(0,Math.min(1,1.909859*(Math.asin(Math.sqrt(W))-1.047198)))}
+      else if(n<=11){
+        const g=-2.273+.459*n,mu=.5440-.39978*n+.025054*n*n-.0006714*n**3,
+          sig=Math.exp(1.3822-.77857*n+.062767*n*n-.0020322*n**3),
+          arg=g-Math.log(1-W);
+        p=arg<=0?1:1-Num.normalCDF((-Math.log(arg)-mu)/sig);
+      }else{
+        const u=Math.log(n),mu=-1.5861-.31082*u-.083751*u*u+.0038915*u**3,
+          sig=Math.exp(-.4803-.082676*u+.0030302*u*u);
+        p=1-Num.normalCDF((Math.log(1-W)-mu)/sig);
+      }
+      return{n,W,p:Math.max(0,Math.min(1,p))};
+    },
+    qqPoints(name){
+      const a=numeric(name).sort((x,y)=>x-y),n=a.length;
+      if(n<3)throw Error('At least three valid cases are required');
+      const theo=Array.from({length:n},(_,i)=>Num.normalQuantile((i+1-.375)/(n+.25)));
+      const m=Num.mean(a),s=Num.sd(a);
+      return{name,n,sample:a,theoretical:theo,slope:s,intercept:m,z:a.map(v=>(v-m)/s)};
+    },
+    tukeyHSD(outcome,group,level=.95){
+      const groups=groupedNumeric(outcome,group),k=groups.length;
+      if(k<2)throw Error('At least two groups are required');
+      const all=groups.flatMap(g=>g.a),N=all.length,dfw=N-k;
+      if(dfw<1)throw Error('Insufficient degrees of freedom for post-hoc comparisons');
+      const msw=Num.sum(groups.map(g=>Num.sum(g.a.map(x=>(x-g.mean)**2))))/dfw;
+      if(!(msw>0))throw Error('Post-hoc comparisons undefined: zero within-group variance');
+      const crit=Num.studentizedRangeQuantile(level,k,dfw),out=[];
+      for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){
+        const gi=groups[i],gj=groups[j],diff=gi.mean-gj.mean,
+          se=Math.sqrt(msw/2*(1/gi.n+1/gj.n)),q=Math.abs(diff)/se,
+          p=1-Num.studentizedRangeCDF(q,k,dfw),half=crit*se;
+        out.push({a:gi.name,b:gj.name,diff,se,q,p,low:diff-half,high:diff+half,df:dfw});
+      }
+      return{method:'Tukey HSD',outcome,group,k,dfw,msw,level,comparisons:out};
+    },
+    gamesHowell(outcome,group,level=.95){
+      const groups=groupedNumeric(outcome,group),k=groups.length;
+      if(k<2)throw Error('At least two groups are required');
+      if(groups.some(g=>g.n<2))throw Error('Each group requires at least two valid cases');
+      const out=[];
+      for(let i=0;i<k;i++)for(let j=i+1;j<k;j++){
+        const gi=groups[i],gj=groups[j],vi=gi.variance/gi.n,vj=gj.variance/gj.n,se=Math.sqrt(vi+vj);
+        if(!(se>0)){out.push({a:gi.name,b:gj.name,diff:gi.mean-gj.mean,se:0,q:NaN,p:NaN,low:NaN,high:NaN,df:NaN});continue}
+        const df=(vi+vj)**2/((vi*vi)/(gi.n-1)+(vj*vj)/(gj.n-1)),diff=gi.mean-gj.mean,
+          q=Math.abs(diff)/Math.sqrt((vi+vj)/2),p=1-Num.studentizedRangeCDF(q,k,df),
+          half=Num.studentizedRangeQuantile(level,k,df)*Math.sqrt((vi+vj)/2);
+        out.push({a:gi.name,b:gj.name,diff,se,q,p,low:diff-half,high:diff+half,df});
+      }
+      return{method:'Games–Howell',outcome,group,k,level,comparisons:out};
+    },
+    fisherExact(a,b,c,d){
+      const n=a+b+c+d,r1=a+b,r2=c+d,c1=a+c;
+      if([a,b,c,d].some(v=>v<0||!Number.isFinite(v)))throw Error('Fisher’s exact test requires non-negative counts');
+      if(!n)throw Error('Fisher’s exact test requires a non-empty table');
+      const pOf=x=>Math.exp(Num.logChoose(r1,x)+Num.logChoose(r2,c1-x)-Num.logChoose(n,c1));
+      const lo=Math.max(0,c1-r2),hi=Math.min(r1,c1),p0=pOf(a);
+      let two=0,left=0,right=0;
+      for(let x=lo;x<=hi;x++){const p=pOf(x);if(p<=p0*(1+1e-9))two+=p;if(x<=a)left+=p;if(x>=a)right+=p}
+      return{p:Math.min(1,two),pLeft:Math.min(1,left),pRight:Math.min(1,right),oddsRatio:(b===0||c===0)?Infinity:(a*d)/(b*c)};
+    },
+    vif(yName,xNames){
+      if(xNames.length<2)return xNames.map(n=>({name:n,vif:1,tolerance:1}));
+      const rows=paired([yName,...xNames]),X=rows.map(r=>r.slice(1));
+      return xNames.map((name,j)=>{
+        const y=X.map(r=>r[j]),others=X.map(r=>r.filter((_,q)=>q!==j)).map(r=>[1,...r]);
+        try{
+          const B=Num.qrSolve(others,y),pred=others.map(r=>Num.sum(r.map((v,q)=>v*B[q]))),
+            m=Num.mean(y),sse=Num.sum(y.map((v,i)=>(v-pred[i])**2)),sst=Num.sum(y.map(v=>(v-m)**2)),
+            R2=sst>0?1-sse/sst:0,tol=Math.max(1e-12,1-R2);
+          return{name,vif:1/tol,tolerance:tol};
+        }catch(e){return{name,vif:NaN,tolerance:NaN}}
+      });
+    },
+    regressionDiagnostics(model){
+      const {resid,pred,n,p,mse}=model,rows=paired([model.yName,...model.xNames]),
+        X=rows.map(r=>[1,...r.slice(1)]),Xt=Num.transpose(X),inv=Num.inverse(Num.matMul(Xt,X));
+      const lev=X.map(r=>Num.sum(r.map((v,j)=>v*Num.sum(r.map((w,k2)=>w*inv[k2][j])))));
+      const s=Math.sqrt(mse),std=resid.map((e,i)=>e/(s*Math.sqrt(Math.max(1e-12,1-lev[i])))),
+        cook=std.map((z,i)=>z*z/p*lev[i]/Math.max(1e-12,1-lev[i]));
+      let dwNum=0,dwDen=0;
+      for(let i=0;i<resid.length;i++){dwDen+=resid[i]**2;if(i)dwNum+=(resid[i]-resid[i-1])**2}
+      const dw=dwDen>0?dwNum/dwDen:NaN;
+      let normality=null;try{normality=this.shapiroWilk(resid)}catch(e){normality=null}
+      const bpFit=(()=>{
+        try{
+          const u=resid.map(e=>e*e/(Num.sum(resid.map(q=>q*q))/n)),Xb=X,B=Num.qrSolve(Xb,u),
+            pr=Xb.map(r=>Num.sum(r.map((v,j)=>v*B[j]))),mu=Num.mean(u),
+            ssr=Num.sum(pr.map(v=>(v-mu)**2)),chi=ssr/2,df=p-1;
+          return{chi,df,p:1-Num.chiCDF(chi,df)};
+        }catch(e){return null}
+      })();
+      const worst=std.map((z,i)=>({i,z,lev:lev[i],cook:cook[i]})).sort((a,b)=>Math.abs(b.z)-Math.abs(a.z)).slice(0,10);
+      return{leverage:lev,standardized:std,cook,dw,normality,breuschPagan:bpFit,worst,meanLeverage:p/n};
+    },
+    missingPatterns(vars){
+      const ds=active();if(!ds)throw Error('No active dataset');
+      const idx=vars.map(n=>ds.variables.findIndex(v=>v.name===n));
+      if(idx.some(j=>j<0))throw Error('A selected variable was not found');
+      const rows=validRows(ds),N=rows.length,perVar=vars.map(()=>0),patterns=new Map();
+      let complete=0;
+      rows.forEach(o=>{
+        const key=idx.map((j,q)=>{const miss=isMissing(ds.variables[j],o.r[j]);if(miss)perVar[q]++;return miss?'M':'.'}).join('');
+        patterns.set(key,(patterns.get(key)||0)+1);
+        if(!key.includes('M'))complete++;
+      });
+      const pat=[...patterns].map(([key,count])=>({key,count,percent:N?count/N*100:0,missingCount:(key.match(/M/g)||[]).length}))
+        .sort((a,b)=>b.count-a.count);
+      const pairwise=vars.map((_,i)=>vars.map((__,j)=>{
+        let both=0;rows.forEach(o=>{if(!isMissing(ds.variables[idx[i]],o.r[idx[i]])&&!isMissing(ds.variables[idx[j]],o.r[idx[j]]))both++});return both;
+      }));
+      return{vars,N,complete,perVar,patterns:pat,pairwise};
+    },
+    correlationPairwise(vars,method='pearson'){
+      const ds=active();if(!ds)throw Error('No active dataset');
+      const idx=vars.map(n=>ds.variables.findIndex(v=>v.name===n));
+      if(idx.some(j=>j<0))throw Error('A selected variable was not found');
+      const rows=validRows(ds),k=vars.length,
+        mat=vars.map(()=>vars.map(()=>NaN)),p=vars.map(()=>vars.map(()=>NaN)),ns=vars.map(()=>vars.map(()=>0));
+      for(let i=0;i<k;i++)for(let j=i;j<k;j++){
+        const xs=[],ys=[];
+        rows.forEach(o=>{
+          const a=o.r[idx[i]],b=o.r[idx[j]];
+          if(isMissing(ds.variables[idx[i]],a)||isMissing(ds.variables[idx[j]],b))return;
+          const x=Number(a),y=Number(b);if(Number.isFinite(x)&&Number.isFinite(y)){xs.push(x);ys.push(y)}
+        });
+        const n=xs.length;ns[i][j]=ns[j][i]=n;
+        if(i===j){mat[i][j]=1;p[i][j]=0;continue}
+        if(n<3||!(Num.sd(xs)>0)||!(Num.sd(ys)>0))continue;
+        const X=method==='spearman'?Num.rank(xs):xs,Y=method==='spearman'?Num.rank(ys):ys,
+          r=this.correlationArrays(X,Y),t=r*Math.sqrt((n-2)/Math.max(1e-12,1-r*r));
+        mat[i][j]=mat[j][i]=r;p[i][j]=p[j][i]=2*(1-Num.tCDF(Math.abs(t),n-2));
+      }
+      return{vars,method,mat,p,ns,missing:'pairwise'};
+    },
+    kmeansPrep(vars){
+      const rows=paired(vars),n=rows.length,p=vars.length;
+      const means=Array.from({length:p},(_,j)=>Num.mean(rows.map(r=>r[j]))),
+        sds=Array.from({length:p},(_,j)=>Num.sd(rows.map(r=>r[j]))||1),
+        Z=rows.map(r=>r.map((v,j)=>(v-means[j])/sds[j]));
+      return{rows,n,p,means,sds,Z};
+    },
+    kmeansFinish(prep,core,vars,k,seed){
+      const{means,sds,n}=prep,centers=core.cent.map(c=>c.map((v,j)=>v*sds[j]+means[j])),
+        sizes=Array.from({length:k},(_,c)=>core.assign.filter(v=>v===c).length);
+      return{vars,k,n,iter:core.iter,assign:core.assign,centers,sizes,wss:core.wss,reseeds:core.reseeds};
+    },
+    bootstrapCI(opts){
+      const {kind,level=.95,B=2000,seed=20260730}=opts;
+      let x=[],y=null;
+      if(kind==='corr'){const rows=paired([opts.a,opts.b]);x=rows.map(r=>r[0]);y=rows.map(r=>r[1]);if(x.length<5)throw Error('At least five complete pairs are required')}
+      else if(kind==='meandiff'||kind==='mediandiff'||kind==='ratio'){
+        if(opts.group){
+          const g=groupedNumeric(opts.a,opts.group);
+          const g1=g.find(q=>String(q.name)===String(opts.g1)),g2=g.find(q=>String(q.name)===String(opts.g2));
+          if(!g1||!g2)throw Error('Both groups must contain valid cases');
+          x=g1.a;y=g2.a;
+        }else{const rows=paired([opts.a,opts.b]);x=rows.map(r=>r[0]);y=rows.map(r=>r[1])}
+        if(x.length<3||y.length<3)throw Error('At least three valid cases per group are required');
+      }else{x=numeric(opts.a);if(x.length<5)throw Error('At least five valid cases are required')}
+      return computeAsync({task:'bootstrap',kind,x,y,B,seed,level});
+    },
+    permutationTest(opts){
+      const {kind,B=5000,seed=20260730}=opts;
+      let x,y;
+      if(kind==='corr'){const rows=paired([opts.a,opts.b]);x=rows.map(r=>r[0]);y=rows.map(r=>r[1])}
+      else{const g=groupedNumeric(opts.a,opts.group),g1=g.find(q=>String(q.name)===String(opts.g1)),g2=g.find(q=>String(q.name)===String(opts.g2));
+        if(!g1||!g2)throw Error('Both groups must contain valid cases');x=g1.a;y=g2.a}
+      if(x.length<3||y.length<3)throw Error('At least three valid cases per group are required');
+      return computeAsync({task:'permutation',kind,x,y,B,seed});
+    }
+  });
+
+  /* Rendering */
+  function renderAll(){renderDatasets();renderGrid();renderVariables();renderOutputs();renderSelectors();renderInspector();renderState();updateTitle()}
+  function updateTitle(){const ds=active();$('#projectTitle').textContent=`${state.project.name}${state.dirty?' *':''}${ds?' — '+ds.name:''}`;document.title=`The Statistian — ${state.project.name}`;$('#memoryStatus').textContent=ds?`${ds.rows.length.toLocaleString()} rows × ${ds.variables.length} variables`:'No dataset'}
+  function renderDatasets(){const ul=$('#datasetList');ul.innerHTML='';state.project.datasets.forEach(ds=>{const li=document.createElement('li'),b=document.createElement('button');b.textContent=`▦ ${ds.name} (${ds.rows.length}×${ds.variables.length})`;b.className=ds.id===state.project.activeDatasetId?'active':'';b.onclick=()=>{state.project.activeDatasetId=ds.id;renderAll()};li.append(b);ul.append(li)})}
+  function displayValue(v,val){if(val==null)return'';if(state.project.settings.showValueLabels!==false&&v.valueLabels&&Object.prototype.hasOwnProperty.call(v.valueLabels,String(val)))return v.valueLabels[String(val)];if(v.type==='numeric')return Number(val).toFixed(v.decimals);if(v.type==='percentage')return (Number(val)*100).toFixed(v.decimals)+'%';if(v.type==='currency')return '$'+Number(val).toFixed(v.decimals);if(v.type==='boolean')return val?'True':'False';if((v.type==='date'||v.type==='datetime')&&!Number.isNaN(Date.parse(val)))return v.type==='date'?new Date(val).toLocaleDateString():new Date(val).toLocaleString();return String(val)}
+  const GRID_WINDOW_MIN=1000,GRID_OVERSCAN=15;
+  let gridWindow={start:0,end:0,total:0,windowed:false},gridScrollQueued=false,gridNavFocus=false;
+  function gridRowHeight(){const v=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--rowh'));return Number.isFinite(v)&&v>0?v:28}
+  function gridTotalRows(ds){return Math.max(ds.rows.length+8,30)}
+  function visibleColIndexes(ds){return ds.variables.map((v,j)=>v.hidden?-1:j).filter(j=>j>=0)}
+  function rawCell(ds,r,c){const row=ds.rows[r];return row?(row[c]??null):null}
+  function editText(v,val){if(val===null||val===undefined)return'';if(v.type==='boolean')return val?'1':'0';return String(val)}
+  function labelToValue(v,text){if(!v.valueLabels)return undefined;const t=String(text).trim().toLowerCase();if(!t)return undefined;const hit=Object.keys(v.valueLabels).find(k=>String(v.valueLabels[k]).trim().toLowerCase()===t);return hit===undefined?undefined:hit}
+  function renderGrid(){const ds=active(),t=$('#dataGrid');if(!ds){t.innerHTML='<tr><td>No dataset. Use File &gt; New Dataset or Import.</td></tr>';gridWindow={start:0,end:0,total:0,windowed:false};return}
+    const af=document.activeElement;let refocus=null;
+    if(af&&af.matches&&af.matches('td[contenteditable]')&&t.contains(af)){cellCommit({currentTarget:af});refocus={r:af.dataset.row,c:af.dataset.col}}
+    const total=gridTotalRows(ds),visibleVars=ds.variables.filter(v=>!v.hidden),vp=$('#gridViewport'),rh=gridRowHeight(),windowed=total>GRID_WINDOW_MIN;
+    let start=0,end=total;
+    if(windowed){const vh=(vp&&vp.clientHeight)||640,view=Math.ceil(vh/rh)+1;start=Math.max(0,Math.floor(((vp&&vp.scrollTop)||0)/rh)-GRID_OVERSCAN);end=Math.min(total,start+view+GRID_OVERSCAN*2)}
+    gridWindow={start,end,total,windowed};
+    const span=visibleVars.length+1;
+    let h='<thead><tr><th class="rownum">Case</th>';
+    visibleVars.forEach(v=>h+=`<th class="colHead" data-col="${ds.variables.indexOf(v)}" style="width:${Math.max(80,v.columns*9)}px">${esc(v.name)}<span class="meta">${esc(v.measure[0].toUpperCase())}</span></th>`);
+    h+='</tr></thead><tbody>';
+    if(start>0)h+=`<tr class="gridSpacer" aria-hidden="true"><td colspan="${span}" style="height:${start*rh}px;padding:0;border:0"></td></tr>`;
+    for(let i=start;i<end;i++){h+=`<tr><th class="rownum">${i+1}</th>`;visibleVars.forEach(v=>{const j=ds.variables.indexOf(v),val=rawCell(ds,i,j);h+=`<td contenteditable="true" role="gridcell" data-row="${i}" data-col="${j}" style="text-align:${v.alignment}">${esc(displayValue(v,val))}</td>`});h+='</tr>'}
+    if(end<total)h+=`<tr class="gridSpacer" aria-hidden="true"><td colspan="${span}" style="height:${(total-end)*rh}px;padding:0;border:0"></td></tr>`;
+    h+='</tbody>';t.innerHTML=h;
+    $$('td[contenteditable]',t).forEach(td=>{td.addEventListener('focus',cellFocus);td.addEventListener('blur',cellCommit);td.addEventListener('keydown',cellKey)});
+    $$('.colHead',t).forEach(th=>th.onclick=()=>selectColumn(Number(th.dataset.col)));
+    if(refocus){const td=$(`td[data-row="${refocus.r}"][data-col="${refocus.c}"]`,t);if(td)td.focus()}
+    updateSelection();
+    if(windowed)setStatus(`Large dataset: showing cases ${start+1}\u2013${end} of ${total} (windowed rendering)`)}
+  function onGridScroll(){if(!gridWindow.windowed)return;const vp=$('#gridViewport');if(!vp)return;const rh=gridRowHeight(),first=Math.floor(vp.scrollTop/rh),last=Math.ceil((vp.scrollTop+vp.clientHeight)/rh);const needTop=gridWindow.start>0&&first<gridWindow.start+2,needBottom=gridWindow.end<gridWindow.total&&last>gridWindow.end-2;if(!(needTop||needBottom))return;if(gridScrollQueued)return;gridScrollQueued=true;requestAnimationFrame(()=>{gridScrollQueued=false;renderGrid()})}
+  function focusCell(r,c){const ds=active();if(!ds)return;const total=gridTotalRows(ds);r=Math.max(0,Math.min(total-1,r));let td=$(`td[data-row="${r}"][data-col="${c}"]`);
+    if(!td&&gridWindow.windowed){const vp=$('#gridViewport'),rh=gridRowHeight();if(vp)vp.scrollTop=Math.max(0,(r-5)*rh);renderGrid();td=$(`td[data-row="${r}"][data-col="${c}"]`)}
+    if(td){gridNavFocus=true;td.focus();gridNavFocus=false;try{td.scrollIntoView({block:'nearest',inline:'nearest'})}catch(err){}}}
+  function cellFocus(e){const td=e.currentTarget,ds=active();if(!ds)return;const r=+td.dataset.row,c=+td.dataset.col,v=ds.variables[c];if(!v)return;const raw=rawCell(ds,r,c);
+    state.selection={row:r,col:c};updateSelection();
+    const labelled=td.textContent!==editText(v,raw);td.dataset.editing='1';td.textContent=editText(v,raw);
+    $('#formulaInput').value=raw??'';$('#cellRef').value=`R${r+1}C${c+1} ${v.name}`;renderInspector();
+    const sel=window.getSelection();if(sel){try{const rg=document.createRange();rg.selectNodeContents(td);if(!gridNavFocus&&!labelled)rg.collapse(false);sel.removeAllRanges();sel.addRange(rg)}catch(err){}}}
+  function cellCommit(e){const td=e.currentTarget,ds=active();if(!ds)return;const r=+td.dataset.row,c=+td.dataset.col,v=ds.variables[c];if(!v)return;
+    let raw=td.textContent;const mapped=labelToValue(v,raw);if(mapped!==undefined)raw=mapped;
+    const old=rawCell(ds,r,c),nv=coerce(raw,v.type);delete td.dataset.editing;
+    if(old!==nv){snapshot('Cell edit');
+      while(ds.rows.length<=r)ds.rows.push(Array(ds.variables.length).fill(null));
+      const row=ds.rows[r];while(row.length<ds.variables.length)row.push(null);
+      row[c]=nv;markDirty(`Edited ${v.name} row ${r+1}`);updateTitle()}
+    td.textContent=displayValue(v,nv)}
+  function cellKey(e){const td=e.currentTarget,ds=active();if(!ds)return;const r=+td.dataset.row,c=+td.dataset.col,vis=visibleColIndexes(ds),pos=vis.indexOf(c),total=gridTotalRows(ds);
+    const go=(nr,nc)=>{e.preventDefault();td.blur();focusCell(nr,nc)};
+    if(e.key==='Enter'){return go(e.shiftKey?Math.max(0,r-1):Math.min(total-1,r+1),c)}
+    if(e.key==='Tab'){let np=pos+(e.shiftKey?-1:1),nr=r;if(np<0){np=vis.length-1;nr=Math.max(0,r-1)}if(np>=vis.length){np=0;nr=Math.min(total-1,r+1)}return go(nr,vis[np]??c)}
+    if(e.key==='ArrowDown')return go(Math.min(total-1,r+1),c);
+    if(e.key==='ArrowUp')return go(Math.max(0,r-1),c);
+    if(e.key==='PageDown')return go(Math.min(total-1,r+20),c);
+    if(e.key==='PageUp')return go(Math.max(0,r-20),c);
+    if(e.key==='Home')return go(e.ctrlKey||e.metaKey?0:r,vis[0]??c);
+    if(e.key==='End')return go(e.ctrlKey||e.metaKey?total-1:r,vis[vis.length-1]??c);
+    if(e.key==='ArrowLeft'||e.key==='ArrowRight'){const sel=window.getSelection(),len=td.textContent.length;let off=null,spanning=false;
+      if(sel&&sel.rangeCount){spanning=!sel.isCollapsed;if(sel.isCollapsed&&td.contains(sel.anchorNode))off=sel.anchorOffset}
+      const atStart=e.key==='ArrowLeft'&&(spanning||off===0||off===null),atEnd=e.key==='ArrowRight'&&(spanning||off===len||off===null);
+      if(atStart||atEnd){const np=pos+(e.key==='ArrowLeft'?-1:1);if(np>=0&&np<vis.length)return go(r,vis[np])}
+      return}
+    if(e.key==='Escape'){e.preventDefault();td.textContent=editText(ds.variables[c],rawCell(ds,r,c));td.blur();return}}
+  function updateSelection(){$$('td.selected,.colHead.selected').forEach(x=>x.classList.remove('selected'));const {row,col}=state.selection;$(`td[data-row="${row}"][data-col="${col}"]`)?.classList.add('selected')}
+  function selectColumn(c){state.selection.col=c;$$('.colHead').forEach(x=>x.classList.toggle('selected',+x.dataset.col===c));renderInspector()}
+  function renderVariables(){const ds=active(),t=$('#varTable');if(!ds){t.innerHTML='';return}const heads=['#','Name','Type','Width','Decimals','Label','Value Labels','Missing','Columns','Alignment','Measure','Role','Notes','Hidden'];let h='<thead><tr>'+heads.map(x=>`<th>${x}</th>`).join('')+'</tr></thead><tbody>';ds.variables.forEach((v,i)=>{h+=`<tr><td>${i+1}</td><td><input data-k="name" data-i="${i}" value="${esc(v.name)}"></td><td><select data-k="type" data-i="${i}">${['numeric','string','date','datetime','time','currency','percentage','scientific','boolean'].map(x=>`<option ${x===v.type?'selected':''}>${x}</option>`).join('')}</select></td><td><input type="number" data-k="width" data-i="${i}" value="${v.width}"></td><td><input type="number" data-k="decimals" data-i="${i}" value="${v.decimals}"></td><td><input data-k="label" data-i="${i}" value="${esc(v.label)}"></td><td><input data-k="valueLabels" data-i="${i}" value="${esc(Object.entries(v.valueLabels).map(([a,b])=>a+'='+b).join('; '))}"></td><td><input data-k="missing" data-i="${i}" value="${esc(v.missing.discrete.join(', '))}"></td><td><input type="number" data-k="columns" data-i="${i}" value="${v.columns}"></td><td><select data-k="alignment" data-i="${i}">${['left','center','right'].map(x=>`<option ${x===v.alignment?'selected':''}>${x}</option>`).join('')}</select></td><td><select data-k="measure" data-i="${i}">${['nominal','ordinal','scale','unknown'].map(x=>`<option ${x===v.measure?'selected':''}>${x}</option>`).join('')}</select></td><td><select data-k="role" data-i="${i}">${['input','target','both','none','partition','split','frequency','weight','record ID'].map(x=>`<option ${x===v.role?'selected':''}>${x}</option>`).join('')}</select></td><td><input data-k="notes" data-i="${i}" value="${esc(v.notes)}"></td><td><input type="checkbox" data-k="hidden" data-i="${i}" ${v.hidden?'checked':''}></td></tr>`});h+=`<tr><td>＋</td><td><button class="btn" id="addVarRow">Add variable</button></td><td colspan="12"></td></tr></tbody>`;t.innerHTML=h;$$('[data-k]',t).forEach(el=>el.onchange=variableChange);$('#addVarRow').onclick=()=>{snapshot('Add variable');ds.variables.push(newVariable(uniqueName('VAR'+(ds.variables.length+1))));ds.rows.forEach(r=>r.push(null));markDirty('Added variable');renderAll()}}
+  function variableChange(e){const ds=active(),el=e.currentTarget,v=ds.variables[+el.dataset.i],k=el.dataset.k;snapshot('Variable metadata');if(k==='name'){const n=String(el.value).replace(/[^A-Za-z0-9_]/g,'_');v.name=n&&n!==v.name?uniqueName(n,{variables:ds.variables.filter(x=>x!==v)}):v.name;el.value=v.name}else if(k==='valueLabels'){v.valueLabels={};String(el.value).split(';').forEach(p=>{const [a,...b]=p.split('=');if(a?.trim()&&b.length)v.valueLabels[a.trim()]=b.join('=').trim()})}else if(k==='missing')v.missing.discrete=String(el.value).split(',').map(x=>x.trim()).filter(Boolean);else if(k==='hidden')v.hidden=el.checked;else if(k==='decimals')v[k]=clamp(Math.round(Number(el.value)||0),0,12);else if(k==='columns')v[k]=clamp(Math.round(Number(el.value)||10),3,80);else if(k==='width')v[k]=clamp(Math.round(Number(el.value)||10),1,255);else v[k]=el.value;markDirty('Changed variable metadata');renderGrid();renderSelectors();renderInspector()}
+  function renderOutputs(){const wrap=$('#outputWrap'),ol=$('#outlineList');ol.innerHTML='';if(!state.project.outputs.length){wrap.innerHTML='<div class="note">Run an analysis to create output. Demonstration data are synthetic and not suitable for substantive conclusions.</div>';return}wrap.innerHTML='';state.project.outputs.forEach((o,i)=>{const d=document.createElement('article');d.className='outputBlock';d.id='output-'+o.id;d.innerHTML=`<div class="outputHead"><h3>${esc(o.title)}</h3><span class="spacer"></span><button class="btn" data-copy="${o.id}">Copy</button><button class="btn danger" data-del="${o.id}">Delete</button></div><div class="outputBody"><div class="outputMeta">${esc(o.meta)}</div>${o.html}<details><summary>Generated syntax</summary><pre class="syntaxEcho">${esc(o.syntax)}</pre></details></div>`;wrap.append(d);const li=document.createElement('li'),b=document.createElement('button');b.textContent=`${i+1}. ${o.title}`;b.onclick=()=>{switchView('outputView');d.scrollIntoView({behavior:'smooth'})};li.append(b);ol.append(li)});$$('[data-del]',wrap).forEach(b=>b.onclick=()=>{snapshot('Delete output');state.project.outputs=state.project.outputs.filter(o=>o.id!==b.dataset.del);markDirty('Deleted output');renderOutputs()});$$('[data-copy]',wrap).forEach(b=>b.onclick=()=>{const o=state.project.outputs.find(o=>o.id===b.dataset.copy);navigator.clipboard?.writeText(stripHTML(o.html)).then(()=>toast('Output copied','ok')).catch(()=>toast('Clipboard unavailable','error'))})}
+  const stripHTML=h=>{const d=document.createElement('div');d.innerHTML=h;return d.innerText};
+  function renderSelectors(){const ds=active(),opts=(filter='all')=>ds?ds.variables.filter(v=>filter==='all'||(filter==='numeric'&&['numeric','currency','percentage','scientific'].includes(v.type))).map(v=>`<option value="${esc(v.name)}">${esc(v.label?`${v.name} — ${v.label}`:v.name)}</option>`).join(''):'';$('#chartX').innerHTML=opts();$('#chartY').innerHTML='<option value="">(none)</option>'+opts('numeric')}
+  function renderInspector(){const ds=active();if(!ds){$('#inspector').innerHTML='No active dataset.';return}const v=ds.variables[state.selection.col];$('#inspector').innerHTML=v?`<dl><dt>Variable</dt><dd>${esc(v.name)}</dd><dt>Label</dt><dd>${esc(v.label||'—')}</dd><dt>Type</dt><dd>${esc(v.type)}</dd><dt>Measure</dt><dd>${esc(v.measure)}</dd><dt>Role</dt><dd>${esc(v.role)}</dd><dt>Missing</dt><dd>${esc(v.missing.discrete.join(', ')||'None')}</dd><dt>Cases</dt><dd>${ds.rows.length.toLocaleString()}</dd></dl>`:'Select a variable.'}
+  function renderState(){const a=state.project.analysis;$('#filterStatus').textContent='Filter: '+(a.filter?`${a.filter.variable} ${a.filter.op} ${a.filter.value}`:'Off');$('#weightStatus').textContent='Weight: '+(a.weight||'Off');$('#splitStatus').textContent='Split: '+(a.split||'Off');$('#stateInspector').innerHTML=`<dl><dt>Filter</dt><dd>${esc(a.filter?JSON.stringify(a.filter):'Off')}</dd><dt>Weight</dt><dd>${esc(a.weight||'Off')}</dd><dt>Split</dt><dd>${esc(a.split||'Off')}</dd><dt>Autosave</dt><dd>${state.project.settings.autosave?'On':'Off'}</dd><dt>Version</dt><dd>${VERSION}</dd><dt>Privacy</dt><dd>Local only; no network requests</dd></dl>`}
+  function switchView(id){state.activeView=id;$$('.tab').forEach(t=>t.classList.toggle('active',t.dataset.view===id));$$('.view').forEach(v=>v.classList.toggle('active',v.id===id));if(id==='outputView')renderOutputs();if(id==='chartView')renderSelectors()}
+  function logSyntax(syntax){if(!syntax)return;const ed=$('#syntaxEditor');if(!ed||!state.project.settings.logSyntax)return;const line=syntax.trim();const cur=ed.value.replace(/\s+$/,'');if(cur.split('\n').slice(-1)[0].trim()===line)return;ed.value=(cur?cur+'\n':'')+line;ed.scrollTop=ed.scrollHeight;state.project.syntax=ed.value}
+  function addOutput(title,html,syntax,notes=''){const ds=active(),a=state.project.analysis;if(a.weight)html=`<div class="note">Cases are weighted by ${esc(a.weight)}. Frequency weights are applied by case replication using values rounded to the nearest whole number; fractional weights are not carried into standard errors.</div>`+html;const meta=`Dataset: ${ds?.name||'None'} | ${new Date().toLocaleString()} | Valid-state filter: ${a.filter?'On':'Off'} | Weight: ${a.weight||'Off'} | Split: ${a.split||'Off'}${notes?' | '+notes:''}`,o={id:uid(),title,html,syntax,meta,time:now()};state.project.outputs.push(o);state.project.journal.push({time:now(),syntax});logSyntax(syntax);markDirty('Added analysis output');renderOutputs();switchView('outputView');return o}
+  function table(headers,rows,caption=''){return `<table class="resultTable">${caption?`<caption>${esc(caption)}</caption>`:''}<thead><tr>${headers.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td>${c&&typeof c==='object'&&Object.prototype.hasOwnProperty.call(c,'html')?c.html:esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`}
+
+  /* Modal/dialog helpers */
+  function modal(title,body,buttons=[{label:'Cancel',value:null},{label:'Run',value:'run',primary:true}],large=false){return new Promise(resolve=>{const bd=$('#modalBackdrop'),m=$('#modal'),mb=$('#modalBody'),mf=$('#modalFoot');$('#modalTitle').textContent=title;mb.innerHTML=body;mf.innerHTML='';m.classList.toggle('large',large);buttons.forEach(x=>{const b=document.createElement('button');b.className='btn'+(x.primary?' primary':'')+(x.danger?' danger':'');b.textContent=x.label;b.onclick=()=>{close();resolve(x.value)};mf.append(b)});const close=()=>{bd.classList.remove('open');document.removeEventListener('keydown',key)};const key=e=>{if(e.key==='Escape'){close();resolve(null)}};$('#modalClose').onclick=()=>{close();resolve(null)};document.addEventListener('keydown',key);bd.classList.add('open');setTimeout(()=>mb.querySelector('input,select,button,textarea')?.focus(),20)})}
+  const varOptions=(numericOnly=false)=>{const ds=active();return ds?ds.variables.filter(v=>!numericOnly||['numeric','currency','percentage','scientific'].includes(v.type)).map(v=>`<option value="${esc(v.name)}">${esc(v.name)}${v.label?' — '+esc(v.label):''}</option>`).join(''):''};
+  async function chooseVariables(title,numericOnly=true,multiple=true){const body=`<div class="formGrid"><label for="pickVars">Variables</label><select id="pickVars" ${multiple?'multiple':''} size="12">${varOptions(numericOnly)}</select><div class="fieldHelp">${multiple?'Use Ctrl/Cmd or Shift to select multiple variables.':'Select one variable.'}</div></div>`;const r=await modal(title,body);if(!r)return null;return [...$('#pickVars').selectedOptions].map(o=>o.value)}
+
+  /* Analysis dialogs and outputs */
+  async function bySplitAsync(build){
+    const a=state.project.analysis;
+    if(!a.split)return build();
+    const levels=splitLevels();
+    if(!levels.length)return build();
+    const v=varByName(a.split),prev=a.splitLevel;let html='';
+    for(const lv of levels){
+      a.splitLevel=lv;let part;
+      try{part=await build()}catch(e){part=`<div class="note error">${esc(e.message)}</div>`}
+      html+=`<h4 class="splitHead">${esc(a.split)} = ${esc(labelText(v,lv))}</h4>`+part;
+    }
+    a.splitLevel=prev;
+    return `<div class="note">Results are reported separately for each level of the split variable ${esc(a.split)}.</div>`+html;
+  }
+  const ciText=(lo,hi)=>`${fmt(lo)} to ${fmt(hi)}`;
+  function normalityNote(name){
+    try{const r=Stats.shapiroWilk(numeric(name));
+      return[name,r.n,fmt(r.W),pFmt(r.p)];
+    }catch(e){return[name,'—','—',e.message]}
+  }
+
+  async function runDescriptives(opts){
+    if(!opts){const vars=await chooseVariables('Descriptive Statistics',true,true);if(!vars?.length)return;opts={vars}}
+    const vars=opts.vars;
+    try{
+      const html=bySplit(()=>{
+        const res=Stats.descriptives(vars),rows=res.map(x=>[x.name,x.n,x.missing,fmt(x.mean),fmt(x.se),fmt(x.median),fmt(x.sd),fmt(x.min),fmt(x.max),fmt(x.skewness),fmt(x.kurtosis),ciText(x.ciLow,x.ciHigh)]);
+        let h=table(['Variable','N','Missing','Mean','SE','Median','Std. Deviation','Minimum','Maximum','Skewness','Kurtosis','95% CI Mean'],rows);
+        if(opts.normality!==false)h+=table(['Variable','N','Shapiro–Wilk W','Significance'],vars.map(normalityNote),'Normality of distribution');
+        return h;
+      });
+      addOutput('Descriptive Statistics',html+'<div class="note">Confidence intervals use the Student t distribution. Skewness and kurtosis use bias-adjusted sample estimators. Shapiro–Wilk tests the null hypothesis that the variable is normally distributed; with large samples it will flag departures too small to matter in practice.</div>',
+        `DESCRIPTIVES VARIABLES=${vars.join(' ')} /STATISTICS=MEAN SE MEDIAN STDDEV MIN MAX SKEWNESS KURTOSIS CI(95) NORMALITY.`);
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runFrequencies(opts){
+    if(!opts){const vars=await chooseVariables('Frequencies',false,true);if(!vars?.length)return;opts={vars}}
+    const vars=opts.vars;
+    try{
+      const html=bySplit(()=>{
+        let h='';
+        for(const name of vars){
+          const r=Stats.frequencies(name),v=varByName(name);
+          h+=`<h4>${esc(name)}${v&&v.label?' — '+esc(v.label):''}</h4>`+
+            table(['Value','Frequency','Percent','Valid Percent','Cumulative Percent'],
+              r.rows.map(x=>[labelText(v,x.value)||x.value,x.count,fmt(x.percent,1),fmt(x.validPercent,1),fmt(x.cumulative,1)]))+
+            `<div class="outputMeta">Valid N = ${r.valid}; Missing = ${r.missing}${v&&Object.keys(v.valueLabels||{}).length?'; category text is the defined value label with the stored value in parentheses':''}</div>`;
+        }
+        return h;
+      });
+      addOutput('Frequencies',html,`FREQUENCIES VARIABLES=${vars.join(' ')}.`);
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runExplore(opts){
+    if(!opts){const vars=await chooseVariables('Explore',true,true);if(!vars?.length)return;opts={vars}}
+    const vars=opts.vars;
+    try{
+      const html=bySplit(()=>{
+        const r=Stats.explore(vars),rows=r.map(x=>[x.name,x.n,fmt(x.mean),fmt(x.median),fmt(x.sd),fmt(x.q1),fmt(x.q3),fmt(x.iqr),fmt(x.min),fmt(x.max),x.outliers,ciText(x.lowerFence,x.upperFence)]);
+        return table(['Variable','N','Mean','Median','Std. Deviation','Q1','Q3','IQR','Minimum','Maximum','Potential Outliers','1.5×IQR Fences'],rows)+
+          table(['Variable','N','Shapiro–Wilk W','Significance'],vars.map(normalityNote),'Tests of normality');
+      });
+      addOutput('Explore',html+'<div class="note">Potential outliers are observations outside the conventional 1.5×IQR fences. They should be investigated, not automatically deleted. Use the Q-Q plot in the Chart Editor to inspect the shape of any departure from normality.</div>',
+        `EXAMINE VARIABLES=${vars.join(' ')} /STATISTICS=DESCRIPTIVES EXTREME /PLOT=BOXPLOT NPPLOT.`);
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runMissing(opts){
+    if(!opts){const vars=await chooseVariables('Missing Value Analysis',false,true);if(!vars?.length)return;opts={vars}}
+    const vars=opts.vars;
+    try{
+      const html=bySplit(()=>{
+        const r=Stats.missingPatterns(vars);
+        const summary=table(['Variable','Valid','Missing','Percent Missing'],
+          vars.map((v,i)=>[v,r.N-r.perVar[i],r.perVar[i],fmt(r.N?r.perVar[i]/r.N*100:0,1)+'%']),'Missing values by variable');
+        const pat=table(['Pattern','Cases','Percent of Cases','Variables Missing'],
+          r.patterns.slice(0,25).map(p=>[{html:`<code>${esc(p.key)}</code>`},p.count,fmt(p.percent,1)+'%',p.missingCount]),
+          'Missing value patterns (M = missing, . = present, in the order listed above)');
+        const pw=table(['Variable',...vars],vars.map((v,i)=>[v,...r.pairwise[i]]),'Cases available for each pair (pairwise N)');
+        return summary+pat+pw+
+          `<div class="outputMeta">Total cases in the working file: ${r.N}. Cases complete on all listed variables: ${r.complete} (${fmt(r.N?r.complete/r.N*100:0,1)}%).</div>`;
+      });
+      addOutput('Missing Value Analysis',html+
+        '<div class="note">Procedures in this build delete cases listwise unless a pairwise option is offered. The gap between the total case count and the complete-case count is the number of cases a multivariable analysis will silently drop. Patterns concentrated in particular variables or particular groups of cases are evidence against a missing-completely-at-random assumption.</div>',
+        `MVA VARIABLES=${vars.join(' ')} /PATTERNS.`);
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runCrosstabs(opts){
+    if(!opts){
+      const body=`<div class="formGrid"><label>Row variable</label><select id="ctRow">${varOptions()}</select><label>Column variable</label><select id="ctCol">${varOptions()}</select><label>Exact test</label><select id="ctExact"><option value="auto">Fisher’s exact when the table is 2×2</option><option value="never">Chi-square only</option></select></div>`;
+      if(!await modal('Crosstabs',body))return;
+      opts={row:$('#ctRow').value,col:$('#ctCol').value,exact:$('#ctExact').value};
+    }
+    const a=opts.row,b=opts.col;
+    if(a===b)return toast('Choose two different variables','error');
+    try{
+      const html=bySplit(()=>{
+        const r=Stats.crosstab(a,b),va=varByName(a),vb=varByName(b);
+        const colLabels=r.cb.map(x=>labelText(vb,x)),rowLabels=r.ra.map(x=>labelText(va,x));
+        const obs=r.ra.map((x,i)=>[rowLabels[i],...r.obs[i],r.rt[i]]);
+        obs.push(['Total',...r.ct,r.n]);
+        const expd=r.ra.map((x,i)=>[rowLabels[i],...r.exp[i].map(v=>fmt(v,2))]);
+        const resid=r.ra.map((x,i)=>[rowLabels[i],...r.exp[i].map((e,j)=>fmt((r.obs[i][j]-e)/Math.sqrt(e),2))]);
+        let h=table([a+' \\ '+b,...colLabels,'Total'],obs,'Observed counts')+
+          table([a+' \\ '+b,...colLabels],expd,'Expected counts')+
+          table([a+' \\ '+b,...colLabels],resid,'Standardized residuals (observed − expected) ÷ √expected');
+        const stats=[['Pearson chi-square',fmt(r.chi),r.df,pFmt(r.p)],['Cramér’s V',fmt(r.v),'—','—']];
+        if(r.ra.length===2&&r.cb.length===2&&opts.exact!=='never'){
+          const f=Stats.fisherExact(r.obs[0][0],r.obs[0][1],r.obs[1][0],r.obs[1][1]);
+          stats.push(['Fisher’s exact test (two-sided)','—','—',pFmt(f.p)]);
+          stats.push(['Fisher’s exact test (one-sided, right tail)','—','—',pFmt(f.pRight)]);
+          stats.push(['Odds ratio',fmt(f.oddsRatio),'—','—']);
+        }
+        h+=table(['Statistic','Value','df','Significance'],stats);
+        if(r.minExp<5)h+=`<div class="note warning">The smallest expected count is ${fmt(r.minExp,2)}. The chi-square approximation is unreliable below 5; prefer the exact test where one is reported, or combine sparse categories.</div>`;
+        return h;
+      });
+      addOutput('Crosstabs',html,`CROSSTABS /TABLES=${a} BY ${b} /CELLS=COUNT EXPECTED SRESID /STATISTICS=CHISQ PHI${opts.exact!=='never'?' EXACT':''}.`);
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runTTest(opts){
+    if(!opts){
+      const body=`<div class="formGrid"><label>Test type</label><select id="ttType"><option value="one">One-sample</option><option value="ind">Independent samples</option><option value="paired">Paired samples</option></select><label>Outcome / Variable 1</label><select id="ttY">${varOptions(true)}</select><label>Group / Variable 2</label><select id="ttG">${varOptions()}</select><label>Test value / Group 1</label><input id="ttA" value="0"><label>Group 2</label><input id="ttB" value="1"><label>Also report</label><select id="ttExtra"><option value="none">Parametric results only</option><option value="boot">Bootstrap confidence interval</option><option value="perm">Permutation test (independent samples)</option></select><label>Replicates</label><input id="ttB2" type="number" min="200" max="50000" value="2000"></div>`;
+      if(!await modal('T Tests',body))return;
+      opts={type:$('#ttType').value,y:$('#ttY').value,g:$('#ttG').value,a:$('#ttA').value,b:$('#ttB').value,extra:$('#ttExtra').value,B:+$('#ttB2').value||2000};
+    }
+    const {type,y,g,a,b}=opts;
+    try{
+      if(type==='one'){
+        const html=bySplit(()=>{
+          const r=Stats.oneSampleT(y,Number(a));
+          return table(['Variable','N','Mean','Std. Deviation','Std. Error'],[[y,r.n,fmt(r.m),fmt(r.sd),fmt(r.se)]])+
+            table(['Test Value','t','df','Significance','Mean Difference','95% CI','Cohen’s d'],[[fmt(r.mu),fmt(r.t),fmt(r.df),pFmt(r.p),fmt(r.m-r.mu),ciText(r.low,r.high),fmt(r.d)]])+
+            table(['Variable','N','Shapiro–Wilk W','Significance'],[normalityNote(y)],'Normality of the tested variable');
+        });
+        let extra='';
+        if(opts.extra==='boot'){const bs=await Stats.bootstrapCI({kind:'mean',a:y,B:opts.B||2000,seed:20260730});
+          extra=table(['Statistic','Observed','Bootstrap SE','Bias','95% Percentile CI','Replicates'],[['Mean',fmt(bs.obs),fmt(bs.se),fmt(bs.bias),ciText(bs.lo,bs.hi),bs.B]],'Nonparametric bootstrap');}
+        addOutput('One-Sample T Test',html+extra,`T-TEST /TESTVAL=${a} /VARIABLES=${y} /CI=95 /EFFECTSIZE=YES.`);
+      }else if(type==='ind'){
+        const html=bySplit(()=>{
+          const r=Stats.independentT(y,g,a,b),vg=varByName(g);
+          let h=table(['Group','N','Mean','Std. Deviation'],[[labelText(vg,a),r.n1,fmt(r.m1),fmt(r.sd1)],[labelText(vg,b),r.n2,fmt(r.m2),fmt(r.sd2)]])+
+            table(['Method','t','df','Significance','Mean Difference','Std. Error','95% CI','Cohen’s d','Hedges’ g'],
+              [['Welch',fmt(r.t),fmt(r.df),pFmt(r.p),fmt(r.diff),fmt(r.se),ciText(r.low,r.high),fmt(r.d),fmt(r.g)]]);
+          try{
+            const lev=Stats.levene(y,g,'median');
+            h+=table(['Test','Statistic','df1','df2','Significance'],[['Levene (median-centred)',fmt(lev.W),lev.df1,lev.df2,pFmt(lev.p)]],'Homogeneity of variance');
+          }catch(err){h+=`<div class="note">Levene’s test could not be computed: ${esc(err.message)}</div>`}
+          return h;
+        });
+        let extra='';
+        if(opts.extra==='boot'){const bs=await Stats.bootstrapCI({kind:'meandiff',a:y,group:g,g1:a,g2:b,B:opts.B||2000,seed:20260730});
+          extra=table(['Statistic','Observed','Bootstrap SE','Bias','95% Percentile CI','Replicates'],[['Mean difference',fmt(bs.obs),fmt(bs.se),fmt(bs.bias),ciText(bs.lo,bs.hi),bs.B]],'Nonparametric bootstrap');}
+        if(opts.extra==='perm'){const pm=await Stats.permutationTest({kind:'meandiff',a:y,group:g,g1:a,g2:b,B:opts.B||5000,seed:20260730});
+          extra=table(['Statistic','Observed','Permutations','Two-sided Significance'],[['Mean difference',fmt(pm.obs),pm.B,pFmt(pm.p)]],'Exact-by-simulation permutation test');}
+        addOutput('Independent-Samples T Test',html+extra+
+          '<div class="note">Welch’s unequal-variance test is reported by default because it is robust to unequal variances and unequal sample sizes. Levene’s test is provided as a description of the variances, not as a gate: a non-significant Levene result does not license the pooled test when group sizes differ.</div>',
+          `T-TEST GROUPS=${g}(${a} ${b}) /VARIABLES=${y} /WELCH=YES /CI=95 /EFFECTSIZE=YES.`);
+      }else{
+        const html=bySplit(()=>{
+          const r=Stats.pairedT(y,g);
+          return table(['Pair','N','Mean 1','Mean 2','Mean Difference','t','df','Significance','95% CI','Paired d','Correlation'],
+            [[`${y} − ${g}`,r.n,fmt(r.meanA),fmt(r.meanB),fmt(r.meanDiff),fmt(r.t),r.df,pFmt(r.p),ciText(r.low,r.high),fmt(r.effect),fmt(r.corr)]]);
+        });
+        addOutput('Paired-Samples T Test',html,`T-TEST PAIRS=${y} WITH ${g} (PAIRED) /CI=95 /EFFECTSIZE=YES.`);
+      }
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runANOVA(opts){
+    if(!opts){
+      const body=`<div class="formGrid"><label>Dependent variable</label><select id="avY">${varOptions(true)}</select><label>Factor</label><select id="avG">${varOptions()}</select><label>Post-hoc comparisons</label><select id="avPost"><option value="tukey">Tukey HSD (equal variances assumed)</option><option value="gh">Games–Howell (equal variances not assumed)</option><option value="both">Both</option><option value="none">None</option></select></div>`;
+      if(!await modal('One-Way ANOVA',body))return;
+      opts={y:$('#avY').value,g:$('#avG').value,posthoc:$('#avPost').value};
+    }
+    const {y,g}=opts,post=opts.posthoc||'tukey';
+    try{
+      const html=bySplit(()=>{
+        const r=Stats.anova(y,g),vg=varByName(g);
+        const desc=r.groups.map(x=>[labelText(vg,x.name),x.n,fmt(x.mean),fmt(x.sd)]);
+        const av=[['Between groups',fmt(r.ssb),r.dfb,fmt(r.msb),fmt(r.F),pFmt(r.p)],
+          ['Within groups',fmt(r.ssw),r.dfw,fmt(r.msw),'—','—'],
+          ['Total',fmt(r.ssb+r.ssw),r.dfb+r.dfw,'—','—','—']];
+        let h=table(['Group','N','Mean','Std. Deviation'],desc)+
+          table(['Source','Sum of Squares','df','Mean Square','F','Significance'],av);
+        try{const w=Stats.welchAnova(y,g);
+          h+=table(['Test','Statistic','df1','df2','Significance'],[['Welch F (variances not assumed equal)',fmt(w.F),w.df1,fmt(w.df2),pFmt(w.p)]],'Robust test of equality of means');
+        }catch(err){}
+        try{const lev=Stats.levene(y,g,'median');
+          h+=table(['Test','Statistic','df1','df2','Significance'],[['Levene (median-centred)',fmt(lev.W),lev.df1,lev.df2,pFmt(lev.p)]],'Homogeneity of variance');
+        }catch(err){}
+        h+=table(['Effect Size','Estimate','Interpretation'],[
+          ['Eta squared',fmt(r.eta),'Proportion of total variance in this sample explained by the factor'],
+          ['Omega squared',fmt(r.omega),'Less biased population estimate of the same quantity'],
+          ['Root mean square error',fmt(Math.sqrt(r.msw)),'Typical distance of a case from its group mean']]);
+        const postTable=(res,adjust)=>{
+          const raw=res.comparisons.map(c=>c.p),adj=adjustP(raw,adjust);
+          return table(['Comparison','Mean Difference','Std. Error','q','df','Significance','Adjusted Significance','95% CI'],
+            res.comparisons.map((c,i)=>[`${labelText(vg,c.a)} − ${labelText(vg,c.b)}`,fmt(c.diff),fmt(c.se),fmt(c.q),fmt(c.df),pFmt(c.p),pFmt(adj[i]),ciText(c.low,c.high)]),
+            `${res.method} post-hoc comparisons (family-wise adjustment: ${ADJUST_LABEL[adjust]})`);
+        };
+        if(post==='tukey'||post==='both'){try{h+=postTable(Stats.tukeyHSD(y,g),'holm')}catch(err){h+=`<div class="note">Tukey HSD unavailable: ${esc(err.message)}</div>`}}
+        if(post==='gh'||post==='both'){try{h+=postTable(Stats.gamesHowell(y,g),'holm')}catch(err){h+=`<div class="note">Games–Howell unavailable: ${esc(err.message)}</div>`}}
+        return h;
+      });
+      addOutput('One-Way ANOVA',html+
+        '<div class="note">The studentized range significance already controls the family-wise error rate for the set of pairwise comparisons; the adjusted column applies a second, more conservative Holm correction and is reported for transparency, not because both are required. Use Games–Howell when group variances or sizes are clearly unequal.</div>',
+        `ONEWAY ${y} BY ${g} /STATISTICS DESCRIPTIVES EFFECTSIZE HOMOGENEITY WELCH /POSTHOC=${post.toUpperCase()}.`);
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runNonparametric(opts){
+    if(!opts){
+      const body=`<div class="formGrid"><label>Test</label><select id="npType"><option value="mw">Mann–Whitney U</option><option value="wil">Wilcoxon signed-rank</option><option value="kw">Kruskal–Wallis</option></select><label>Outcome / Variable 1</label><select id="npY">${varOptions(true)}</select><label>Group / Variable 2</label><select id="npG">${varOptions()}</select><label>Group 1</label><input id="npA" value="0"><label>Group 2</label><input id="npB" value="1"></div>`;
+      if(!await modal('Nonparametric Tests',body))return;
+      opts={test:$('#npType').value,y:$('#npY').value,g:$('#npG').value,a:$('#npA').value,b:$('#npB').value};
+    }
+    const {test,y,g,a,b}=opts;
+    try{
+      if(test==='mw'){
+        const html=bySplit(()=>{const r=Stats.mannWhitney(y,g,a,b),vg=varByName(g);
+          return table(['Group','N'],[[labelText(vg,a),r.n1],[labelText(vg,b),r.n2]])+table(['U','z','Significance','Effect r'],[[fmt(r.U),fmt(r.z),pFmt(r.p),fmt(r.effect)]])});
+        addOutput('Mann–Whitney U Test',html,`NPTESTS /INDEPENDENT TEST(${y}) GROUP(${g}) MANN_WHITNEY(${a} ${b}).`);
+      }else if(test==='wil'){
+        const html=bySplit(()=>{const r=Stats.wilcoxon(y,g);
+          return table(['Pair','Nonzero N','Median Difference','W+','W−','Test Statistic','z','Significance','Effect r'],
+            [[`${y} − ${g}`,r.n,fmt(r.medianDiff),fmt(r.Wp),fmt(r.Wm),fmt(r.T),fmt(r.z),pFmt(r.p),fmt(r.effect)]])});
+        addOutput('Wilcoxon Signed-Rank Test',html,`NPTESTS /RELATED TEST(${y} ${g}) WILCOXON.`);
+      }else{
+        const html=bySplit(()=>{const r=Stats.kruskalWallis(y,g),vg=varByName(g);
+          return table(['Group','N','Mean Rank'],r.groups.map(x=>[labelText(vg,x.name),x.n,fmt(x.meanRank)]))+table(['H','df','Significance'],[[fmt(r.H),r.df,pFmt(r.p)]])});
+        addOutput('Kruskal–Wallis Test',html,`NPTESTS /INDEPENDENT TEST(${y}) GROUP(${g}) KRUSKAL_WALLIS.`);
+      }
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runCorrelation(opts){
+    if(!opts){
+      const body=`<div class="formGrid"><label>Variables</label><select id="corVars" multiple size="10">${varOptions(true)}</select><label>Method</label><select id="corMethod"><option value="pearson">Pearson</option><option value="spearman">Spearman</option></select><label>Missing values</label><select id="corMiss"><option value="listwise">Listwise deletion</option><option value="pairwise">Pairwise deletion</option></select><label>Multiplicity</label><select id="corAdj"><option value="none">No adjustment</option><option value="holm">Holm–Bonferroni</option><option value="bh">Benjamini–Hochberg FDR</option></select></div>`;
+      if(!await modal('Bivariate Correlations',body))return;
+      opts={vars:[...$('#corVars').selectedOptions].map(o=>o.value),method:$('#corMethod').value,missing:$('#corMiss').value,adjust:$('#corAdj').value};
+    }
+    const vars=opts.vars,method=opts.method||'pearson',missing=opts.missing||'listwise',adjust=opts.adjust||'none';
+    if(vars.length<2)return toast('Select at least two variables','error');
+    try{
+      const html=bySplit(()=>{
+        const r=missing==='pairwise'?Stats.correlationPairwise(vars,method):Stats.correlation(vars,method);
+        const flat=[],pos=[];
+        for(let i=0;i<vars.length;i++)for(let j=i+1;j<vars.length;j++){flat.push(r.p[i][j]);pos.push([i,j])}
+        const adjFlat=adjustP(flat,adjust),adjMat=vars.map(()=>vars.map(()=>NaN));
+        pos.forEach(([i,j],q)=>{adjMat[i][j]=adjMat[j][i]=adjFlat[q]});
+        const star=p=>p<.01?'**':p<.05?'*':'';
+        const rows=vars.map((v,i)=>[v,...r.mat[i].map((x,j)=>i===j?'1.000':`${fmt(x)}${star(adjust==='none'?r.p[i][j]:adjMat[i][j])}`)]);
+        let h=table(['Variable',...vars],rows,`${method[0].toUpperCase()+method.slice(1)} correlation coefficients`);
+        h+=table(['Pair','r','N',adjust==='none'?'Significance':'Unadjusted Significance',...(adjust==='none'?[]:['Adjusted Significance'])],
+          pos.map(([i,j],q)=>{
+            const n=r.ns?r.ns[i][j]:r.n;
+            const base=[`${vars[i]} – ${vars[j]}`,fmt(r.mat[i][j]),n,pFmt(r.p[i][j])];
+            return adjust==='none'?base:[...base,pFmt(adjFlat[q])];
+          }),'Pairwise tests');
+        h+=`<div class="outputMeta">${missing==='pairwise'?'Pairwise deletion: each coefficient uses every case valid on that pair, so N varies by cell.':'Listwise deletion: N = '+r.n+' cases valid on all selected variables.'} Stars mark ${adjust==='none'?'unadjusted':ADJUST_LABEL[adjust]+'-adjusted'} significance: * p &lt; .05, ** p &lt; .01 (two-tailed).</div>`;
+        if(missing==='pairwise')h+='<div class="note warning">A pairwise correlation matrix can be internally inconsistent and is not guaranteed to be positive definite. Do not feed it to a procedure that requires a proper covariance matrix, such as principal components or factor analysis.</div>';
+        return h;
+      });
+      addOutput(`${method[0].toUpperCase()+method.slice(1)} Correlations`,html,
+        `CORRELATIONS /VARIABLES=${vars.join(' ')} /METHOD=${method.toUpperCase()} /MISSING=${missing.toUpperCase()}${adjust==='none'?'':' /ADJUST='+adjust.toUpperCase()}.`);
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runRegression(logistic=false,opts){
+    if(logistic&&typeof logistic==='object'){opts=logistic;logistic=!!opts.logistic}
+    if(!opts){
+      const body=`<div class="formGrid"><label>Dependent</label><select id="rgY">${varOptions(!logistic)}</select><label>Predictors</label><select id="rgX" multiple size="10">${varOptions(true)}</select><div class="fieldHelp">${logistic?'The dependent variable may be numeric or string but must have exactly two distinct valid levels. Predictors must be numeric.':'Dependent and predictor variables must be numeric.'}</div></div>`;
+      if(!await modal(logistic?'Binary Logistic Regression':'Linear Regression',body))return;
+      opts={y:$('#rgY').value,x:[...$('#rgX').selectedOptions].map(o=>o.value)};
+    }
+    const y=opts.y,x=(opts.x||[]).filter(v=>v!==y);
+    if(!x.length)return toast('Select at least one predictor','error');
+    try{
+      if(logistic){
+        const html=bySplit(()=>{
+          const r=Stats.logisticRegression(y,x),names=['Constant',...x],
+            rows=names.map((n,i)=>[n,fmt(r.b[i]),fmt(r.se[i]),fmt(r.z[i]),pFmt(r.pv[i]),fmt(r.odds[i]),ciText(Math.exp(r.b[i]-1.959964*r.se[i]),Math.exp(r.b[i]+1.959964*r.se[i]))]);
+          let h=`<div class="outputMeta">Modelled event: ${esc(String(r.levels[1]))}; reference event: ${esc(String(r.levels[0]))}</div>`+
+            table(['Model χ²','df','Significance','−2 Log Likelihood','McFadden R²','Accuracy','Converged'],
+              [[fmt(r.chi),r.df,pFmt(r.modelP),fmt(-2*r.ll),fmt(1-r.ll/r.ll0),fmt(r.accuracy*100,1)+'%',r.converged?'Yes':'No']])+
+            table(['Predictor','B','Std. Error','z','Significance','Odds Ratio','95% CI for Odds Ratio'],rows);
+          if(x.length>1){try{h+=table(['Predictor','VIF','Tolerance'],Stats.vif(y,x).map(v=>[v.name,fmt(v.vif),fmt(v.tolerance)]),'Collinearity among predictors')}catch(err){}}
+          if(!r.converged)h+='<div class="note warning">The optimizer did not converge. Coefficients may be unreliable; inspect separation, scaling, and sparse outcomes.</div>';
+          return h;
+        });
+        addOutput('Binary Logistic Regression',html,`LOGISTIC REGRESSION ${y} WITH ${x.join(' ')} /PRINT=CI(95) CLASSIFICATION.`);
+      }else{
+        const html=bySplit(()=>{
+          const r=Stats.linearRegression(y,x),names=['Constant',...x],
+            rows=names.map((n,i)=>[n,fmt(r.B[i]),fmt(r.se[i]),fmt(r.t[i]),pFmt(r.pv[i]),ciText(r.ci[i][0],r.ci[i][1])]);
+          let h=table(['R²','Adjusted R²','RMSE','F','df','Significance'],[[fmt(r.R2),fmt(r.adj),fmt(r.rmse),fmt(r.F),`${r.dfm}, ${r.dfe}`,pFmt(r.Fp)]])+
+            table(['Predictor','B','Std. Error','t','Significance','95% CI'],rows);
+          if(x.length>1){try{
+            const v=Stats.vif(y,x);
+            h+=table(['Predictor','VIF','Tolerance'],v.map(q=>[q.name,fmt(q.vif),fmt(q.tolerance)]),'Collinearity diagnostics');
+            if(v.some(q=>q.vif>10))h+='<div class="note warning">A variance inflation factor above 10 indicates that a predictor is largely explained by the others. Coefficient estimates and their standard errors become unstable; consider dropping, combining, or centring predictors.</div>';
+          }catch(err){}}
+          try{
+            const d=Stats.regressionDiagnostics(r);
+            const diagRows=[['Durbin–Watson',fmt(d.dw),'Serial correlation of residuals; near 2 indicates independence, below about 1.5 or above 2.5 warrants attention']];
+            if(d.normality)diagRows.push(['Shapiro–Wilk W on residuals',`${fmt(d.normality.W)} (${pFmt(d.normality.p)})`,'Normality of the residuals, which affects intervals and tests more than it affects the coefficients']);
+            if(d.breuschPagan)diagRows.push(['Breusch–Pagan χ²',`${fmt(d.breuschPagan.chi)} on ${d.breuschPagan.df} df (${pFmt(d.breuschPagan.p)})`,'Constant residual variance; a small significance indicates heteroscedasticity']);
+            diagRows.push(['Mean leverage',fmt(d.meanLeverage),`Cases above ${fmt(2*d.meanLeverage)} are high-leverage by the conventional 2p/n rule`]);
+            h+=table(['Diagnostic','Value','What it tests'],diagRows,'Residual and influence diagnostics');
+            h+=table(['Case','Standardized Residual','Leverage','Cook’s Distance'],
+              d.worst.map(w=>[w.i+1,fmt(w.z),fmt(w.lev),fmt(w.cook)]),'Ten most extreme cases by standardized residual');
+            const infl=d.cook.filter(c=>c>4/r.n).length;
+            if(infl)h+=`<div class="note">${infl} case${infl===1?'':'s'} exceed the conventional Cook’s distance threshold of 4/N = ${fmt(4/r.n)}. Investigate them before trusting the coefficients; do not delete them merely because they are influential.</div>`;
+          }catch(err){h+=`<div class="note">Residual diagnostics unavailable: ${esc(err.message)}</div>`}
+          return h;
+        });
+        addOutput('Linear Regression',html,`REGRESSION /DEPENDENT=${y} /METHOD=ENTER ${x.join(' ')} /STATISTICS=COEFF CI R ANOVA COLLIN TOL /RESIDUALS=DURBIN.`);
+      }
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runReliability(opts){
+    if(!opts){const vars=await chooseVariables('Reliability Analysis',true,true);if(!vars||vars.length<2)return;opts={vars}}
+    const vars=opts.vars;
+    try{
+      const html=bySplit(()=>{
+        const r=Stats.reliability(vars),rows=vars.map((v,i)=>[v,fmt(r.itemTotal[i]),fmt(r.deleted[i])]);
+        return table(['Cronbach’s Alpha','Number of Items','Complete Cases'],[[fmt(r.alpha),r.k,r.n]])+
+          table(['Item','Corrected Item–Total Correlation','Alpha if Item Deleted'],rows);
+      });
+      addOutput('Reliability Analysis',html+'<div class="note">Cronbach’s alpha assumes a common-score model and does not by itself establish unidimensionality.</div>',
+        `RELIABILITY /VARIABLES=${vars.join(' ')} /MODEL=ALPHA /STATISTICS=ITEM TOTAL.`);
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runPCA(opts){
+    if(!opts){const vars=await chooseVariables('Principal Component Analysis',true,true);if(!vars||vars.length<2)return;opts={vars}}
+    const vars=opts.vars;
+    try{
+      const html=bySplit(()=>{
+        const r=Stats.pca(vars),rows=r.values.map((v,i)=>['Component '+(i+1),fmt(v),fmt(r.variance[i],2),fmt(r.cum[i],2)]),
+          loads=r.vars.map((v,i)=>[v,...r.loadings[i].map(x=>fmt(x))]);
+        return table(['Component','Eigenvalue','% Variance','Cumulative %'],rows)+
+          table(['Variable',...r.values.map((_,i)=>'Component '+(i+1))],loads);
+      });
+      addOutput('Principal Component Analysis',html+'<div class="note">PCA was computed from the correlation matrix using a symmetric Jacobi eigendecomposition, with listwise deletion of incomplete cases. Retain components based on theory, diagnostics, and validation—not eigenvalues alone.</div>',
+        `PCA VARIABLES=${vars.join(' ')} /MATRIX=CORRELATION /PRINT=INITIAL EXTRACTION /PLOT=EIGEN.`);
+    }catch(e){toast(e.message,'error')}
+  }
+
+  async function runKMeans(opts){
+    if(!opts){
+      const body=`<div class="formGrid"><label>Variables</label><select id="kmVars" multiple size="10">${varOptions(true)}</select><label>Clusters</label><input id="kmK" type="number" min="2" max="20" value="3"><label>Seed</label><input id="kmSeed" type="number" value="12345"><label>Iterations</label><input id="kmIter" type="number" min="10" max="1000" value="100"></div>`;
+      if(!await modal('K-Means Clustering',body))return;
+      opts={vars:[...$('#kmVars').selectedOptions].map(o=>o.value),k:+$('#kmK').value,seed:+$('#kmSeed').value,maxIter:+$('#kmIter').value||100};
+    }
+    const vars=opts.vars,k=opts.k||3,seed=opts.seed||12345,maxIter=opts.maxIter||100;
+    if(vars.length<2)return toast('Select at least two variables','error');
+    try{
+      setStatus('Clustering…');
+      const html=await bySplitAsync(async()=>{
+        const prep=Stats.kmeansPrep(vars);
+        if(prep.n<k)throw Error('Fewer complete cases than clusters');
+        const core=await computeAsync({task:'kmeans',Z:prep.Z,k,maxIter,seed});
+        const r=Stats.kmeansFinish(prep,core,vars,k,seed);
+        const rows=r.centers.map((c,i)=>['Cluster '+(i+1),r.sizes[i],...c.map(x=>fmt(x))]);
+        let h=table(['Cluster','N',...vars],rows)+
+          table(['Iterations','Within-cluster SS','Seed','Empty-cluster reseeds','Computed on'],[[r.iter,fmt(r.wss),seed,r.reseeds,workerStatus()]]);
+        if(r.reseeds)h+=`<div class="note">${r.reseeds} empty cluster${r.reseeds===1?' was':'s were'} reseeded from the observation furthest from its assigned centre. Reseeding is a sign that the requested number of clusters is not well supported by the data.</div>`;
+        return h;
+      });
+      addOutput('K-Means Clustering',html+'<div class="note">Variables were standardized for assignment; centres are reported in original units. K-means can converge to local solutions, so compare multiple seeds before interpreting a cluster structure.</div>',
+        `QUICK CLUSTER ${vars.join(' ')} /CRITERIA=CLUSTER(${k}) MXITER(${maxIter}) SEED(${seed}) /METHOD=KMEANS.`);
+      setStatus('Ready');
+    }catch(e){setStatus('Ready');toast(e.message,'error')}
+  }
+
+  async function runBootstrap(opts){
+    if(!opts){
+      const body=`<div class="formGrid"><label>Statistic</label><select id="bsKind"><option value="mean">Mean</option><option value="median">Median</option><option value="sd">Standard deviation</option><option value="corr">Pearson correlation</option><option value="meandiff">Difference of means between two groups</option><option value="mediandiff">Difference of medians between two groups</option></select><label>Variable</label><select id="bsA">${varOptions(true)}</select><label>Second variable (correlation)</label><select id="bsB">${varOptions(true)}</select><label>Group variable (differences)</label><select id="bsG"><option value="">None</option>${varOptions()}</select><label>Group 1</label><input id="bsG1" value=""><label>Group 2</label><input id="bsG2" value=""><label>Replicates</label><input id="bsB2" type="number" min="200" max="50000" value="5000"><label>Seed</label><input id="bsSeed" type="number" value="20260730"><label>Confidence level</label><select id="bsLevel"><option value="0.95">95%</option><option value="0.9">90%</option><option value="0.99">99%</option></select></div>`;
+      if(!await modal('Bootstrap Confidence Intervals',body))return;
+      opts={kind:$('#bsKind').value,a:$('#bsA').value,b:$('#bsB').value,group:$('#bsG').value||null,g1:$('#bsG1').value,g2:$('#bsG2').value,B:+$('#bsB2').value||5000,seed:+$('#bsSeed').value||20260730,level:+$('#bsLevel').value||.95};
+    }
+    try{
+      setStatus('Resampling…');
+      const html=await bySplitAsync(async()=>{
+        const r=await Stats.bootstrapCI(opts);
+        const names={mean:'Mean',median:'Median',sd:'Standard deviation',corr:'Pearson correlation',meandiff:'Difference of means',mediandiff:'Difference of medians',ratio:'Ratio of means'};
+        return table(['Statistic','Observed','Bootstrap SE','Bias','Percentile CI','Level','Replicates','Computed on'],
+          [[names[opts.kind]||opts.kind,fmt(r.obs),fmt(r.se),fmt(r.bias),ciText(r.lo,r.hi),fmt(r.level*100,0)+'%',r.B,workerStatus()]]);
+      });
+      addOutput('Bootstrap Confidence Intervals',html+
+        '<div class="note">Intervals use the nonparametric percentile method on case resamples with a fixed seed, so the same request reproduces the same interval. The percentile method is not bias-corrected; where the reported bias is large relative to the standard error, treat the interval as approximate.</div>',
+        `BOOTSTRAP /STATISTIC=${String(opts.kind).toUpperCase()} /VARIABLES=${[opts.a,opts.b].filter(Boolean).join(' ')} /SAMPLES=${opts.B} /SEED=${opts.seed} /CI=${Math.round((opts.level||.95)*100)}.`);
+      setStatus('Ready');
+    }catch(e){setStatus('Ready');toast(e.message,'error')}
+  }
+
+  /* Transform and data-management dialogs */
+  async function computeVariable(){const body=`<div class="formGrid"><label>Target variable</label><input id="cmpName" value="computed"><label>Expression</label><textarea id="cmpExpr" placeholder="(score1 + score2) / 2"></textarea><div class="fieldHelp">Operators: + − * / ^, comparisons, parentheses. Functions: ABS, SQRT, LN, LOG10, EXP, ROUND, FLOOR, CEIL, SIN, COS, TAN.</div></div>`;if(!await modal('Compute Variable',body))return;const ds=active(),name=uniqueName($('#cmpName').value),expr=$('#cmpExpr').value;try{const rpn=Expr.parse(expr);snapshot('Compute variable');const v=newVariable(name,'numeric',name);ds.variables.push(v);for(const row of ds.rows){const env={};ds.variables.slice(0,-1).forEach((x,j)=>env[x.name]=row[j]);let val=Expr.eval(rpn,env);row.push(Number.isFinite(Number(val))?Number(val):val??null)}markDirty(`Computed ${name}`);$('#syntaxEditor').value+=`\nCOMPUTE ${name} = ${expr}.\nEXECUTE.`;renderAll();toast(`Created ${name}`,'ok')}catch(e){toast(e.message,'error')}}
+  async function recodeVariable(){const body=`<div class="formGrid"><label>Source variable</label><select id="rcSrc">${varOptions()}</select><label>Target variable</label><input id="rcTarget" value="recode"><label>Rules</label><textarea id="rcRules" placeholder="1=0; 2=0; 3=1; ELSE=COPY"></textarea><div class="fieldHelp">Separate rules with semicolons. Use old=new, a THRU b=new, or ELSE=COPY / ELSE=value.</div></div>`;if(!await modal('Recode into Different Variable',body))return;const ds=active(),src=$('#rcSrc').value,target=uniqueName($('#rcTarget').value),rules=$('#rcRules').value.split(';').map(x=>x.trim()).filter(Boolean),si=ds.variables.findIndex(v=>v.name===src),parsed=rules.map(x=>{const [a,b]=x.split('=').map(y=>y.trim());if(!b)throw Error('Invalid rule: '+x);if(/^ELSE$/i.test(a))return{else:true,to:b};const m=a.match(/^(.+)\s+THRU\s+(.+)$/i);return m?{lo:Number(m[1]),hi:Number(m[2]),to:b}:{from:a,to:b}});snapshot('Recode variable');const nv=newVariable(target,ds.variables[si].type,target);ds.variables.push(nv);for(const row of ds.rows){const old=row[si];let out=null,hit=false;for(const r of parsed){if(r.else&&!hit){out=/^COPY$/i.test(r.to)?old:coerce(r.to,nv.type);hit=true}else if(r.lo!==undefined&&Number(old)>=r.lo&&Number(old)<=r.hi){out=coerce(r.to,nv.type);hit=true;break}else if(r.from!==undefined&&String(old)===r.from){out=coerce(r.to,nv.type);hit=true;break}}row.push(out)}markDirty(`Recoded ${src} to ${target}`);$('#syntaxEditor').value+=`\nRECODE ${src} (${rules.join(') (')}) INTO ${target}.\nEXECUTE.`;renderAll();toast(`Created ${target}`,'ok')}
+  async function sortCases(){const body=`<div class="formGrid"><label>Variables</label><select id="sortVars" multiple size="10">${varOptions()}</select><label>Direction</label><select id="sortDir"><option value="asc">Ascending</option><option value="desc">Descending</option></select></div>`;if(!await modal('Sort Cases',body))return;const vars=[...$('#sortVars').selectedOptions].map(o=>o.value),dir=$('#sortDir').value==='asc'?1:-1,ds=active(),idx=vars.map(n=>ds.variables.findIndex(v=>v.name===n));if(!idx.length)return;snapshot('Sort cases');ds.rows=ds.rows.map((r,i)=>({r,i})).sort((a,b)=>{for(const j of idx){const x=a.r[j],y=b.r[j];if(x==null&&y!=null)return 1;if(y==null&&x!=null)return-1;if(x<y)return-dir;if(x>y)return dir}return a.i-b.i}).map(o=>o.r);markDirty('Sorted cases');renderGrid();$('#syntaxEditor').value+=`\nSORT CASES BY ${vars.map(v=>v+(dir===1?' (A)':' (D)')).join(' ')}.`}
+  async function selectCases(){const body=`<div class="formGrid"><label>Variable</label><select id="flVar">${varOptions()}</select><label>Operator</label><select id="flOp"><option>==</option><option>!=</option><option>&gt;</option><option>&gt;=</option><option>&lt;</option><option>&lt;=</option><option value="contains">contains</option></select><label>Value</label><input id="flVal"><label>Mode</label><select id="flMode"><option value="filter">Temporary filter</option><option value="clear">Clear filter</option></select></div>`;if(!await modal('Select Cases',body))return;if($('#flMode').value==='clear')state.project.analysis.filter=null;else state.project.analysis.filter={variable:$('#flVar').value,op:$('#flOp').value,value:$('#flVal').value};markDirty('Changed filter');renderState();renderGrid();toast('Filter state updated','ok')}
+  async function splitFile(){const body=`<div class="formGrid"><label>Split variable</label><select id="spVar"><option value="">Off</option>${varOptions()}</select><div class="fieldHelp">When a split variable is active, every analysis is computed and reported separately for each level of that variable.</div></div>`;if(!await modal('Split File',body))return;state.project.analysis.split=$('#spVar').value||null;state.project.analysis.splitLevel=null;markDirty('Changed split file');renderState()}
+  async function weightCases(){const body=`<div class="formGrid"><label>Weight variable</label><select id="wtVar"><option value="">Off</option>${varOptions(true)}</select><div class="fieldHelp">Frequency weights are applied to every procedure by case replication, using weight values rounded to the nearest whole number. Cases with missing, zero, or negative weights are dropped. Fractional and probability weights are not supported.</div></div>`;if(!await modal('Weight Cases',body))return;state.project.analysis.weight=$('#wtVar').value||null;markDirty('Changed weight');renderState()}
+
+  /* Charting */
+  function drawChart(){const type=$('#chartType').value,x=$('#chartX').value,y=$('#chartY').value,c=$('#chartCanvas'),g=c.getContext('2d'),W=c.width,H=c.height,pad={l:70,r:30,t:55,b:70};g.clearRect(0,0,W,H);g.fillStyle='#fff';g.fillRect(0,0,W,H);g.strokeStyle='#222';g.fillStyle='#111';g.font='14px Arial';g.lineWidth=1.5;g.beginPath();g.moveTo(pad.l,pad.t);g.lineTo(pad.l,H-pad.b);g.lineTo(W-pad.r,H-pad.b);g.stroke();let alt='';if(type==='histogram'){const a=numeric(x);if(!a.length)return toast('Choose a numeric X variable','error');const min=Math.min(...a),max=Math.max(...a),bins=Math.max(5,Math.min(30,Math.ceil(Math.sqrt(a.length)))),w=(max-min||1)/bins,counts=Array(bins).fill(0);a.forEach(v=>counts[Math.min(bins-1,Math.floor((v-min)/w))]++);const mx=Math.max(...counts);g.fillStyle='#0b5cab';counts.forEach((n,i)=>{const xx=pad.l+i*(W-pad.l-pad.r)/bins,ww=(W-pad.l-pad.r)/bins-2,hh=n/mx*(H-pad.t-pad.b);g.fillRect(xx,H-pad.b-hh,ww,hh)});g.fillStyle='#111';g.font='bold 19px Arial';g.fillText(`Histogram of ${x}`,pad.l,pad.t-22);g.font='12px Arial';g.fillText(fmt(min),pad.l,H-pad.b+20);g.fillText(fmt(max),W-pad.r-30,H-pad.b+20);alt=`Histogram of ${x}, N=${a.length}, range ${fmt(min)} to ${fmt(max)}, highest bin count ${mx}.`}else if(type==='bar'){const r=Stats.frequencies(x),mx=Math.max(...r.rows.map(q=>q.count)),bw=(W-pad.l-pad.r)/Math.max(1,r.rows.length);g.fillStyle='#0b5cab';r.rows.forEach((q,i)=>{const hh=q.count/mx*(H-pad.t-pad.b),xx=pad.l+i*bw;g.fillRect(xx+3,H-pad.b-hh,Math.max(2,bw-6),hh);g.save();g.translate(xx+bw/2,H-pad.b+8);g.rotate(-Math.PI/4);g.fillStyle='#111';g.font='11px Arial';g.fillText(String(q.value).slice(0,18),0,0);g.restore()});g.fillStyle='#111';g.font='bold 19px Arial';g.fillText(`Bar Chart of ${x}`,pad.l,pad.t-22);alt=`Bar chart of ${x}. ${r.rows.map(q=>`${q.value}: ${q.count}`).join('; ')}.`}else if(type==='scatter'){if(!y)return toast('Choose a Y variable','error');const rows=paired([x,y]),xs=rows.map(r=>r[0]),ys=rows.map(r=>r[1]),xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys),sx=v=>pad.l+(v-xmin)/(xmax-xmin||1)*(W-pad.l-pad.r),sy=v=>H-pad.b-(v-ymin)/(ymax-ymin||1)*(H-pad.t-pad.b);g.fillStyle='#0b5cab';rows.forEach(r=>{g.beginPath();g.arc(sx(r[0]),sy(r[1]),3,0,Math.PI*2);g.fill()});g.fillStyle='#111';g.font='bold 19px Arial';g.fillText(`${y} by ${x}`,pad.l,pad.t-22);const corr=Stats.correlationArrays(xs,ys);g.font='12px Arial';g.fillText(`r = ${fmt(corr)}`,W-pad.r-100,pad.t);alt=`Scatterplot of ${y} by ${x}, N=${rows.length}, Pearson r=${fmt(corr)}.`}else if(type==='qq'){let r;try{r=Stats.qqPoints(x)}catch(err){return toast(err.message,'error')}const t=r.theoretical,ss=r.sample,tmin=t[0],tmax=t[t.length-1],smin=Math.min(...ss),smax=Math.max(...ss),sx=v=>pad.l+(v-tmin)/(tmax-tmin||1)*(W-pad.l-pad.r),sy=v=>H-pad.b-(v-smin)/(smax-smin||1)*(H-pad.t-pad.b);g.strokeStyle='#b42318';g.lineWidth=1.5;g.beginPath();const l1=r.intercept+r.slope*tmin,l2=r.intercept+r.slope*tmax;g.moveTo(sx(tmin),sy(Math.max(smin,Math.min(smax,l1))));g.lineTo(sx(tmax),sy(Math.max(smin,Math.min(smax,l2))));g.stroke();g.fillStyle='#0b5cab';t.forEach((tv,i)=>{g.beginPath();g.arc(sx(tv),sy(ss[i]),3,0,Math.PI*2);g.fill()});g.fillStyle='#111';g.font='bold 19px Arial';g.fillText(`Normal Q-Q Plot of ${x}`,pad.l,pad.t-22);g.font='12px Arial';g.fillText('Theoretical quantiles',W/2-60,H-pad.b+34);let sw='';try{const swr=Stats.shapiroWilk(ss);sw=` Shapiro–Wilk W=${fmt(swr.W)}, ${pFmt(swr.p)}.`;g.fillText(`W = ${fmt(swr.W)}`,W-pad.r-110,pad.t)}catch(err){}alt=`Normal Q-Q plot of ${x}, N=${r.n}. Points near the reference line indicate approximate normality.${sw}`}else if(type==='box'){const a=numeric(x);if(!a.length)return;const min=Math.min(...a),q1=Num.quantile(a,.25),med=Num.median(a),q3=Num.quantile(a,.75),max=Math.max(...a),sx=v=>pad.l+(v-min)/(max-min||1)*(W-pad.l-pad.r),cy=H/2;g.strokeStyle='#0b5cab';g.lineWidth=3;g.strokeRect(sx(q1),cy-50,sx(q3)-sx(q1),100);g.beginPath();g.moveTo(sx(min),cy);g.lineTo(sx(q1),cy);g.moveTo(sx(q3),cy);g.lineTo(sx(max),cy);g.moveTo(sx(med),cy-50);g.lineTo(sx(med),cy+50);g.stroke();g.fillStyle='#111';g.font='bold 19px Arial';g.fillText(`Boxplot of ${x}`,pad.l,pad.t-22);alt=`Boxplot of ${x}: minimum ${fmt(min)}, first quartile ${fmt(q1)}, median ${fmt(med)}, third quartile ${fmt(q3)}, maximum ${fmt(max)}.`}c.dataset.alt=alt;c.setAttribute('aria-label',alt);setStatus('Chart drawn')}
+  function exportChart(){const c=$('#chartCanvas');c.toBlob(b=>download('The_Statistian_Chart.png',b,'image/png'))}
+
+  /* Syntax engine */
+  let runningSyntax=false;
+  async function executeSyntax(text){
+    const commands=text.split(/\.(?=\s|$)/).map(s=>s.trim()).filter(Boolean).filter(s=>!/^\*/.test(s));
+    $('#syntaxStatus').textContent=`Running ${commands.length} command(s)…`;
+    runningSyntax=true;
+    try{
+      for(const cmd of commands){
+        try{await executeCommand(cmd)}
+        catch(e){addOutput('Syntax Error',`<div class="note error">${esc(e.message)}</div>`,cmd+'.');break}
+      }
+    }finally{runningSyntax=false}
+    $('#syntaxStatus').textContent='Ready';
+  }
+  const synList=s=>String(s).trim().split(/[\s,]+/).filter(Boolean);
+  function synFilterOp(op){return op==='='?'==':op}
+  async function executeCommand(cmd){
+    const c=cmd.trim();let m;
+    if(/^EXECUTE$/i.test(c))return;
+    if((m=c.match(/^SET\s+LABELS\s+(ON|OFF)$/i))){state.project.settings.showValueLabels=/ON/i.test(m[1]);renderGrid();return toast(`Value labels ${/ON/i.test(m[1])?'shown':'hidden'}`,'ok')}
+    if(/^DIAGNOSTICS/i.test(c))return diagnostics();
+
+    if((m=c.match(/^DESCRIPTIVES\s+(?:VARIABLES\s*=\s*)?([^/]+)/i)))return runDescriptives({vars:synList(m[1]),normality:!/NONORMALITY/i.test(c)});
+    if((m=c.match(/^FREQUENCIES\s+(?:VARIABLES\s*=\s*)?([^/]+)/i)))return runFrequencies({vars:synList(m[1])});
+    if((m=c.match(/^EXAMINE\s+(?:VARIABLES\s*=\s*)?([^/]+)/i)))return runExplore({vars:synList(m[1])});
+    if((m=c.match(/^MVA\s+(?:VARIABLES\s*=\s*)?([^/]+)/i)))return runMissing({vars:synList(m[1])});
+    if((m=c.match(/^CROSSTABS\s+\/TABLES\s*=\s*(\S+)\s+BY\s+([^/]+)/i)))
+      return runCrosstabs({row:m[1].trim(),col:synList(m[2])[0],exact:/NOEXACT/i.test(c)?'never':'auto'});
+
+    if((m=c.match(/^T-?TEST\s+\/?TESTVAL\s*=\s*(\S+)\s*\/VARIABLES\s*=\s*([^/]+)/i)))
+      return runTTest({type:'one',y:synList(m[2])[0],a:m[1]});
+    if((m=c.match(/^T-?TEST\s+GROUPS\s*=\s*(\w+)\s*\(([^)]+)\)\s*\/VARIABLES\s*=\s*([^/]+)/i))){
+      const gs=synList(m[2]);
+      return runTTest({type:'ind',y:synList(m[3])[0],g:m[1],a:gs[0],b:gs[1],
+        extra:/BOOTSTRAP/i.test(c)?'boot':(/PERMUT/i.test(c)?'perm':'none'),B:(c.match(/SAMPLES\s*=\s*(\d+)/i)||[])[1]*1||2000});
+    }
+    if((m=c.match(/^T-?TEST\s+PAIRS\s*=\s*(\w+)\s+WITH\s+(\w+)/i)))return runTTest({type:'paired',y:m[1],g:m[2]});
+
+    if((m=c.match(/^ONEWAY\s+(\w+)\s+BY\s+(\w+)/i))){
+      const ph=(c.match(/POSTHOC\s*=\s*(\w+)/i)||[])[1];
+      const map={TUKEY:'tukey',GH:'gh',GAMESHOWELL:'gh','GAMES_HOWELL':'gh',BOTH:'both',NONE:'none'};
+      return runANOVA({y:m[1],g:m[2],posthoc:map[(ph||'TUKEY').toUpperCase()]||'tukey'});
+    }
+    if(/^NPTESTS/i.test(c)){
+      if((m=c.match(/TEST\s*\(\s*(\w+)\s*\)\s*GROUP\s*\(\s*(\w+)\s*\)\s*MANN_WHITNEY\s*\(([^)]+)\)/i))){
+        const gs=synList(m[3]);return runNonparametric({test:'mw',y:m[1],g:m[2],a:gs[0],b:gs[1]});
+      }
+      if((m=c.match(/TEST\s*\(\s*(\w+)\s*\)\s*GROUP\s*\(\s*(\w+)\s*\)\s*KRUSKAL_WALLIS/i)))
+        return runNonparametric({test:'kw',y:m[1],g:m[2]});
+      if((m=c.match(/TEST\s*\(\s*(\w+)\s+(\w+)\s*\)\s*WILCOXON/i)))
+        return runNonparametric({test:'wil',y:m[1],g:m[2]});
+      throw Error('Unrecognised NPTESTS specification');
+    }
+    if((m=c.match(/^CORRELATIONS\s+\/VARIABLES\s*=\s*([^/]+)/i))){
+      const adj=(c.match(/ADJUST\s*=\s*(\w+)/i)||[])[1];
+      return runCorrelation({vars:synList(m[1]),method:/SPEARMAN/i.test(c)?'spearman':'pearson',
+        missing:/PAIRWISE/i.test(c)?'pairwise':'listwise',adjust:adj?adj.toLowerCase():'none'});
+    }
+    if((m=c.match(/^REGRESSION[\s\S]*?\/DEPENDENT\s*=\s*(\w+)[\s\S]*?\/METHOD\s*=\s*ENTER\s+([^/]+)/i)))
+      return runRegression(false,{y:m[1],x:synList(m[2])});
+    if((m=c.match(/^LOGISTIC\s+REGRESSION\s+(\w+)\s+WITH\s+([^/]+)/i)))
+      return runRegression(true,{y:m[1],x:synList(m[2])});
+    if((m=c.match(/^RELIABILITY\s+\/VARIABLES\s*=\s*([^/]+)/i)))return runReliability({vars:synList(m[1])});
+    if((m=c.match(/^(?:PCA|FACTOR)\s+(?:\/)?VARIABLES\s*=\s*([^/]+)/i)))return runPCA({vars:synList(m[1])});
+    if((m=c.match(/^QUICK\s+CLUSTER\s+([^/]+)/i))){
+      const k=(c.match(/CLUSTER\s*\(\s*(\d+)\s*\)/i)||[])[1]*1||3,
+        seed=(c.match(/SEED\s*\(\s*(-?\d+)\s*\)/i)||[])[1]*1||12345,
+        it=(c.match(/MXITER\s*\(\s*(\d+)\s*\)/i)||[])[1]*1||100;
+      return runKMeans({vars:synList(m[1]),k,seed,maxIter:it});
+    }
+    if((m=c.match(/^KMEANS\s+(?:VARIABLES\s*=\s*)?([^/]+)/i))){
+      const k=(c.match(/CLUSTERS\s*=\s*(\d+)/i)||[])[1]*1||3,seed=(c.match(/SEED\s*=\s*(-?\d+)/i)||[])[1]*1||12345;
+      return runKMeans({vars:synList(m[1]),k,seed});
+    }
+    if(/^BOOTSTRAP/i.test(c)){
+      const kind=((c.match(/STATISTIC\s*=\s*(\w+)/i)||[])[1]||'MEAN').toLowerCase(),
+        vars=synList((c.match(/VARIABLES\s*=\s*([^/]+)/i)||[])[1]||''),
+        grp=(c.match(/GROUP\s*=\s*(\w+)\s*\(([^)]+)\)/i)||[]),
+        B=(c.match(/SAMPLES\s*=\s*(\d+)/i)||[])[1]*1||5000,
+        seed=(c.match(/SEED\s*=\s*(-?\d+)/i)||[])[1]*1||20260730,
+        ci=(c.match(/CI\s*=\s*(\d+)/i)||[])[1]*1||95;
+      if(!vars.length)throw Error('BOOTSTRAP requires /VARIABLES');
+      const gs=grp[2]?synList(grp[2]):[];
+      return runBootstrap({kind,a:vars[0],b:vars[1],group:grp[1]||null,g1:gs[0],g2:gs[1],B,seed,level:ci/100});
+    }
+
+    if((m=c.match(/^COMPUTE\s+([A-Za-z_][\w]*)\s*=\s*(.+)$/i))){
+      const ds=active();if(!ds)throw Error('No active dataset');
+      const name=uniqueName(m[1]),rpn=Expr.parse(m[2]);
+      snapshot('Syntax compute');
+      ds.variables.push(newVariable(name,'numeric',name));
+      for(const row of ds.rows){const env={};ds.variables.slice(0,-1).forEach((x,j)=>env[x.name]=row[j]);row.push(Expr.eval(rpn,env))}
+      markDirty('Syntax compute');renderAll();return;
+    }
+    if((m=c.match(/^RECODE\s+(\w+)\s+(\(.+\))\s+INTO\s+(\w+)$/i))){
+      const ds=active();if(!ds)throw Error('No active dataset');
+      const si=ds.variables.findIndex(v=>v.name===m[1]);
+      if(si<0)throw Error('Unknown variable in RECODE: '+m[1]);
+      const rules=[...m[2].matchAll(/\(([^)]*)\)/g)].map(x=>x[1].trim()).filter(Boolean).map(rule=>{
+        const parts=rule.split('=');if(parts.length<2)throw Error('Invalid RECODE rule: '+rule);
+        const to=parts.slice(1).join('=').trim(),from=parts[0].trim();
+        if(/^ELSE$/i.test(from))return{else:true,to};
+        const th=from.match(/^(.+?)\s+THRU\s+(.+)$/i);
+        return th?{lo:Number(th[1]),hi:Number(th[2]),to}:{from,to};
+      });
+      snapshot('Syntax recode');
+      const target=uniqueName(m[3]),nv=newVariable(target,ds.variables[si].type,target);
+      ds.variables.push(nv);
+      for(const row of ds.rows){
+        const old=row[si];let out=null,hit=false;
+        for(const r of rules){
+          if(hit)break;
+          if(r.else){out=/^COPY$/i.test(r.to)?old:coerce(r.to,nv.type);hit=true}
+          else if(r.lo!==undefined&&Number.isFinite(Number(old))&&Number(old)>=r.lo&&Number(old)<=r.hi){out=coerce(r.to,nv.type);hit=true}
+          else if(r.from!==undefined&&String(old)===r.from){out=coerce(r.to,nv.type);hit=true}
+        }
+        row.push(out);
+      }
+      markDirty('Syntax recode');renderAll();return toast(`Created ${target}`,'ok');
+    }
+    if((m=c.match(/^RANK\s+(?:VARIABLES\s*=\s*)?(\w+)(?:\s+INTO\s+(\w+))?$/i))){
+      const ds=active();if(!ds)throw Error('No active dataset');
+      const j=ds.variables.findIndex(v=>v.name===m[1]);
+      if(j<0)throw Error('Unknown variable in RANK: '+m[1]);
+      const vals=ds.rows.map(r=>Number(r[j])),valid=vals.map((v,i)=>Number.isFinite(v)?i:-1).filter(i=>i>=0),
+        ranks=Num.rank(valid.map(i=>vals[i])),name=uniqueName(m[2]||('RANK_'+m[1]));
+      snapshot('Syntax rank');
+      ds.variables.push(newVariable(name,'numeric','Rank of '+m[1]));
+      ds.rows.forEach(r=>r.push(null));
+      valid.forEach((ri,k)=>ds.rows[ri][ds.variables.length-1]=ranks[k]);
+      markDirty('Syntax rank');renderAll();return;
+    }
+    if((m=c.match(/^SORT CASES BY\s+(.+)$/i))){
+      const ds=active();if(!ds)throw Error('No active dataset');
+      const specs=[];
+      synList(m[1]).forEach(tok=>{
+        const solo=tok.match(/^\(([AD])\)$/i);
+        if(solo){if(specs.length)specs[specs.length-1].dir=solo[1].toUpperCase()==='D'?-1:1;return}
+        const inline=tok.match(/\(([AD])\)$/i),name=tok.replace(/\([AD]\)$/i,'').trim();
+        if(!name)return;
+        specs.push({name,dir:inline&&inline[1].toUpperCase()==='D'?-1:1});
+      });
+      if(!specs.length)throw Error('SORT CASES requires at least one variable');
+      const idx=specs.map(sp=>({j:ds.variables.findIndex(v=>v.name===sp.name),dir:sp.dir,name:sp.name})),bad=idx.filter(o=>o.j<0);
+      if(bad.length)throw Error('Unknown variable in SORT CASES: '+bad.map(o=>o.name).join(', '));
+      snapshot('Syntax sort');
+      ds.rows=ds.rows.map((r,i)=>({r,i})).sort((a,b)=>{
+        for(const{j,dir}of idx){const x=a.r[j],y=b.r[j];
+          if(x==null&&y!=null)return 1;if(y==null&&x!=null)return-1;
+          if(x<y)return-dir;if(x>y)return dir}
+        return a.i-b.i}).map(o=>o.r);
+      markDirty('Syntax sort');renderGrid();
+      return setStatus(`Sorted ${ds.rows.length} cases by ${specs.map(sp=>sp.name+(sp.dir<0?' (D)':' (A)')).join(', ')}`);
+    }
+    if(/^(FILTER\s+OFF|USE\s+ALL)$/i.test(c)){state.project.analysis.filter=null;markDirty('Cleared filter');renderState();renderGrid();return toast('Filter cleared','ok')}
+    if((m=c.match(/^SELECT IF\s*\(?\s*(\w+)\s*(==|!=|>=|<=|>|<|=)\s*([^)]+?)\s*\)?$/i))){
+      const ds=active();if(!ds)throw Error('No active dataset');
+      if(!ds.variables.some(v=>v.name===m[1]))throw Error('Unknown variable in SELECT IF: '+m[1]);
+      state.project.analysis.filter={variable:m[1],op:synFilterOp(m[2]),value:m[3].replace(/^['"]|['"]$/g,'')};
+      markDirty('Syntax filter');renderState();renderGrid();return toast('Filter applied','ok');
+    }
+    if(/^SPLIT FILE\s+OFF$/i.test(c)){state.project.analysis.split=null;state.project.analysis.splitLevel=null;markDirty('Split off');renderState();return toast('Split file off','ok')}
+    if((m=c.match(/^SPLIT FILE\s+(?:LAYERED\s+)?BY\s+(\w+)$/i))){
+      const ds=active();if(!ds||!ds.variables.some(v=>v.name===m[1]))throw Error('Unknown variable in SPLIT FILE: '+m[1]);
+      state.project.analysis.split=m[1];state.project.analysis.splitLevel=null;markDirty('Split file');renderState();return toast(`Split file by ${m[1]}`,'ok');
+    }
+    if(/^WEIGHT\s+OFF$/i.test(c)){state.project.analysis.weight=null;markDirty('Weight off');renderState();return toast('Weighting off','ok')}
+    if((m=c.match(/^WEIGHT\s+BY\s+(\w+)$/i))){
+      const ds=active();if(!ds||!ds.variables.some(v=>v.name===m[1]))throw Error('Unknown variable in WEIGHT BY: '+m[1]);
+      state.project.analysis.weight=m[1];markDirty('Weight on');renderState();return toast(`Cases weighted by ${m[1]}`,'ok');
+    }
+    if((m=c.match(/^DATASET\s+ACTIVATE\s+(.+)$/i))){
+      const name=m[1].trim(),ds=state.project.datasets.find(d=>d.name===name||d.id===name);
+      if(!ds)throw Error('No dataset named '+name);
+      state.project.activeDatasetId=ds.id;renderAll();return toast(`Active dataset: ${ds.name}`,'ok');
+    }
+    throw Error('Unsupported or invalid command near: '+c.slice(0,80));
+  }
+
+  /* Project/file operations */
+  function newProject(){if(state.dirty&&!confirm('Discard unsaved changes?'))return;state.project={id:uid(),name:'Untitled Project',created:now(),modified:now(),version:VERSION,datasets:[],activeDatasetId:null,syntax:'',outputs:[],settings:{theme:state.project.settings.theme,precision:3,autosave:true,showValueLabels:true,logSyntax:true},analysis:{filter:null,weight:null,split:null,splitLevel:null},journal:[],audit:[]};state.undo=[];state.redo=[];state.dirty=false;loadSample('survey');renderAll()}
+  async function newDataset(){const body=`<div class="formGrid"><label>Name</label><input id="ndName" value="DataSet${state.project.datasets.length+1}"><label>Variables</label><input id="ndVars" type="number" min="1" max="200" value="5"><label>Cases</label><input id="ndRows" type="number" min="0" max="100000" value="20"></div>`;if(!await modal('New Dataset',body))return;const n=$('#ndName').value,v=clamp(+$(`#ndVars`).value,1,200),r=clamp(+$(`#ndRows`).value,0,100000),vars=Array.from({length:v},(_,i)=>newVariable('VAR'+(i+1))),rows=Array.from({length:r},()=>Array(v).fill(null)),ds=makeDataset(n,vars,rows);snapshot('New dataset');state.project.datasets.push(ds);state.project.activeDatasetId=ds.id;markDirty('Created dataset');renderAll()}
+  function saveProject(){state.project.syntax=$('#syntaxEditor').value;const payload={format:'The Statistian Project',version:VERSION,project:state.project};download((state.project.name||'Project').replace(/[^\w-]+/g,'_')+'.statistian',JSON.stringify(payload),'application/json');state.dirty=false;updateTitle();toast('Project saved','ok')}
+  function openProject(){const f=$('#projectFile');f.value='';f.click()}
+  function importData(){const f=$('#dataFile');f.value='';f.click()}
+  async function onDataFile(file){setStatus(`Reading ${file.name}…`);const text=await file.text(),ext=file.name.split('.').pop().toLowerCase();try{let ds;if(ext==='json'||ext==='statistian'){const r=importJSON(text,file.name.replace(/\.[^.]+$/,''));if(r.project){state.project=r.project;state.dirty=false;$('#syntaxEditor').value=state.project.syntax||'';renderAll();return}ds=r}else{const guess=ext==='tsv'?'\t':(text.split('\n')[0].split('\t').length>text.split('\n')[0].split(',').length?'\t':',');ds=importText(text,file.name.replace(/\.[^.]+$/,''),guess,true)}const previewRows=ds.rows.slice(0,8).map(r=>r.map((v,i)=>displayValue(ds.variables[i],v)));const ok=await modal('Import Preview',`<p><strong>${esc(file.name)}</strong>: ${ds.rows.length.toLocaleString()} rows × ${ds.variables.length} variables</p>${table(ds.variables.map(v=>v.name),previewRows)}<h3>Inferred Variables</h3>${table(['Name','Type','Measure'],ds.variables.map(v=>[v.name,v.type,v.measure]))}<div class="note">Review inferred types after import in Variable View. Nothing is added until you choose Import.</div>`,[{label:'Cancel',value:null},{label:'Import',value:'run',primary:true}],true);if(!ok){setStatus('Import cancelled');return}snapshot('Import dataset');state.project.datasets.push(ds);state.project.activeDatasetId=ds.id;markDirty(`Imported ${file.name}`);renderAll();toast(`Imported ${ds.rows.length} rows and ${ds.variables.length} variables`,'ok')}catch(e){toast('Import failed: '+e.message,'error')}finally{setStatus('Ready')}}
+  async function onProjectFile(file){try{const obj=JSON.parse(await file.text());if(obj.format!=='The Statistian Project'||!obj.project)throw Error('Not a valid The Statistian project');if(state.dirty&&!confirm('Discard unsaved changes?'))return;state.project=obj.project;state.project.settings=state.project.settings||{theme:'light',precision:3,autosave:true,showValueLabels:true};if(state.project.settings.showValueLabels===undefined)state.project.settings.showValueLabels=true;state.project.analysis=state.project.analysis||{filter:null,weight:null,split:null};state.undo=[];state.redo=[];state.dirty=false;$('#syntaxEditor').value=state.project.syntax||'';applyTheme(state.project.settings.theme||'light');renderAll();toast('Project opened','ok')}catch(e){toast('Open failed: '+e.message,'error')}}
+  async function exportDataDialog(){const ds=active();if(!ds)return;const body=`<div class="formGrid"><label>Format</label><select id="exFmt"><option value="csv">CSV</option><option value="tsv">TSV</option><option value="json">JSON records</option></select></div>`;if(!await modal('Export Data',body))return;const f=$('#exFmt').value;if(f==='json'){const rec=ds.rows.map(r=>Object.fromEntries(ds.variables.map((v,i)=>[v.name,r[i]])));download(ds.name+'.json',JSON.stringify(rec,null,2),'application/json')}else download(ds.name+'.'+f,exportCSV(ds,f==='tsv'?'\t':','),f==='tsv'?'text/tab-separated-values':'text/csv')}
+  function exportOutput(){const css='body{font-family:Arial;margin:30px;color:#111}.outputBlock{margin-bottom:24px}.resultTable{border-collapse:collapse}.resultTable th,.resultTable td{border:1px solid #999;padding:5px 8px;text-align:right}.resultTable th:first-child,.resultTable td:first-child{text-align:left}.outputHead button{display:none}.note{padding:8px;border-left:4px solid #0b5cab;background:#eef6ff}.syntaxEcho{white-space:pre-wrap;background:#eee;padding:8px}';download('The_Statistian_Output.html',`<!doctype html><meta charset="utf-8"><title>The Statistian Output</title><style>${css}</style><h1>The Statistian</h1><p>${esc(state.project.name)} — exported ${new Date().toLocaleString()}</p>${$('#outputWrap').innerHTML}`,'text/html')}
+  function exportOutputMarkdown(){
+    const outs=state.project.outputs;
+    if(!outs.length)return toast('No output to export','error');
+    let tableNo=0;
+    const cellText=el=>el.textContent.replace(/\s+/g,' ').trim().replace(/\|/g,'\\|');
+    const md=[];
+    md.push(`# The Statistian Output`,'',`Project: ${state.project.name}  `,`Exported: ${new Date().toLocaleString()}  `,`Application version: ${VERSION}`,'');
+    const host=document.createElement('div');
+    outs.forEach(o=>{
+      md.push(`## ${o.title}`,'',`*${o.meta}*`,'');
+      host.innerHTML=o.html;
+      host.childNodes.forEach(node=>{
+        if(node.nodeType!==1){const t=(node.textContent||'').trim();if(t)md.push(t,'');return}
+        const tag=node.tagName.toLowerCase();
+        if(tag==='table'){
+          tableNo++;
+          const cap=node.querySelector('caption');
+          md.push(`**Table ${tableNo}.** ${cap?cap.textContent.trim():o.title}`,'');
+          const rows=[...node.querySelectorAll('tr')].map(tr=>[...tr.children].map(cellText));
+          if(rows.length){
+            md.push('| '+rows[0].join(' | ')+' |');
+            md.push('| '+rows[0].map(()=>'---').join(' | ')+' |');
+            rows.slice(1).forEach(r=>md.push('| '+r.join(' | ')+' |'));
+            md.push('');
+          }
+        }else if(tag==='h4'){md.push(`### ${node.textContent.trim()}`,'')}
+        else if(node.classList.contains('note')||node.classList.contains('outputMeta')){md.push(`> ${node.textContent.replace(/\s+/g,' ').trim()}`,'')}
+        else{const t=node.textContent.replace(/\s+/g,' ').trim();if(t)md.push(t,'')}
+      });
+      if(o.syntax)md.push('```','* Reproducible syntax.',o.syntax,'```','');
+    });
+    download('The_Statistian_Output.md',md.join('\n'),'text/markdown');
+    toast(`Exported ${outs.length} output block(s), ${tableNo} numbered table(s)`,'ok');
+  }
+  function loadSample(type='experiment'){let ds;if(type==='experiment'){const vars=[newVariable('id','numeric'),newVariable('group','string'),newVariable('baseline','numeric'),newVariable('score','numeric'),newVariable('followup','numeric')];vars[1].measure='nominal';let s=99;const rnd=()=>((s=(1103515245*s+12345)>>>0)/4294967296),norm=()=>Math.sqrt(-2*Math.log(Math.max(rnd(),1e-9)))*Math.cos(2*Math.PI*rnd());const rows=Array.from({length:90},(_,i)=>{const g=i<45?'Control':'Treatment',b=50+10*norm(),score=b+(g==='Treatment'?7:1)+7*norm(),f=score+3+6*norm();return[i+1,g,b,score,f]});ds=makeDataset('Synthetic Experiment',vars,rows)}else{const vars=[newVariable('month','date'),newVariable('demand','numeric'),newVariable('cost','numeric')];let s=7;const rnd=()=>((s=(1664525*s+1013904223)>>>0)/4294967296),rows=Array.from({length:72},(_,i)=>[new Date(2020,0+i,1).toISOString(),120+i*.9+14*Math.sin(i*Math.PI/6)+(rnd()-.5)*12,65+i*.35+(rnd()-.5)*5]);ds=makeDataset('Synthetic Time Series',vars,rows)}state.project.datasets.push(ds);state.project.activeDatasetId=ds.id;state.dirty=true;renderAll()}
+
+  /* Diagnostics */
+  async function diagnostics(){const tests=[],test=(name,fn,expected,tol=1e-8)=>{try{const got=fn(),ok=typeof expected==='boolean'?got===expected:Math.abs(got-expected)<=tol;tests.push({name,ok,got,expected})}catch(e){tests.push({name,ok:false,got:e.message,expected})}};test('Mean',()=>Num.mean([1,2,3,4]),2.5);test('Sample variance',()=>Num.variance([1,2,3,4]),1.6666666666667,1e-10);test('Median even',()=>Num.median([4,1,3,2]),2.5);test('Normal CDF(0)',()=>Num.normalCDF(0),.5,1e-7);test('t CDF symmetry',()=>Num.tCDF(0,10),.5,1e-9);test('Chi-square CDF known',()=>Num.chiCDF(3.841458820694124,1),.95,5e-7);test('F CDF known',()=>Num.fCDF(4.9646027437307145,1,10),.95,5e-6);test('Matrix inverse',()=>Num.inverse([[4,7],[2,6]])[0][0],.6,1e-10);test('QR least-squares slope',()=>Num.qrSolve([[1,1],[1,2],[1,3]],[3,5,7])[1],2,1e-10);test('Expression parser',()=>Expr.eval(Expr.parse('(2+3)*4'),{}),20);
+    const oldActive=state.project.activeDatasetId,tempId='__diagnostic__',stringVars=['group','flag'],diagVars=['group','x','y','item1','item2','item3','binary','flag','const1'].map((name,i)=>({id:'dv'+i,name,type:stringVars.includes(name)?'string':'numeric',width:10,decimals:2,label:'',valueLabels:{},missing:{discrete:[],range:null},columns:10,alignment:'right',measure:stringVars.includes(name)?'nominal':'scale',role:'input',notes:'',format:'general',hidden:false})),diagRows=[];
+    for(let i=0;i<18;i++){const x=i+1,g=i<9?'A':'B',noise=(i%3-1)*.35,y=4+1.6*x+noise,item1=i%5+1,item2=item1+(i%2===0?1:0),item3=item1+(i%3===0?1:0),binary=((i>8)?1:0)^(i===3||i===14?1:0);diagRows.push([g,x,y,item1,item2,item3,binary,binary?'Yes':'No',1])}
+    const temp={id:tempId,name:'Diagnostics Data',variables:diagVars,rows:diagRows};state.project.datasets.push(temp);state.project.activeDatasetId=tempId;
+    try{test('Procedure: descriptives',()=>Math.abs(Stats.descriptives(['x'])[0].mean-9.5)<1e-12,true);test('Procedure: frequencies',()=>Stats.frequencies('group').valid===18,true);test('Procedure: crosstabs',()=>Stats.crosstab('group','binary').n===18,true);test('Procedure: one-sample t',()=>Number.isFinite(Stats.oneSampleT('x',0).t),true);test('Procedure: independent t',()=>Number.isFinite(Stats.independentT('y','group','A','B').t),true);test('Procedure: paired t',()=>Number.isFinite(Stats.pairedT('item2','item3').t),true);test('Procedure: ANOVA',()=>Number.isFinite(Stats.anova('y','group').F),true);test('Procedure: Mann–Whitney',()=>Number.isFinite(Stats.mannWhitney('y','group','A','B').U),true);test('Procedure: Wilcoxon',()=>Number.isFinite(Stats.wilcoxon('item2','item3').T),true);test('Procedure: Kruskal–Wallis',()=>Number.isFinite(Stats.kruskalWallis('y','group').H),true);test('Procedure: correlation',()=>Number.isFinite(Stats.correlation(['x','y']).mat[0][1]),true);test('Procedure: linear regression',()=>Math.abs(Stats.linearRegression('y',['x']).B[1]-1.6)<.02,true);test('Procedure: logistic regression',()=>Stats.logisticRegression('binary',['x']).levels.length===2,true);test('Procedure: reliability',()=>Number.isFinite(Stats.reliability(['item1','item2','item3']).alpha),true);test('Procedure: PCA',()=>Math.abs(Num.sum(Stats.pca(['x','y','item1']).values)-3)<1e-6,true);test('Procedure: k-means',()=>Num.sum(Stats.kmeans(['x','y'],3,100,17).sizes)===18,true);test('Logistic: string dependent levels',()=>{const r=Stats.logisticRegression('flag',['x']);return r.levels.length===2&&Number.isFinite(r.b[1])},true);test('Logistic: level order is string-safe',()=>Stats.logisticRegression('flag',['x']).levels.join('|')==='No|Yes',true);test('Guard: single-category crosstab',()=>{try{Stats.crosstab('const1','group');return false}catch(e){return /at least two distinct categories/i.test(e.message)}},true);test('Guard: zero-variance independent t',()=>{try{Stats.independentT('const1','group','A','B');return false}catch(e){return /zero variance/i.test(e.message)}},true);test('Guard: tQuantile rejects invalid df',()=>Number.isNaN(Stats.tQuantile(.975,NaN)),true);test('k-means: no empty clusters',()=>Stats.kmeans(['x','y'],4,100,17).sizes.every(s=>s>0),true);test('Levene finite',()=>Number.isFinite(Stats.levene('y','group').W),true);test('Welch ANOVA finite',()=>Number.isFinite(Stats.welchAnova('y','group').F),true);test('Tukey HSD produces k(k-1)/2 comparisons',()=>Stats.tukeyHSD('y','group').comparisons.length===1,true);test('Games–Howell p in [0,1]',()=>{const c=Stats.gamesHowell('y','group').comparisons[0];return c.p>=0&&c.p<=1},true);test('Fisher exact tea-tasting p',()=>Math.abs(Stats.fisherExact(3,1,1,3).p-.4857)<.001,true);test('Studentized range q(.95,3,12)',()=>Math.abs(Num.studentizedRangeCDF(3.7729,3,12)-.95)<.005,true);test('Shapiro–Wilk matches R for 1:10',()=>Math.abs(Stats.shapiroWilk([1,2,3,4,5,6,7,8,9,10]).W-.97016)<.001,true);test('VIF of single predictor is 1',()=>Math.abs(Stats.vif('y',['x'])[0].vif-1)<1e-9,true);test('Regression diagnostics: leverage sums to p',()=>{const m=Stats.linearRegression('y',['x']);return Math.abs(Num.sum(Stats.regressionDiagnostics(m).leverage)-2)<1e-6},true);test('Pairwise correlation N per cell',()=>Stats.correlationPairwise(['x','y']).ns[0][1]===18,true);test('Missing patterns: complete-case count',()=>{const r=Stats.missingPatterns(['x','y']);return r.complete===18&&r.N===18},true);test('Holm adjustment ordering',()=>{const a=adjustP([.01,.02,.03,.04],'holm');return Math.abs(a[0]-.04)<1e-12&&Math.abs(a[3]-.06)<1e-12},true);test('BH adjustment',()=>adjustP([.01,.02,.03,.04],'bh').every(v=>Math.abs(v-.04)<1e-12),true);test('Bootstrap kernel reproducible',()=>{const a=KERNEL({task:'bootstrap',kind:'mean',x:[1,2,3,4,5,6,7,8],y:null,B:200,seed:9,level:.95}),b=KERNEL({task:'bootstrap',kind:'mean',x:[1,2,3,4,5,6,7,8],y:null,B:200,seed:9,level:.95});return a.lo===b.lo&&a.hi===b.hi},true);test('Permutation kernel p in (0,1]',()=>{const r=KERNEL({task:'permutation',kind:'meandiff',x:[1,2,3,4],y:[6,7,8,9],B:300,seed:4});return r.p>0&&r.p<=1},true);diagVars[1].missing.discrete=['-99'];diagRows[0][1]=-99;test('User-missing exclusion',()=>Stats.descriptives(['x'])[0].n===17,true)}finally{state.project.datasets=state.project.datasets.filter(d=>d.id!==tempId);state.project.activeDatasetId=oldActive}
+    const passed=tests.filter(t=>t.ok).length,body=`<p><strong>${passed}/${tests.length}</strong> embedded numerical tests passed.</p>`+table(['Test','Status','Observed','Expected'],tests.map(t=>[t.name,t.ok?{html:'<span class="diagPass">PASS</span>'}:{html:'<span class="diagFail">FAIL</span>'},String(t.got),String(t.expected)]))+`<div class="note ${passed===tests.length?'ok':'error'}">These tests check core numerical primitives and do not replace independent validation of every analysis for high-stakes use.</div>`;addOutput('Diagnostics',body,'DIAGNOSTICS RUN ALL.',`Version ${VERSION}`);return{passed,total:tests.length}}
+
+  /* Help/About */
+  async function showHelp(section='start'){const sections={start:['Getting Started',`<h3>Getting Started</h3><p>The Statistian is an offline statistical workbench. Import CSV, TSV, or JSON data; define variables in Variable View; run procedures from Analyze; review results in Output; and save a <code>.statistian</code> project.</p><ol><li>Use File → Import Data, or load the synthetic experiment or time-series example.</li><li>Review variable types and measurement levels.</li><li>Choose an analysis and select eligible variables.</li><li>Inspect assumptions, warnings, confidence intervals, and effect sizes.</li><li>Save the project and export data or output.</li></ol>`],data:['Data and Missing Values',`<h3>Data Concepts</h3><p>Rows are cases and columns are variables. Blank cells are system-missing. User-defined missing values are preserved as metadata; core procedures currently exclude blank/system-missing values and use listwise deletion for multivariable analyses.</p><p>Value labels display category text without replacing stored values. When you click into a cell the underlying stored value is shown for editing, and the label is restored when you leave the cell. Typing a label that matches a defined value label stores the underlying value.</p><h3>Grid Keyboard Navigation</h3><p>Enter and Shift+Enter move down and up. Tab and Shift+Tab move right and left, wrapping to the next or previous case. Arrow keys move between cells when the caret is at the edge of the cell text. Home and End jump to the first and last column; Ctrl+Home and Ctrl+End jump to the first and last case. Page Up and Page Down move twenty cases. Escape cancels the current cell edit.</p><p>Datasets larger than 1,000 cases are rendered with a scrolling window so that only the visible cases are placed in the page. Scroll position, editing, and keyboard navigation behave the same way; only the number of rows held in the page at one time changes.</p>`],procedures:['Procedures',`<h3>Implemented Procedures</h3><p>Frequencies, descriptives with Shapiro–Wilk normality, Explore, missing value analysis (per-variable counts, patterns, pairwise N), crosstabs with chi-square, Cramér’s V, standardized residuals, and Fisher’s exact test for 2×2 tables, one-sample/independent/paired t tests with Levene’s test and optional bootstrap or permutation results, one-way ANOVA with Welch’s robust F, eta and omega squared, and Tukey HSD or Games–Howell post-hoc comparisons, Mann–Whitney U, Wilcoxon signed-rank, Kruskal–Wallis, Pearson and Spearman correlations with listwise or pairwise deletion and Holm or Benjamini–Hochberg adjustment, linear regression with VIF, Durbin–Watson, Breusch–Pagan, residual normality, leverage, and Cook’s distance, binary logistic regression with odds-ratio intervals and McFadden R², reliability analysis, PCA, k-means clustering (computed in a background worker for large files), and seeded bootstrap confidence intervals for means, medians, standard deviations, correlations, and group differences.</p><h3>Weights and Split File</h3><p>Frequency weights (Data → Weight Cases or <code>WEIGHT BY</code>) are applied to every procedure by case replication, rounding weights to the nearest whole number. A split variable (Data → Split File or <code>SPLIT FILE BY</code>) makes every procedure run and report separately for each level.</p><h3>Planned / Not Included</h3><p>Factorial and repeated-measures ANOVA, exact tests, full generalized linear models, EFA rotations, hierarchical clustering, ARIMA/SARIMA, survival analysis, multinomial/ordinal regression, and full bootstrap modules are not exposed as working menu items in this version.</p>`],syntax:['Syntax',`<h3>Syntax</h3><p>Every procedure can be run from syntax, and every dialog appends its reproducible syntax line to the editor (View → Toggle Dialog-to-Syntax Logging). Commands end with a period; lines beginning with * are comments. Select text and press Ctrl+Enter to run the selection, or run the whole editor.</p><p>Analysis: <code>DESCRIPTIVES</code>, <code>FREQUENCIES</code>, <code>EXAMINE</code>, <code>MVA</code> (missing value analysis), <code>CROSSTABS /TABLES=a BY b</code>, <code>T-TEST</code> (TESTVAL, GROUPS, or PAIRS forms; add /BOOTSTRAP or /PERMUTATION SAMPLES=n to the GROUPS form), <code>ONEWAY y BY g /POSTHOC=TUKEY|GH|BOTH|NONE</code>, <code>NPTESTS</code>, <code>CORRELATIONS /VARIABLES=… [/SPEARMAN] [/MISSING=PAIRWISE] [/ADJUST=HOLM|BH]</code>, <code>REGRESSION /DEPENDENT=y /METHOD=ENTER x1 x2</code>, <code>LOGISTIC REGRESSION y WITH x1 x2</code>, <code>RELIABILITY</code>, <code>PCA</code>, <code>QUICK CLUSTER … /CRITERIA=CLUSTER(k) SEED(s)</code>, <code>BOOTSTRAP /STATISTIC=MEAN|MEDIAN|SD|CORR|MEANDIFF /VARIABLES=… [/GROUP=g(a b)] /SAMPLES=n /SEED=s /CI=95</code>.</p><p>Data management: <code>COMPUTE</code>, <code>RECODE x (1=0)(2 THRU 5=1)(ELSE=COPY) INTO y</code>, <code>RANK x INTO r</code>, <code>SORT CASES BY x (A) y (D)</code>, <code>SELECT IF (x &gt; 5)</code>, <code>USE ALL</code>, <code>SPLIT FILE BY g</code> / <code>SPLIT FILE OFF</code>, <code>WEIGHT BY w</code> / <code>WEIGHT OFF</code>, <code>DATASET ACTIVATE name</code>, <code>SET LABELS ON|OFF</code>, <code>DIAGNOSTICS</code>, <code>EXECUTE</code>.</p><pre>WEIGHT BY w.\nSPLIT FILE BY region.\nONEWAY satisfaction BY region /POSTHOC=GH.\nCORRELATIONS /VARIABLES=age satisfaction service /MISSING=PAIRWISE /ADJUST=BH.\nBOOTSTRAP /STATISTIC=MEANDIFF /VARIABLES=satisfaction /GROUP=region(North South) /SAMPLES=5000 /SEED=42 /CI=95.</pre>`],privacy:['Privacy and Security',`<h3>Privacy</h3><p>All processing occurs in this browser. The application makes no network requests, includes no telemetry, and never uploads data. Autosave uses local browser storage on this device only.</p><p>Imported text is escaped before display, project files are treated as data, and stored syntax is never executed automatically.</p>`],limits:['Limitations',`<h3>Known Limitations</h3><ul><li>Excel and SPSS <code>.sav</code> import/export are not included because a genuine, license-compatible parser could not be embedded reliably within this build.</li><li>Weight metadata is preserved and displayed, but core procedures do not apply weights in version ${VERSION}.</li><li>Split-file state is preserved and displayed, but procedures are not yet executed separately by split groups.</li><li>The grid renders the full active dataset and is practical for moderate data; it does not yet use full row virtualization for 100,000-row editing.</li><li>Statistical routines are original JavaScript implementations and should be independently verified for regulated or high-stakes decisions.</li></ul>`],shortcuts:['Keyboard Shortcuts',`<h3>Keyboard</h3><p>Alt-key menu activation depends on browser behavior. Use Tab and Shift+Tab to move through controls. In Data View, Enter commits a cell and moves downward. Ctrl/Cmd+Z and Ctrl/Cmd+Y perform undo/redo. Ctrl/Cmd+S saves the project. Ctrl/Cmd+Enter runs syntax.</p>`],about:['About and Licenses',`<h3>The Statistian ${VERSION}</h3><p>An original, self-contained statistical workbench. Product name preserved exactly as requested.</p><p><strong>Implementation:</strong> Original HTML, CSS, JavaScript, numerical routines, charting, project format, help, and synthetic demonstration data. No third-party runtime libraries or external assets are embedded.</p><p><strong>Version 2.0.1 changes:</strong> The synthetic survey dataset was removed. The application now starts with no dataset loaded; import data, open a project, or load the synthetic experiment or time-series example from the File menu.</p><p><strong>Version 2.0.0 changes:</strong> Frequency weighting and split-file execution are applied by every procedure. Missing value analysis, Fisher’s exact test, Levene’s test, Welch’s ANOVA, Tukey HSD and Games–Howell post-hoc comparisons, Shapiro–Wilk normality, normal Q-Q charts, regression diagnostics (VIF, Durbin–Watson, Breusch–Pagan, leverage, Cook’s distance), pairwise-deletion correlations with Holm and Benjamini–Hochberg adjustment, and seeded bootstrap and permutation inference were added. Long resampling and clustering jobs run in a background Web Worker with an automatic same-thread fallback. Every analysis dialog appends reproducible syntax to the editor, the syntax interpreter covers the full procedure set plus RECODE, RANK, SELECT IF, SPLIT FILE, WEIGHT BY, and DATASET ACTIVATE, value labels appear throughout output with stored values in parentheses, and output can be exported as Markdown with numbered tables.</p><p><strong>Version 1.1.0 changes:</strong> Cell commits no longer create empty trailing cases; value-labelled cells now expose the stored value for editing and restore the label on exit; binary logistic regression accepts string and numeric dependent variables with string-safe level ordering; SORT CASES in syntax honours per-variable (A) and (D) direction flags and null placement; independent-samples t, crosstabulation, and the t quantile routine now reject undefined boundary conditions instead of returning silent placeholder values; k-means reseeds empty clusters; the data grid supports full keyboard navigation and windowed rendering above 1,000 cases.</p><p><strong>Compatibility:</strong> “SPSS-style” describes a familiar workflow only. This product is not affiliated with or endorsed by IBM and does not contain IBM code, logos, manuals, or protected interface assets.</p>`]};const nav=Object.entries(sections).map(([k,v])=>`<button data-help="${k}">${v[0]}</button>`).join(''),body=`<div class="helpGrid"><nav class="helpNav">${nav}</nav><div class="helpContent" id="helpContent">${sections[section][1]}</div></div>`;modal('Help',body,[{label:'Close',value:null}],true);setTimeout(()=>$$('[data-help]').forEach(b=>b.onclick=()=>$('#helpContent').innerHTML=sections[b.dataset.help][1]),10)}
+
+  /* Menus/actions */
+  const menuSpec={File:[['New Project','newProject','Ctrl+N'],['New Dataset','newDataset',''],['Open Project','openProject','Ctrl+O'],['Save Project','saveProject','Ctrl+S'],'-', ['Import Data','importData',''],['Load Synthetic Experiment','sampleExperiment',''],['Load Synthetic Time Series','sampleTime',''],['Export Active Data','exportData',''],['Export Output HTML','exportOutput',''],['Export Output Markdown','exportOutputMd',''],['Print Output','printOutput','Ctrl+P']],Edit:[['Undo','undo','Ctrl+Z'],['Redo','redo','Ctrl+Y'],'-',['Find / Replace','findReplace',''],['Insert Variable','insertVariable',''],['Delete Variable','deleteVariable','']],View:[['Data View','viewData',''],['Variable View','viewVariables',''],['Syntax Editor','viewSyntax',''],['Output Viewer','viewOutput',''],['Chart Editor','viewChart',''],'-',['Toggle Project Panel','toggleLeft',''],['Toggle Inspector','toggleRight',''],['Cycle Theme','cycleTheme',''],['Toggle Value Labels','toggleLabels',''],['Toggle Dialog-to-Syntax Logging','toggleSyntaxLog','']],Data:[['Sort Cases','sortCases',''],['Select Cases','selectCases',''],['Weight Cases','weightCases',''],['Split File','splitFile',''],['Identify Duplicates','duplicates',''],['Add Cases / Merge','mergeData','']],Transform:[['Compute Variable','compute',''],['Recode into Different Variable','recode',''],['Rank Cases','rankCases','']],Analyze:[['Frequencies','frequencies',''],['Descriptive Statistics','descriptives',''],['Explore','explore',''],['Crosstabs','crosstabs',''],['Missing Value Analysis','missing',''],'-',['T Tests','ttest',''],['One-Way ANOVA','anova',''],['Nonparametric Tests','nonparametric',''],'-',['Correlations','correlation',''],['Linear Regression','linearRegression',''],['Binary Logistic Regression','logisticRegression',''],'-',['Reliability Analysis','reliability',''],['Principal Components','pca',''],['K-Means Clustering','kmeans',''],'-',['Bootstrap Confidence Intervals','bootstrap','']],Graphs:[['Chart Builder','viewChart',''],['Draw Current Chart','drawChart',''],['Export Chart PNG','exportChart','']],Utilities:[['Run Diagnostics','diagnostics',''],['Project Audit Log','audit',''],['Clear Local Recovery Data','clearLocal','']],Extensions:[['Extension Information','extensions','']],Window:[['Data View','viewData',''],['Variable View','viewVariables',''],['Syntax','viewSyntax',''],['Output','viewOutput','']],Help:[['Getting Started','help','F1'],['Procedure Guide','helpProcedures',''],['Syntax Reference','helpSyntax',''],['Limitations','helpLimits',''],['About The Statistian','about','']]};
+  function buildMenus(){const mb=$('#menubar');mb.innerHTML='';Object.entries(menuSpec).forEach(([name,items])=>{const w=document.createElement('div');w.className='menuWrap';const b=document.createElement('button');b.className='menuBtn';b.textContent=name;b.setAttribute('aria-expanded','false');const m=document.createElement('div');m.className='menu';m.setAttribute('role','menu');items.forEach(it=>{if(it==='-'){const s=document.createElement('div');s.className='sep';m.append(s)}else{const x=document.createElement('button');x.innerHTML=`<span>${esc(it[0])}</span><span>${esc(it[2])}</span>`;x.dataset.action=it[1];m.append(x)}});b.onclick=e=>{e.stopPropagation();$$('.menu.open').forEach(x=>x!==m&&x.classList.remove('open'));m.classList.toggle('open');b.setAttribute('aria-expanded',m.classList.contains('open'))};w.append(b,m);mb.append(w)});document.addEventListener('click',()=>{$$('.menu.open').forEach(x=>x.classList.remove('open'));$$('.menuBtn[aria-expanded=true]').forEach(x=>x.setAttribute('aria-expanded','false'))})}
+  async function action(a){switch(a){case'newProject':return newProject();case'newDataset':return newDataset();case'openProject':return openProject();case'saveProject':return saveProject();case'importData':return importData();case'sampleExperiment':return loadSample('experiment');case'sampleTime':return loadSample('time');case'exportData':return exportDataDialog();case'exportOutput':return exportOutput();case'exportOutputMd':return exportOutputMarkdown();case'printOutput':switchView('outputView');return print();case'undo':if(state.undo.length){state.redo.push({label:'Redo',project:deepClone(state.project)});restore(state.undo.pop())}return;case'redo':if(state.redo.length){state.undo.push({label:'Undo',project:deepClone(state.project)});restore(state.redo.pop())}return;case'viewData':return switchView('dataView');case'viewVariables':return switchView('variableView');case'viewSyntax':return switchView('syntaxView');case'viewOutput':return switchView('outputView');case'viewChart':return switchView('chartView');case'toggleLeft':return $('#leftSide').classList.toggle('hidden');case'toggleRight':return $('#rightSide').classList.toggle('hidden');case'cycleTheme':return cycleTheme();case'toggleLabels':state.project.settings.showValueLabels=state.project.settings.showValueLabels===false;markDirty('Toggled value labels');renderGrid();return toast(state.project.settings.showValueLabels?'Value labels shown':'Raw values shown','ok');case'frequencies':return runFrequencies();case'descriptives':return runDescriptives();case'explore':return runExplore();case'crosstabs':return runCrosstabs();case'ttest':return runTTest();case'anova':return runANOVA();case'nonparametric':return runNonparametric();case'correlation':return runCorrelation();case'linearRegression':return runRegression(false);case'logisticRegression':return runRegression(true);case'reliability':return runReliability();case'pca':return runPCA();case'kmeans':return runKMeans();case'missing':return runMissing();case'bootstrap':return runBootstrap();case'toggleSyntaxLog':state.project.settings.logSyntax=!state.project.settings.logSyntax;markDirty('Toggled syntax logging');return toast(state.project.settings.logSyntax?'Dialogs will append reproducible syntax to the editor':'Dialog-to-syntax logging off','ok');case'compute':return computeVariable();case'recode':return recodeVariable();case'sortCases':return sortCases();case'selectCases':return selectCases();case'weightCases':return weightCases();case'splitFile':return splitFile();case'runSyntax':return executeSyntax($('#syntaxEditor').value);case'drawChart':return drawChart();case'exportChart':return exportChart();case'diagnostics':return diagnostics();case'help':return showHelp('start');case'helpProcedures':return showHelp('procedures');case'helpSyntax':return showHelp('syntax');case'helpLimits':return showHelp('limits');case'about':return showHelp('about');case'extensions':return modal('Extensions','<div class="note">This single-file offline build does not load remote extensions. Future extensions must be explicitly imported, license-compatible, sandboxed, and never execute without informed user action.</div>',[{label:'Close',value:null}]);case'clearLocal':localStorage.removeItem('statistian.autosave');return toast('Local recovery data cleared','ok');case'audit':return modal('Project Audit Log',`<div class="preview">${state.project.audit.slice().reverse().map(x=>`<div>${esc(new Date(x.time).toLocaleString())} — ${esc(x.action)}</div>`).join('')||'No audit entries.'}</div>`,[{label:'Close',value:null}],true);case'insertVariable':{const ds=active();snapshot('Insert variable');ds.variables.splice(state.selection.col,0,newVariable(uniqueName('VAR'+(ds.variables.length+1))));ds.rows.forEach(r=>r.splice(state.selection.col,0,null));markDirty('Inserted variable');return renderAll()}case'deleteVariable':{const ds=active();if(!ds||!ds.variables.length)return;if(!confirm(`Delete variable ${ds.variables[state.selection.col].name}?`))return;snapshot('Delete variable');ds.variables.splice(state.selection.col,1);ds.rows.forEach(r=>r.splice(state.selection.col,1));state.selection.col=Math.max(0,state.selection.col-1);markDirty('Deleted variable');return renderAll()}case'rankCases':return rankCases();case'duplicates':return identifyDuplicates();case'findReplace':return findReplace();case'mergeData':return toast('Use Import Data to add another dataset. Guided keyed merge is listed as planned in Help.','error');default:return toast('This command is planned but not included in this version. See Help > Limitations.','error')}}
+  async function rankCases(){const vars=await chooseVariables('Rank Cases',true,false);if(!vars?.length)return;const ds=active(),src=vars[0],j=ds.variables.findIndex(v=>v.name===src),vals=ds.rows.map(r=>Number(r[j])),valid=vals.map((v,i)=>Number.isFinite(v)?i:-1).filter(i=>i>=0),ranks=Num.rank(valid.map(i=>vals[i])),name=uniqueName('RANK_'+src);snapshot('Rank cases');ds.variables.push(newVariable(name,'numeric','Rank of '+src));ds.rows.forEach(r=>r.push(null));valid.forEach((ri,k)=>ds.rows[ri][ds.variables.length-1]=ranks[k]);markDirty('Ranked cases');renderAll();$('#syntaxEditor').value+=`\nRANK VARIABLES=${src} INTO ${name}.`}
+  async function identifyDuplicates(){const vars=await chooseVariables('Identify Duplicate Cases',false,true);if(!vars?.length)return;const ds=active(),idx=vars.map(n=>ds.variables.findIndex(v=>v.name===n)),seen=new Map(),flag=[];ds.rows.forEach((r,i)=>{const key=JSON.stringify(idx.map(j=>r[j]));flag[i]=seen.has(key)?1:0;seen.set(key,i)});const name=uniqueName('DUPLICATE');snapshot('Identify duplicates');ds.variables.push(newVariable(name,'numeric','Duplicate case indicator'));ds.rows.forEach((r,i)=>r.push(flag[i]));markDirty('Identified duplicates');renderAll();toast(`${flag.reduce((a,b)=>a+b,0)} duplicate cases flagged`,'ok')}
+  async function findReplace(){const body=`<div class="formGrid"><label>Variable</label><select id="frVar">${varOptions()}</select><label>Find</label><input id="frFind"><label>Replace</label><input id="frRep"><label>Case sensitive</label><input id="frCase" type="checkbox"></div>`;if(!await modal('Find and Replace',body))return;const ds=active(),j=ds.variables.findIndex(v=>v.name===$('#frVar').value),find=$('#frFind').value,rep=$('#frRep').value,cs=$('#frCase').checked;let n=0;snapshot('Find replace');ds.rows.forEach(r=>{if(r[j]==null)return;const s=String(r[j]),match=cs?s===find:s.toLowerCase()===find.toLowerCase();if(match){r[j]=coerce(rep,ds.variables[j].type);n++}});markDirty('Find replace');renderGrid();toast(`${n} value(s) replaced`,'ok')}
+  function applyTheme(t){$('#app').dataset.theme=t;state.project.settings.theme=t;markDirty('Changed theme')}
+  function cycleTheme(){const a=['light','dark','high'],i=(a.indexOf($('#app').dataset.theme)+1)%a.length;applyTheme(a[i]);toast(`${a[i]} theme`,'ok')}
+
+  function init(){buildMenus();$$('[data-action]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();action(b.dataset.action)}));$$('.tab').forEach(t=>t.onclick=()=>switchView(t.dataset.view));$('#themeBtn').onclick=cycleTheme;$('#helpBtn').onclick=()=>showHelp('start');$('#dataFile').onchange=e=>e.target.files[0]&&onDataFile(e.target.files[0]);$('#projectFile').onchange=e=>e.target.files[0]&&onProjectFile(e.target.files[0]);$('#gridViewport').addEventListener('scroll',onGridScroll,{passive:true});$('#applyCell').onclick=()=>{const td=$(`td[data-row="${state.selection.row}"][data-col="${state.selection.col}"]`);if(td){td.textContent=$('#formulaInput').value;td.blur();cellCommit({currentTarget:td})}};$('#runSelection').onclick=()=>{const e=$('#syntaxEditor'),text=e.value.slice(e.selectionStart,e.selectionEnd)||e.value;executeSyntax(text)};$('#clearSyntax').onclick=()=>$('#syntaxEditor').value='';$('#drawChart').onclick=drawChart;$('#exportChart').onclick=exportChart;$('#chartAlt').onclick=()=>modal('Chart Text Alternative',`<p>${esc($('#chartCanvas').dataset.alt||'Draw a chart first.')}</p>`,[{label:'Close',value:null}]);document.addEventListener('keydown',e=>{const mod=e.ctrlKey||e.metaKey;if(mod&&e.key.toLowerCase()==='s'){e.preventDefault();saveProject()}if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();action('undo')}if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();action('redo')}if(mod&&e.key==='Enter'){e.preventDefault();executeSyntax($('#syntaxEditor').value)}if(e.key==='F1'){e.preventDefault();showHelp('start')}});window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue=''}});try{const auto=localStorage.getItem('statistian.autosave');if(auto){const p=JSON.parse(auto);if(confirm('A local recovery snapshot is available. Restore it?')){state.project=p;state.dirty=true;$('#syntaxEditor').value=p.syntax||'';applyTheme(p.settings?.theme||'light');renderAll();return}}}catch(e){}$('#syntaxEditor').value=`* The Statistian ${VERSION}.\n* Import data (File > Import Data), open a project, or load a synthetic example, then run commands here.\n* Example: DESCRIPTIVES VARIABLES=var1 var2.`;renderAll();setStatus('Ready — all processing is local and offline');if(new URLSearchParams(location.search).has('selftest'))diagnostics().then(r=>document.body.dataset.selftest=`${r.passed}/${r.total}`)}
+  /* Developer notes: State is project-centric; datasets are row arrays with ordered metadata. UI dialogs call Stats and add immutable output records. Extension points are the action registry, Stats object, syntax command dispatcher, and chart renderer. Known limitations are documented in offline Help. */
+  return{init,action,Stats,Num,Expr,state,diagnostics,util:{adjustP,labelText,splitLevels,bySplit,validRows,computeAsync,KERNEL,workerStatus,groupedNumeric}};
+})();
+window.addEventListener('DOMContentLoaded',TS.init);
+</script>
+</body>
+</html>

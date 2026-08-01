@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#06131b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>RuView Mobile — WiFi Radar & Phone Sensors</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#061018;--bg2:#091a24;--surface:#0d202b;--surface2:#112b38;
+  --text:#eefbff;--muted:#82a5b3;--accent:#32d8e6;--accent2:#65f2b9;
+  --warn:#ffc857;--danger:#ff5d73;--good:#45e38b;--line:rgba(137,224,239,.16);
+  --shadow:0 14px 40px rgba(0,0,0,.35);--radius:18px;
+  --nav-h:74px;--header-h:62px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
+body{overscroll-behavior:none}
+button,input,select{font:inherit}
+button{color:inherit}
+.app{height:100%;display:grid;grid-template-rows:calc(var(--header-h) + env(safe-area-inset-top)) 1fr calc(var(--nav-h) + env(safe-area-inset-bottom));background:
+ radial-gradient(circle at 80% -10%,rgba(50,216,230,.13),transparent 34%),
+ radial-gradient(circle at -10% 90%,rgba(101,242,185,.08),transparent 35%),var(--bg)}
+header{padding:env(safe-area-inset-top) 14px 0;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);background:rgba(6,16,24,.88);backdrop-filter:blur(18px);z-index:10}
+.logo{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(50,216,230,.22),rgba(101,242,185,.07));border:1px solid rgba(50,216,230,.32);font-size:25px;font-weight:800;box-shadow:inset 0 0 18px rgba(50,216,230,.08)}
+.brand{min-width:0;flex:1}.brand b{display:block;font-size:17px;letter-spacing:.3px}.brand small{display:block;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.status-pill{display:flex;align-items:center;gap:7px;max-width:136px;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.045);border:1px solid var(--line);font-size:11px;font-weight:800;letter-spacing:.45px;text-transform:uppercase}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 4px rgba(130,165,179,.08)}
+.status-pill.connected .dot{background:var(--good);box-shadow:0 0 12px var(--good)}
+.status-pill.connecting .dot{background:var(--warn);box-shadow:0 0 12px var(--warn);animation:pulse 1s infinite}
+.status-pill.simulated .dot{background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.status-pill.disconnected .dot{background:var(--danger)}
+@keyframes pulse{50%{opacity:.35}}
+main{position:relative;overflow:hidden}
+.view{position:absolute;inset:0;overflow:auto;padding:14px 14px 24px;display:none;scrollbar-width:none}.view::-webkit-scrollbar{display:none}.view.active{display:block;animation:fade .18s ease-out}@keyframes fade{from{opacity:.45;transform:translateY(4px)}to{opacity:1;transform:none}}
+.section-title{display:flex;align-items:end;justify-content:space-between;margin:2px 2px 12px}.section-title h1{font-size:22px;line-height:1.05;margin:0}.section-title p{margin:4px 0 0;color:var(--muted);font-size:12px}.section-title .mini{color:var(--muted);font-size:11px}
+.card{background:linear-gradient(155deg,rgba(17,43,56,.94),rgba(10,27,37,.94));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.live-stage{height:min(52vh,470px);min-height:340px;position:relative;overflow:hidden;background:#030a10;border-radius:22px;border:1px solid rgba(90,220,234,.2);box-shadow:var(--shadow)}
+#scene{width:100%;height:100%;display:block;touch-action:none}
+.stage-top{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;pointer-events:none}
+.stage-badge,.fps{padding:7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(3,10,16,.62);backdrop-filter:blur(8px);font-size:10px;font-weight:800;letter-spacing:.5px}.stage-badge{color:var(--accent)}
+.hud{position:absolute;left:10px;right:10px;bottom:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;pointer-events:none}.hud-item{background:rgba(3,10,16,.72);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 5px;text-align:center;backdrop-filter:blur(8px)}.hud-item b{display:block;font-size:15px}.hud-item span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;margin-top:2px;letter-spacing:.5px}
+.floating-controls{position:absolute;right:10px;top:50px;display:flex;flex-direction:column;gap:8px}.icon-btn{width:42px;height:42px;border-radius:13px;border:1px solid rgba(255,255,255,.14);background:rgba(3,10,16,.72);backdrop-filter:blur(8px);display:grid;place-items:center;font-size:18px;box-shadow:0 8px 20px rgba(0,0,0,.2)}.icon-btn:active{transform:scale(.95)}
+.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}.quick{padding:13px}.quick .label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.55px}.quick .value{font-size:18px;font-weight:800;margin-top:5px}.quick .bar{height:5px;background:rgba(255,255,255,.07);border-radius:99px;margin-top:9px;overflow:hidden}.quick .bar i{display:block;height:100%;width:50%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:inherit;transition:width .3s}
+.vitals-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.vital{padding:14px;min-height:208px}.vital-head{display:flex;justify-content:space-between;align-items:center}.vital-head b{font-size:14px}.vital-head span{font-size:18px}.gauge{position:relative;width:138px;height:92px;margin:10px auto 0}.gauge svg{width:100%;height:100%;overflow:visible}.gauge .track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:13;stroke-linecap:round}.gauge .fill{fill:none;stroke:url(#g1);stroke-width:13;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:90;transition:stroke-dashoffset .4s ease}.gauge-number{position:absolute;inset:30px 0 auto;text-align:center;font-size:31px;font-weight:850}.gauge-number small{display:block;font-size:9px;color:var(--muted);letter-spacing:.6px}.confidence{font-size:10px;color:var(--muted);text-align:center;margin-top:0}.spark{width:100%;height:45px;margin-top:7px;display:block}
+.wide-card{margin-top:10px;padding:14px}.wide-card h3{margin:0 0 4px;font-size:14px}.wide-card p{margin:0;color:var(--muted);font-size:11px;line-height:1.45}.metric-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.metric{text-align:center;padding:10px 6px;background:rgba(255,255,255,.035);border-radius:12px}.metric b{display:block;font-size:16px}.metric span{font-size:9px;color:var(--muted);text-transform:uppercase}
+.floor-card{padding:12px}.floor{position:relative;aspect-ratio:1.05;background:#08151d;border-radius:15px;border:1px solid var(--line);overflow:hidden}.floor-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(100,220,235,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(100,220,235,.06) 1px,transparent 1px);background-size:10% 10%}.room{position:absolute;border:1px solid rgba(205,245,255,.2);background:rgba(50,216,230,.035);display:flex;align-items:flex-end;padding:6px;color:rgba(224,249,255,.8);font-size:10px;transition:background .25s,box-shadow .25s}.room.active{background:rgba(50,216,230,.2);box-shadow:inset 0 0 30px rgba(50,216,230,.22)}.room.hot{background:rgba(255,93,115,.2);box-shadow:inset 0 0 30px rgba(255,93,115,.22)}
+.person-dot{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--accent2);border:3px solid rgba(255,255,255,.85);box-shadow:0 0 20px var(--accent2);transform:translate(-50%,-50%);transition:left .3s,top .3s;z-index:5}.node-dot{position:absolute;width:12px;height:12px;border-radius:4px;background:var(--accent);transform:translate(-50%,-50%);box-shadow:0 0 15px var(--accent);z-index:4}.node-dot:after{content:"";position:absolute;inset:-9px;border:1px solid rgba(50,216,230,.25);border-radius:50%;animation:ring 2s infinite}@keyframes ring{from{transform:scale(.4);opacity:1}to{transform:scale(1.5);opacity:0}}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:10px 2px 0;color:var(--muted);font-size:10px}.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.event-list{display:flex;flex-direction:column;gap:9px}.event{padding:13px;display:grid;grid-template-columns:42px 1fr auto;gap:11px;align-items:center}.event-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:rgba(50,216,230,.1);font-size:20px}.event.danger .event-icon{background:rgba(255,93,115,.14)}.event h3{font-size:13px;margin:0 0 3px}.event p{font-size:10px;color:var(--muted);margin:0;line-height:1.35}.event time{font-size:9px;color:var(--muted);white-space:nowrap}.empty{padding:40px 22px;text-align:center;color:var(--muted)}.empty .big{font-size:38px;margin-bottom:10px}
+.settings-stack{display:flex;flex-direction:column;gap:10px}.settings-card{padding:14px}.settings-card h3{margin:0 0 12px;font-size:14px}.field{margin-bottom:12px}.field:last-child{margin-bottom:0}.field label{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.55px;margin:0 2px 6px}.input,select{width:100%;height:46px;border-radius:13px;border:1px solid var(--line);background:#071721;color:var(--text);padding:0 12px;outline:none}.input:focus,select:focus{border-color:rgba(50,216,230,.7);box-shadow:0 0 0 3px rgba(50,216,230,.09)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{min-height:46px;border:0;border-radius:13px;background:linear-gradient(135deg,var(--accent),#16aeba);color:#001218;font-weight:850;padding:0 13px;box-shadow:0 9px 20px rgba(50,216,230,.15)}.btn.secondary{background:rgba(255,255,255,.055);color:var(--text);border:1px solid var(--line);box-shadow:none}.btn.danger{background:rgba(255,93,115,.13);color:#ffdbe1;border:1px solid rgba(255,93,115,.26);box-shadow:none}.btn:active{transform:scale(.98)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.055)}.toggle-row:last-child{border-bottom:0}.toggle-copy b{display:block;font-size:12px}.toggle-copy span{display:block;color:var(--muted);font-size:10px;margin-top:3px}.switch{width:48px;height:28px;border-radius:99px;background:#243a46;padding:3px;transition:.2s}.switch i{display:block;width:22px;height:22px;border-radius:50%;background:#d5e7ed;transition:.2s}.switch.on{background:var(--accent)}.switch.on i{transform:translateX(20px);background:#041119}
+.notice{padding:12px 13px;border-radius:14px;background:rgba(255,200,87,.08);border:1px solid rgba(255,200,87,.16);color:#ecd7a7;font-size:10px;line-height:1.45}.notice b{color:#fff1c7}
+.logbox{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#030b10;border:1px solid var(--line);border-radius:12px;padding:10px;font-size:9px;color:#8eb2bd;max-height:130px;overflow:auto;white-space:pre-wrap}
+nav{padding:0 8px env(safe-area-inset-bottom);display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:rgba(6,16,24,.94);backdrop-filter:blur(18px);z-index:10}.nav-btn{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#6f919e;font-size:9px;font-weight:750}.nav-btn .ico{font-size:20px;line-height:1}.nav-btn.active{color:var(--accent)}.nav-btn.active .ico{filter:drop-shadow(0 0 7px rgba(50,216,230,.5))}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 14px);transform:translate(-50%,18px);background:#142c38;border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-size:11px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s;z-index:50;max-width:88%;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;background:rgba(0,6,10,.72);backdrop-filter:blur(8px);display:none;align-items:flex-end;z-index:40}.modal.open{display:flex}.sheet{width:100%;max-height:82vh;overflow:auto;background:#0b1d27;border:1px solid var(--line);border-radius:24px 24px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -20px 50px rgba(0,0,0,.4)}.sheet-handle{width:42px;height:4px;border-radius:99px;background:#35505d;margin:0 auto 14px}.sheet h2{font-size:18px;margin:0 0 10px}.scenario-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.scenario{padding:14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line);text-align:left}.scenario b{display:block;font-size:12px}.scenario span{display:block;font-size:9px;color:var(--muted);margin-top:3px}.scenario.active{border-color:var(--accent);background:rgba(50,216,230,.09)}
+@media(min-width:720px){.view{max-width:760px;left:50%;transform:translateX(-50%);width:100%}.vitals-grid{gap:14px}.quick-grid{grid-template-columns:repeat(4,1fr)}nav{padding-left:max(8px,calc((100vw - 760px)/2));padding-right:max(8px,calc((100vw - 760px)/2))}}
+@media(orientation:landscape) and (max-height:600px){:root{--header-h:52px;--nav-h:58px}.live-stage{height:calc(100vh - 150px);min-height:250px}.quick-grid{display:none}.nav-btn{flex-direction:row;font-size:9px}.nav-btn .ico{font-size:16px}.view{padding-top:8px}}
+
+/* Phone-sensor mode */
+.sensor-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.sensor-chip{padding:10px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.sensor-chip b{display:block;font-size:11px}.sensor-chip span{display:block;margin-top:3px;color:var(--muted);font-size:9px}
+.sensor-chip.ok{border-color:rgba(69,227,139,.28)}.sensor-chip.ok b{color:var(--good)}
+.sensor-chip.warn{border-color:rgba(255,200,87,.3)}.sensor-chip.warn b{color:var(--warn)}
+.sensor-chip.bad{border-color:rgba(255,93,115,.28)}.sensor-chip.bad b{color:var(--danger)}
+.range{width:100%;accent-color:var(--accent)}
+.sensor-readout{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.sensor-readout div{text-align:center;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,.03)}
+.sensor-readout b{display:block;font-size:13px}.sensor-readout span{display:block;color:var(--muted);font-size:8px;text-transform:uppercase;margin-top:2px}
+.sensor-active-banner{display:none;margin-top:10px;padding:9px 11px;border-radius:12px;background:rgba(69,227,139,.08);border:1px solid rgba(69,227,139,.25);font-size:10px;color:#bfffd8}
+.sensor-active-banner.show{display:block}
+#sensorVideo{position:fixed;left:-320px;bottom:0;width:240px;height:180px;opacity:.001;pointer-events:none;z-index:-1;background:#000}
+#sensorPreview{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:13px;background:#02070b;border:1px solid var(--line);display:none;margin-top:10px}
+#sensorPreview.show{display:block}
+.mic-live-meter{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:10px;display:none}.mic-live-meter.show{display:block}.mic-live-meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .12s}
+#sensorWorkCanvas{display:none}
+.phone-mode .stage-badge{color:var(--good)}
+@media(max-width:380px){.sensor-readout{grid-template-columns:repeat(2,1fr)}}
+
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="logo">π</div>
+  <div class="brand"><b>RuView Mobile</b><small id="subtitle">WiFi spatial sensing companion</small></div>
+  <div class="status-pill simulated" id="statusPill"><span class="dot"></span><span id="statusText">Demo</span></div>
+</header>
+<main>
+  <section class="view active" id="view-live">
+    <div class="live-stage">
+      <canvas id="scene"></canvas>
+      <div class="stage-top"><div class="stage-badge" id="modeBadge">SIMULATED SIGNAL</div><div class="fps"><span id="fps">60</span> FPS</div></div>
+      <div class="floating-controls">
+        <button class="icon-btn" id="recenterBtn" aria-label="Recenter view">⌾</button>
+        <button class="icon-btn" id="scenarioBtn" aria-label="Choose scenario">◫</button>
+        <button class="icon-btn" id="pauseBtn" aria-label="Pause">Ⅱ</button>
+      </div>
+      <div class="hud">
+        <div class="hud-item"><b id="hudPersons">1</b><span id="hudPersonsLabel">Persons</span></div>
+        <div class="hud-item"><b id="hudRssi">-52</b><span id="hudRssiLabel">RSSI dBm</span></div>
+        <div class="hud-item"><b id="hudConfidence">91%</b><span id="hudConfidenceLabel">Confidence</span></div>
+        <div class="hud-item"><b id="hudMotion">Still</b><span id="hudMotionLabel">Motion</span></div>
+      </div>
+    </div>
+    <div class="quick-grid">
+      <div class="quick card"><div class="label" id="qSignalLabel">Signal Quality</div><div class="value" id="qSignal">Good</div><div class="bar"><i id="signalBar" style="width:78%"></i></div></div>
+      <div class="quick card"><div class="label" id="qPresenceLabel">Presence</div><div class="value" id="qPresence">Detected</div><div class="bar"><i id="presenceBar" style="width:91%"></i></div></div>
+      <div class="quick card"><div class="label" id="qBreathLabel">Breathing</div><div class="value"><span id="qBreath">15.2</span> <small id="qBreathUnit" style="font-size:10px;color:var(--muted)">BPM</small></div></div>
+      <div class="quick card"><div class="label" id="qHeartLabel">Heart</div><div class="value"><span id="qHeart">72</span> <small id="qHeartUnit" style="font-size:10px;color:var(--muted)">BPM</small></div></div>
+    </div>
+  </section>
+
+  <section class="view" id="view-vitals">
+    <div class="section-title"><div><h1>Vital Signs</h1><p>Contactless estimates from the RuView stream</p></div><div class="mini" id="vitalAge">Live</div></div>
+    <div class="vitals-grid">
+      <div class="vital card">
+        <div class="vital-head"><b id="heartTitle">Heart Rate</b><span id="heartIcon">♡</span></div>
+        <div class="gauge">
+          <svg viewBox="0 0 150 100"><defs><linearGradient id="g1"><stop offset="0" stop-color="#32d8e6"/><stop offset="1" stop-color="#65f2b9"/></linearGradient></defs><path class="track" d="M20 82 A58 58 0 0 1 130 82"/><path class="fill" id="heartGauge" d="M20 82 A58 58 0 0 1 130 82"/></svg>
+          <div class="gauge-number"><span id="heartValue">72</span><small id="heartUnit">BPM</small></div>
+        </div>
+        <div class="confidence"><span id="heartConf">90</span>% confidence</div>
+        <canvas class="spark" id="heartSpark"></canvas>
+      </div>
+      <div class="vital card">
+        <div class="vital-head"><b id="breathTitle">Respiration</b><span id="breathIcon">☼</span></div>
+        <div class="gauge">
+          <svg viewBox="0 0 150 100"><path class="track" d="M20 82 A58 58 0 0 1 130 82"/><path class="fill" id="breathGauge" d="M20 82 A58 58 0 0 1 130 82"/></svg>
+          <div class="gauge-number"><span id="breathValue">15.2</span><small id="breathUnit">BREATHS/MIN</small></div>
+        </div>
+        <div class="confidence"><span id="breathConf">92</span>% confidence</div>
+        <canvas class="spark" id="breathSpark"></canvas>
+      </div>
+    </div>
+    <div class="wide-card card">
+      <h3 id="assessmentTitle">Signal Assessment</h3><p id="assessmentText">These are signal-derived estimates, not medical diagnoses. Movement, sensor placement, multipath interference, and limited CSI coverage can reduce accuracy.</p>
+      <div class="metric-row">
+        <div class="metric"><b id="varianceValue">0.18</b><span id="varianceLabel">Variance</span></div>
+        <div class="metric"><b id="motionPower">0.22</b><span id="motionPowerLabel">Motion Power</span></div>
+        <div class="metric"><b id="breathPower">0.61</b><span id="breathPowerLabel">Breath Power</span></div>
+      </div>
+    </div>
+    <div class="wide-card card">
+      <h3>60-Second Trend</h3><p id="trendText">Stable respiration and heart-rate proxy. No abrupt signal changes detected.</p>
+    </div>
+  </section>
+
+  <section class="view" id="view-zones">
+    <div class="section-title"><div><h1>Zones</h1><p>Estimated occupancy and sensor coverage</p></div><div class="mini"><span id="zoneCount">1</span> occupied</div></div>
+    <div class="floor-card card">
+      <div class="floor" id="floor">
+        <div class="floor-grid"></div>
+        <div class="room" data-zone="Living" style="left:3%;top:3%;width:58%;height:46%">Living</div>
+        <div class="room" data-zone="Kitchen" style="left:63%;top:3%;width:34%;height:46%">Kitchen</div>
+        <div class="room" data-zone="Bedroom" style="left:3%;top:51%;width:45%;height:46%">Bedroom</div>
+        <div class="room" data-zone="Hall" style="left:50%;top:51%;width:20%;height:46%">Hall</div>
+        <div class="room" data-zone="Bath" style="left:72%;top:51%;width:25%;height:46%">Bath</div>
+        <div id="zonePeople"></div><div id="zoneNodes"></div>
+      </div>
+      <div class="legend"><span><i style="background:var(--accent2)"></i>Person</span><span><i style="background:var(--accent)"></i>Sensor</span><span><i style="background:rgba(50,216,230,.25)"></i>Occupied</span></div>
+    </div>
+    <div class="wide-card card"><h3>Current Zone</h3><p id="zoneSummary">One person estimated in the living area. Three simulated sensing nodes have overlapping coverage.</p></div>
+  </section>
+
+  <section class="view" id="view-events">
+    <div class="section-title"><div><h1>Events</h1><p>Presence, motion, and safety alerts</p></div><button class="btn secondary" id="clearEventsBtn" style="min-height:34px;padding:0 11px;font-size:10px">Clear</button></div>
+    <div class="event-list" id="eventList"></div>
+  </section>
+
+  <section class="view" id="view-settings">
+    <div class="section-title"><div><h1>Settings</h1><p>Use local phone sensors or connect to RuView hardware</p></div></div>
+    <div class="settings-stack">
+      <div class="settings-card card" id="phoneSensorCard">
+        <h3>Phone Sensor Detection</h3>
+        <div style="color:var(--muted);font-size:10px;line-height:1.5">Uses the phone camera, microphone, accelerometer, gyroscope, and orientation events. Each permission is requested separately and diagnosed below. Phone sensors are optional when using an external RuView WiFi-CSI radar source.</div>
+        <div class="field" style="margin-top:12px"><label><span>Camera</span><span>Detection view</span></label><select id="cameraFacing"><option value="environment">Rear camera</option><option value="user">Front camera</option></select></div>
+        <div class="field"><label><span>Sensitivity</span><span id="sensitivityValue">45%</span></label><input class="range" id="sensorSensitivity" type="range" min="15" max="90" value="45"></div>
+        <div class="btn-row"><button class="btn" id="enableSensorsBtn">Enable Sensors</button><button class="btn secondary" id="stopSensorsBtn">Stop Sensors</button></div>
+        <div class="sensor-active-banner" id="sensorBanner">● Local processing active. Camera and microphone data remain on this phone.</div>
+        <div class="sensor-grid">
+          <div class="sensor-chip" id="cameraChip"><b>Camera</b><span>Not started</span></div>
+          <div class="sensor-chip" id="micChip"><b>Microphone</b><span>Not started</span></div>
+          <div class="sensor-chip" id="motionChip"><b>Motion sensors</b><span>Not started</span></div>
+          <div class="sensor-chip" id="faceChip"><b>Face detector</b><span>Checking browser</span></div>
+        </div>
+        <div class="sensor-readout">
+          <div><b id="sensorSceneReadout">0%</b><span>Scene motion</span></div>
+          <div><b id="sensorSoundReadout">0%</b><span>Sound</span></div>
+          <div><b id="sensorPhoneReadout">0%</b><span>Phone motion</span></div>
+          <div><b id="sensorLightReadout">--</b><span>Light proxy</span></div>
+        </div>
+        <div class="field" style="margin-top:12px"><label><span>Permission diagnostics</span><span id="mediaContextBadge">Checking…</span></label><div class="logbox" id="mediaDiagnostics" style="max-height:170px">Checking browser media capabilities…</div></div>
+        <div class="btn-row"><button class="btn secondary" id="testCameraBtn">Start Camera</button><button class="btn secondary" id="testMicBtn">Start Microphone</button></div>
+        <video id="sensorPreview" playsinline muted autoplay></video>
+        <div class="mic-live-meter" id="micLiveMeter"><i id="micLiveFill"></i></div>
+        <div class="btn-row" style="margin-top:9px"><button class="btn secondary" id="capturePhotoBtn">Camera Fallback</button><button class="btn secondary" id="captureAudioBtn">Mic Fallback</button></div>
+        <input type="file" id="photoCaptureInput" accept="image/*" capture="environment" hidden>
+        <input type="file" id="audioCaptureInput" accept="audio/*" capture hidden>
+        <div style="color:var(--muted);font-size:10px;line-height:1.45;margin-top:9px">Fallback buttons can capture a photo or audio clip when continuous live access is blocked. They do not provide continuous detection.</div>
+      </div>
+      <div class="settings-card card">
+        <h3>WiFi Radar Source</h3>
+        <div style="color:var(--muted);font-size:10px;line-height:1.5;margin-bottom:12px">True RuView WiFi radar requires raw Channel State Information from compatible hardware such as an ESP32-S3/C6 or a supported research NIC. This phone acts as the display and connects to the sensing server over WiFi. A browser cannot read raw CSI from the phone WiFi chipset.</div>
+        <div class="field"><label><span>RuView server URL</span><span>Same WiFi/LAN</span></label><input class="input" id="serverUrl" inputmode="url" autocomplete="url" placeholder="http://192.168.1.20:3000"></div>
+        <div class="field"><label><span>WebSocket path</span><span>RuView endpoint</span></label><select id="wsPath"><option value="auto">Auto-detect</option><option value="/api/v1/stream/pose">/api/v1/stream/pose</option><option value="/ws/sensing">/ws/sensing</option></select></div>
+        <div class="btn-row"><button class="btn" id="connectBtn">Connect</button><button class="btn secondary" id="demoBtn">Use Demo</button></div>
+      </div>
+      <div class="settings-card card">
+        <h3>Display & Alerts</h3>
+        <div class="toggle-row" data-toggle="haptics"><div class="toggle-copy"><b>Haptic alerts</b><span>Vibrate on fall or distress events</span></div><div class="switch on" id="hapticsSwitch"><i></i></div></div>
+        <div class="toggle-row" data-toggle="wake"><div class="toggle-copy"><b>Keep screen awake</b><span>Use the browser Screen Wake Lock API</span></div><div class="switch" id="wakeSwitch"><i></i></div></div>
+        <div class="toggle-row" data-toggle="waves"><div class="toggle-copy"><b>Signal animation</b><span>Show RF field waves in the live view</span></div><div class="switch on" id="wavesSwitch"><i></i></div></div>
+      </div>
+      <div class="settings-card card">
+        <h3>Recordings & Data</h3>
+        <div class="btn-row"><button class="btn secondary" id="importBtn">Import JSON/JSONL</button><button class="btn secondary" id="snapshotBtn">Save Snapshot</button></div>
+        <input type="file" id="fileInput" accept=".json,.jsonl,.ndjson,application/json" hidden>
+        <button class="btn secondary" id="exportEventsBtn" style="width:100%;margin-top:9px">Export Event Log CSV</button>
+      </div>
+      <div class="notice"><b>Important:</b> true WiFi radar is available only when this page connects to a RuView CSI sensing server. Android WiFi RTT, where supported by a native app and compatible access points, measures device-to-access-point distance; it is not a substitute for CSI-based human-motion sensing. Phone-sensor mode remains limited to visible scene motion, nearby sound, and movement of the phone.</div>
+      <div class="settings-card card"><h3>Connection Log</h3><div class="logbox" id="logbox">RuView Mobile initialized. Demo mode active.</div></div>
+      <div class="settings-card card"><h3>About</h3><div style="color:var(--muted);font-size:10px;line-height:1.55">Single-file mobile companion for the open-source RuView project. Includes independently requested phone sensors, permission diagnostics, offline demo mode, and external WiFi-CSI server support for the documented RuView sensing-frame fields, <code>/api/v1/stream/pose</code>, and <code>/ws/sensing</code>. Sensor analysis occurs locally in the browser. Data is not transmitted unless you connect to a server URL.</div></div>
+    </div>
+  </section>
+</main>
+<nav>
+  <button class="nav-btn active" data-view="live"><span class="ico">◉</span><span>Live</span></button>
+  <button class="nav-btn" data-view="vitals"><span class="ico">♡</span><span>Vitals</span></button>
+  <button class="nav-btn" data-view="zones"><span class="ico">▦</span><span>Zones</span></button>
+  <button class="nav-btn" data-view="events"><span class="ico">⚑</span><span>Events</span></button>
+  <button class="nav-btn" data-view="settings"><span class="ico">⚙</span><span>Settings</span></button>
+</nav>
+</div>
+<video id="sensorVideo" playsinline muted autoplay></video><canvas id="sensorWorkCanvas" width="80" height="60"></canvas>
+<div class="toast" id="toast"></div>
+<div class="modal" id="scenarioModal"><div class="sheet"><div class="sheet-handle"></div><h2>Demo Scenario</h2><div class="scenario-grid">
+  <button class="scenario active" data-scenario="standing"><b>Standing</b><span>One person, low motion</span></button>
+  <button class="scenario" data-scenario="walking"><b>Walking</b><span>Active lateral movement</span></button>
+  <button class="scenario" data-scenario="sitting"><b>Sitting</b><span>Stable seated posture</span></button>
+  <button class="scenario" data-scenario="two"><b>Two People</b><span>Multi-person occupancy</span></button>
+  <button class="scenario" data-scenario="empty"><b>Empty Room</b><span>No presence detected</span></button>
+  <button class="scenario" data-scenario="fall"><b>Fall Event</b><span>Triggers a safety alert</span></button>
+</div><button class="btn secondary" id="closeScenario" style="width:100%;margin-top:12px">Close</button></div></div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const state={
+  mode:'simulated', status:'simulated', frame:null, paused:false, scenario:'standing',
+  socket:null,reconnectTimer:null,reconnectAttempt:0,autoPathIndex:0,lastFrameAt:0,
+  settings:{serverUrl:'',wsPath:'auto',haptics:true,wake:false,waves:true,cameraFacing:'environment',sensorSensitivity:45},
+  history:{heart:[],breath:[],rssi:[]},events:[],logs:[],
+  camera:{yaw:-.2,pitch:.05,zoom:1},touch:{points:new Map(),lastDist:0,lastX:0},
+  replay:{frames:[],index:0,timer:null},wakeLock:null,fallCooldown:0,
+  fps:{frames:0,last:performance.now(),value:60},t:0,
+  sensors:{active:false,stream:null,audioCtx:null,analyser:null,audioData:null,timer:null,prevPixels:null,prevLuma:null,
+    cameraMotion:0,sceneMotion:0,audioLevel:0,phoneMotion:0,lightProxy:0,lightChange:0,faces:[],faceDetector:null,
+    faceBusy:false,lastFaceScan:0,presenceUntil:0,motionAvailable:false,orientationAvailable:false,
+    accel:{x:0,y:0,z:0},rotation:{alpha:0,beta:0,gamma:0},freeFallAt:0,fall:false,lastImpactAt:0,
+    historyMotion:[],historyAudio:[],cameraReady:false,micReady:false,lastError:'',cameraStream:null,micStream:null,audioUnlocked:false,mediaErrors:{camera:'',microphone:''}}
+};
+const COCO=['nose','left_eye','right_eye','left_ear','right_ear','left_shoulder','right_shoulder','left_elbow','right_elbow','left_wrist','right_wrist','left_hip','right_hip','left_knee','right_knee','left_ankle','right_ankle'];
+const BONES=[[0,1],[0,2],[1,3],[2,4],[5,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16]];
+const PATHS=['/api/v1/stream/pose','/ws/sensing'];
+function clamp(v,a,b){return Math.min(b,Math.max(a,v))}
+function num(v,d=0){v=Number(v);return Number.isFinite(v)?v:d}
+function saveSettings(){try{localStorage.setItem('ruview-mobile-settings',JSON.stringify(state.settings));localStorage.setItem('ruview-mobile-events',JSON.stringify(state.events.slice(0,100)))}catch{}}
+function loadSettings(){try{Object.assign(state.settings,JSON.parse(localStorage.getItem('ruview-mobile-settings')||'{}'));state.events=JSON.parse(localStorage.getItem('ruview-mobile-events')||'[]')}catch{} $('#serverUrl').value=state.settings.serverUrl;$('#wsPath').value=state.settings.wsPath;$('#cameraFacing').value=state.settings.cameraFacing||'environment';$('#sensorSensitivity').value=state.settings.sensorSensitivity||45;$('#sensitivityValue').textContent=(state.settings.sensorSensitivity||45)+'%';setSwitch('haptics',state.settings.haptics);setSwitch('wake',state.settings.wake);setSwitch('waves',state.settings.waves);updateSensorCapabilityUI()}
+function log(msg){const line=`${new Date().toLocaleTimeString()}  ${msg}`;state.logs.unshift(line);state.logs=state.logs.slice(0,60);$('#logbox').textContent=state.logs.join('\n')}
+let toastTimer;function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200)}
+function setStatus(status,label){state.status=status;const pill=$('#statusPill');pill.className='status-pill '+status;$('#statusText').textContent=label||({connected:'Live',connecting:'Connecting',simulated:'Demo',disconnected:'Offline'}[status]);$('#modeBadge').textContent=state.mode==='sensors'?'PHONE SENSOR FUSION':status==='connected'?'LIVE RUVIEW STREAM':status==='connecting'?'CONNECTING…':state.mode==='replay'?'RECORDING REPLAY':'SIMULATED SIGNAL';document.body.classList.toggle('phone-mode',state.mode==='sensors')}
+function setSwitch(name,on){state.settings[name]=!!on;const el=$('#'+name+'Switch');if(el)el.classList.toggle('on',!!on)}
+function navTo(name){$$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+name));$$('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===name));if(name==='vitals'){drawSpark($('#heartSpark'),state.mode==='sensors'?state.sensors.historyMotion:state.history.heart);drawSpark($('#breathSpark'),state.mode==='sensors'?state.sensors.historyAudio:state.history.breath)}if(name==='events')renderEvents();if(name==='zones')renderZones(state.frame)}
+$$('.nav-btn').forEach(b=>b.addEventListener('click',()=>navTo(b.dataset.view)));
+$$('.toggle-row').forEach(row=>row.addEventListener('click',async()=>{const n=row.dataset.toggle;setSwitch(n,!state.settings[n]);saveSettings();if(n==='wake')await updateWakeLock();}));
+async function updateWakeLock(){try{if(state.settings.wake&&'wakeLock'in navigator){state.wakeLock=await navigator.wakeLock.request('screen');toast('Screen will stay awake');state.wakeLock.addEventListener('release',()=>{state.wakeLock=null})}else if(state.wakeLock){await state.wakeLock.release();state.wakeLock=null}}catch(e){setSwitch('wake',false);toast('Wake lock not available');log('Wake lock unavailable: '+e.message)}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.settings.wake)updateWakeLock()});
+
+function chip(id,status,text){const el=$(id);if(!el)return;el.classList.remove('ok','warn','bad');if(status)el.classList.add(status);el.querySelector('span').textContent=text}
+function mediaErrorText(err,kind){
+  const name=err?.name||'Error', msg=err?.message||String(err||'Unknown error');
+  const hints={
+    NotAllowedError:'Permission was denied, the browser/app has camera or microphone disabled, or the page is not allowed to request it.',
+    SecurityError:'The browser or embedding app has disabled media capture for this page.',
+    NotFoundError:'No matching camera or microphone was found.',
+    NotReadableError:'The device exists but is busy, disabled, or unavailable to this browser.',
+    OverconstrainedError:'The requested camera settings are unsupported; retrying with basic settings may work.',
+    AbortError:'The browser stopped the request before the device opened.',
+    TypeError:'Media capture is unavailable in this document context, commonly because it is not a permitted secure top-level page.'
+  };
+  return `${kind}: ${name} — ${hints[name]||msg}${msg&&hints[name]?` (${msg})`:''}`;
+}
+async function permissionState(name){
+  try{if(!navigator.permissions?.query)return 'unsupported';return (await navigator.permissions.query({name})).state}catch{return 'unavailable'}
+}
+function isTopLevel(){try{return window.top===window.self}catch{return false}}
+async function updateSensorCapabilityUI(){
+  chip('#faceChip','FaceDetector'in window?'ok':'warn','FaceDetector'in window?'Native API available':'Motion-only fallback');
+  const cameraPerm=await permissionState('camera'), micPerm=await permissionState('microphone');
+  const md=!!navigator.mediaDevices?.getUserMedia, top=isTopLevel(), secure=window.isSecureContext;
+  const protocol=location.protocol||'(unknown)', host=location.host||'(local file/no host)';
+  const policy=document.permissionsPolicy||document.featurePolicy;
+  let cameraPolicy='unknown',micPolicy='unknown';
+  try{cameraPolicy=policy?.allowsFeature?.('camera')===false?'blocked':'allowed'}catch{}
+  try{micPolicy=policy?.allowsFeature?.('microphone')===false?'blocked':'allowed'}catch{}
+  let deviceSummary='not enumerated';
+  try{
+    if(navigator.mediaDevices?.enumerateDevices){
+      const devices=await navigator.mediaDevices.enumerateDevices();
+      const cams=devices.filter(d=>d.kind==='videoinput').length,mics=devices.filter(d=>d.kind==='audioinput').length;
+      deviceSummary=`${cams} camera input(s), ${mics} microphone input(s)`;
+    }
+  }catch(e){deviceSummary='enumeration blocked: '+(e?.name||'error')}
+  const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  const net=conn?`${conn.type||conn.effectiveType||'unknown'}${Number.isFinite(conn.rtt)?`, RTT ${conn.rtt} ms`:''}`:'not exposed';
+  const lines=[
+    `URL: ${location.href.slice(0,180)}`,
+    `Protocol: ${protocol}  Host: ${host}`,
+    `Secure context: ${secure?'yes':'NO'}  Top-level page: ${top?'yes':'NO'}`,
+    `getUserMedia available: ${md?'yes':'NO'}`,
+    `Permissions policy — camera: ${cameraPolicy}, microphone: ${micPolicy}`,
+    `Camera permission: ${cameraPerm}  Microphone permission: ${micPerm}`,
+    `Detected devices: ${deviceSummary}`,
+    `Audio engine: ${state.sensors.audioCtx?.state||'not started'}`,
+    `Browser: ${navigator.userAgent.slice(0,145)}`,
+    `Browser network info: ${net}`,
+    `WiFi CSI/RSSI access from JavaScript: unavailable`
+  ];
+  if(protocol==='content:'||protocol==='blob:'||protocol==='data:')lines.push('BLOCKER: this preview has no usable web origin. Download it and open from Chrome, or host it over HTTPS.');
+  if(!secure)lines.push('BLOCKER: camera and microphone require HTTPS, localhost, or a browser-supported file origin.');
+  if(!top)lines.push('BLOCKER: the page is embedded. Open directly in Chrome/Safari, not inside ChatGPT or a file-preview window.');
+  if(cameraPolicy==='blocked'||micPolicy==='blocked')lines.push('BLOCKER: the parent app or server Permissions-Policy forbids camera/microphone. HTML code cannot override it.');
+  if(!md)lines.push('BLOCKER: this browser/WebView does not expose camera and microphone capture to this page.');
+  if(protocol==='file:')lines.push('Note: file:// can be treated as secure, but Android file viewers and embedded WebViews often still deny live capture. HTTPS is the reliable option.');
+  if(state.sensors.mediaErrors.camera)lines.push(state.sensors.mediaErrors.camera);
+  if(state.sensors.mediaErrors.microphone)lines.push(state.sensors.mediaErrors.microphone);
+  const box=$('#mediaDiagnostics');if(box)box.textContent=lines.join('\n');
+  const ready=secure&&top&&md&&cameraPolicy!=='blocked'&&micPolicy!=='blocked';
+  const badge=$('#mediaContextBadge');if(badge){badge.textContent=ready?'Ready':'Restricted';badge.style.color=ready?'var(--good)':'var(--warn)'}
+}
+
+async function requestMotionPermission(){
+  let granted=true;
+  try{if(typeof DeviceMotionEvent!=='undefined'&&typeof DeviceMotionEvent.requestPermission==='function')granted=(await DeviceMotionEvent.requestPermission())==='granted'}catch(e){granted=false;log('Motion permission: '+e.message)}
+  try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function')await DeviceOrientationEvent.requestPermission()}catch(e){log('Orientation permission: '+e.message)}
+  return granted;
+}
+function onDeviceMotion(e){
+  const s=state.sensors,a=e.acceleration||{x:0,y:0,z:0},g=e.accelerationIncludingGravity||a;
+  const ax=num(a.x),ay=num(a.y),az=num(a.z),movement=Math.sqrt(ax*ax+ay*ay+az*az);
+  s.phoneMotion=s.phoneMotion*.82+clamp(movement/7,0,1)*.18;s.accel={x:ax,y:ay,z:az};s.motionAvailable=true;
+  const gx=num(g.x),gy=num(g.y),gz=num(g.z),gm=Math.sqrt(gx*gx+gy*gy+gz*gz),now=Date.now();
+  if(gm<3)s.freeFallAt=now;
+  if(s.freeFallAt&&now-s.freeFallAt<1400&&gm>18&&now-s.lastImpactAt>5000){s.fall=true;s.lastImpactAt=now;s.freeFallAt=0}
+}
+function onDeviceOrientation(e){state.sensors.rotation={alpha:num(e.alpha),beta:num(e.beta),gamma:num(e.gamma)};state.sensors.orientationAvailable=true}
+async function waitForVideoReady(video,timeout=5000){
+  if(video.readyState>=2&&video.videoWidth)return;
+  await new Promise((resolve,reject)=>{let done=false;const finish=(ok)=>{if(done)return;done=true;clearTimeout(timer);video.removeEventListener('loadedmetadata',onReady);video.removeEventListener('canplay',onReady);ok?resolve():reject(new Error('Camera opened but no video frames arrived'))};const onReady=()=>finish(true);const timer=setTimeout(()=>finish(false),timeout);video.addEventListener('loadedmetadata',onReady,{once:true});video.addEventListener('canplay',onReady,{once:true})})
+}
+async function requestCameraOnly(showToast=false){
+  const s=state.sensors;state.settings.cameraFacing=$('#cameraFacing')?.value||state.settings.cameraFacing;
+  if(!navigator.mediaDevices?.getUserMedia)throw new TypeError('navigator.mediaDevices.getUserMedia is unavailable');
+  if(s.cameraStream)s.cameraStream.getTracks().forEach(t=>t.stop());
+  let stream;
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:state.settings.cameraFacing},width:{ideal:640},height:{ideal:480},frameRate:{ideal:15,max:30}},audio:false});
+  }catch(first){
+    log(`Camera preferred constraints failed (${first?.name||'error'}); retrying with video:true`);
+    stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+  }
+  s.cameraStream=stream;
+  const track=stream.getVideoTracks()[0];
+  s.cameraReady=!!track&&track.readyState==='live';
+  if(track)track.addEventListener('ended',()=>{s.cameraReady=false;chip('#cameraChip','bad','Camera track ended')},{once:true});
+  const video=$('#sensorVideo'),preview=$('#sensorPreview');
+  for(const el of [video,preview]){
+    if(!el)continue;
+    el.muted=true;el.autoplay=true;el.playsInline=true;el.setAttribute('playsinline','');el.srcObject=stream;
+    try{const playResult=el.play();if(playResult?.catch)playResult.catch(err=>log(`Camera preview play deferred: ${err?.name||err}`))}catch(err){log('Camera preview play deferred: '+(err?.message||err))}
+  }
+  try{await waitForVideoReady(video,8000)}catch(err){log(err.message+'; camera permission was still granted and playback will retry on the next tap.')}
+  if(preview)preview.classList.add('show');
+  chip('#cameraChip',s.cameraReady?'ok':'warn',s.cameraReady?'Camera permission granted':'Camera track did not become live');
+  s.mediaErrors.camera='';if(showToast)toast('Camera permission granted');await updateSensorCapabilityUI();return stream;
+}
+async function ensureAudioContext(){
+  const s=state.sensors,AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw new Error('Web Audio unavailable');
+  if(!s.audioCtx||s.audioCtx.state==='closed')s.audioCtx=new AC({latencyHint:'interactive'});
+  try{if(s.audioCtx.state==='suspended')await s.audioCtx.resume()}catch(e){log('Audio resume deferred until the next tap: '+(e?.message||e))}
+  s.audioUnlocked=s.audioCtx.state==='running';return s.audioCtx;
+}
+async function requestMicrophoneOnly(showToast=false){
+  const s=state.sensors;if(!navigator.mediaDevices?.getUserMedia)throw new TypeError('navigator.mediaDevices.getUserMedia is unavailable');
+  const ctx=await ensureAudioContext();
+  if(s.micStream)s.micStream.getTracks().forEach(t=>t.stop());
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:false,audio:{echoCancellation:{ideal:false},noiseSuppression:{ideal:false},autoGainControl:{ideal:false}}})}
+  catch(first){log(`Microphone preferred constraints failed (${first?.name||'error'}); retrying with audio:true`);stream=await navigator.mediaDevices.getUserMedia({video:false,audio:true})}
+  s.micStream=stream;await setupAudio(stream,ctx);s.mediaErrors.microphone='';if(showToast)toast(s.audioCtx?.state==='running'?'Microphone enabled':'Microphone granted — tap the screen once to start the meter');await updateSensorCapabilityUI();return stream;
+}
+async function enablePhoneSensors(){
+  stopPhoneSensors(false);disconnect(false);state.mode='sensors';state.paused=false;setStatus('connecting','Sensors');$('#subtitle').textContent='Requesting phone sensor permissions…';
+  await updateSensorCapabilityUI();
+  const motionGranted=await requestMotionPermission();
+  if(motionGranted){window.addEventListener('devicemotion',onDeviceMotion);window.addEventListener('deviceorientation',onDeviceOrientation);chip('#motionChip','ok','Accelerometer and orientation enabled')}else chip('#motionChip','warn','Permission unavailable');
+  const s=state.sensors;s.active=true;s.motionAvailable=motionGranted;state.settings.cameraFacing=$('#cameraFacing').value;state.settings.sensorSensitivity=num($('#sensorSensitivity').value,45);saveSettings();
+  try{await requestCameraOnly(false)}catch(e){s.cameraReady=false;s.mediaErrors.camera=mediaErrorText(e,'Camera');chip('#cameraChip','bad',e?.name||'Camera unavailable');log(s.mediaErrors.camera)}
+  try{await requestMicrophoneOnly(false)}catch(e){s.micReady=false;s.mediaErrors.microphone=mediaErrorText(e,'Microphone');chip('#micChip','bad',e?.name||'Microphone unavailable');log(s.mediaErrors.microphone)}
+  try{if('FaceDetector'in window)s.faceDetector=new FaceDetector({fastMode:true,maxDetectedFaces:5})}catch(e){log('FaceDetector unavailable: '+e.message)}
+  chip('#faceChip',s.faceDetector?'ok':'warn',s.faceDetector?'Native face detection active':'Scene-motion fallback');
+  s.timer=setInterval(sensorTick,250);$('#sensorBanner').classList.add('show');
+  const activeSources=(s.cameraReady?1:0)+(s.micReady?1:0)+(s.motionAvailable?1:0);
+  setStatus(activeSources?'connected':'disconnected',activeSources?'Phone':'Blocked');$('#subtitle').textContent=activeSources?'Local phone sensors • data stays on device':'Media access blocked • see diagnostics';
+  log(`Phone sensor mode started with ${activeSources}/3 sensor groups`);toast(activeSources?'Phone sensors enabled':'No sensors enabled — see diagnostics');sensorTick();await updateSensorCapabilityUI();
+}
+async function setupAudio(stream,ctx=state.sensors.audioCtx){
+  const s=state.sensors;
+  try{
+    ctx=ctx||await ensureAudioContext();
+    if(s.analyser)try{s.analyser.disconnect()}catch{}
+    const analyser=ctx.createAnalyser();analyser.fftSize=1024;analyser.smoothingTimeConstant=.65;
+    const source=ctx.createMediaStreamSource(stream);source.connect(analyser);
+    s.audioCtx=ctx;s.audioSource=source;s.analyser=analyser;s.audioData=new Uint8Array(analyser.fftSize);
+    const track=stream.getAudioTracks()[0];s.micReady=!!track&&track.readyState==='live';
+    if(track)track.addEventListener('ended',()=>{s.micReady=false;chip('#micChip','bad','Microphone track ended')},{once:true});
+    $('#micLiveMeter')?.classList.add('show');
+    chip('#micChip',s.micReady?'ok':'warn',s.micReady?(ctx.state==='running'?'Microphone analysis active':'Permission granted; tap screen to unlock audio'):'No live audio track');
+  }catch(e){s.micReady=false;chip('#micChip','warn','Audio analysis unavailable');throw e}
+}
+
+function stopPhoneSensors(toDemo=true){
+  const s=state.sensors;if(s.timer)clearInterval(s.timer);s.timer=null;window.removeEventListener('devicemotion',onDeviceMotion);window.removeEventListener('deviceorientation',onDeviceOrientation);
+  if(s.stream){s.stream.getTracks().forEach(t=>t.stop());s.stream=null}if(s.cameraStream){s.cameraStream.getTracks().forEach(t=>t.stop());s.cameraStream=null}if(s.micStream){s.micStream.getTracks().forEach(t=>t.stop());s.micStream=null}if(s.audioSource){try{s.audioSource.disconnect()}catch{}s.audioSource=null}if(s.audioCtx){try{s.audioCtx.close()}catch{}s.audioCtx=null}s.analyser=null;s.audioData=null;s.audioUnlocked=false;
+  const v=$('#sensorVideo');if(v)v.srcObject=null;const pv=$('#sensorPreview');if(pv){pv.srcObject=null;pv.classList.remove('show')}$('#micLiveMeter')?.classList.remove('show');s.active=false;s.cameraReady=false;s.micReady=false;s.faces=[];s.prevPixels=null;$('#sensorBanner')?.classList.remove('show');
+  chip('#cameraChip','', 'Not started');chip('#micChip','', 'Not started');chip('#motionChip','', 'Not started');updateSensorCapabilityUI();
+  if(state.mode==='sensors'&&toDemo)startDemo();
+}
+function analyzeAudio(){const s=state.sensors;if(!s.analyser||!s.audioData)return;s.analyser.getByteTimeDomainData(s.audioData);let sum=0;for(const v of s.audioData){const x=(v-128)/128;sum+=x*x}const rms=Math.sqrt(sum/s.audioData.length);const score=clamp((rms-.008)/.16,0,1);s.audioLevel=s.audioLevel*.7+score*.3;const fill=$('#micLiveFill');if(fill)fill.style.width=Math.round(s.audioLevel*100)+'%'}
+function analyzeCamera(){
+  const s=state.sensors,v=$('#sensorVideo'),c=$('#sensorWorkCanvas');if(!s.cameraReady||!v||v.readyState<2)return;const x=c.getContext('2d',{willReadFrequently:true});
+  try{x.drawImage(v,0,0,c.width,c.height);const data=x.getImageData(0,0,c.width,c.height).data;const pix=new Uint8Array(c.width*c.height);let lum=0,p=0;for(let i=0;i<data.length;i+=4){const y=(data[i]*.299+data[i+1]*.587+data[i+2]*.114)|0;pix[p++]=y;lum+=y}lum/=pix.length;let diff=0;if(s.prevPixels){for(let i=0;i<pix.length;i+=2)diff+=Math.abs(pix[i]-s.prevPixels[i]);diff/=(pix.length/2)}s.prevPixels=pix;s.lightProxy=Math.round(lum);s.lightChange=s.prevLuma==null?0:s.lightChange*.75+clamp(Math.abs(lum-s.prevLuma)/35,0,1)*.25;s.prevLuma=lum;s.cameraMotion=s.cameraMotion*.7+clamp((diff-2)/32,0,1)*.3;const phoneDiscount=1-clamp(s.phoneMotion*1.2,0,.88);s.sceneMotion=s.cameraMotion*phoneDiscount;
+  }catch(e){s.lastError=e.message}}
+async function scanFaces(){const s=state.sensors,v=$('#sensorVideo');if(!s.faceDetector||s.faceBusy||!s.cameraReady||v.readyState<2||Date.now()-s.lastFaceScan<1200)return;s.faceBusy=true;s.lastFaceScan=Date.now();try{s.faces=await s.faceDetector.detect(v)}catch(e){s.faceDetector=null;s.faces=[];chip('#faceChip','warn','Native detector failed; motion fallback')}finally{s.faceBusy=false}}
+function sensorTick(){
+  const s=state.sensors;if(!s.active||state.paused)return;analyzeAudio();analyzeCamera();scanFaces();
+  const sensitivity=clamp(num(state.settings.sensorSensitivity,45)/100,.15,.9),threshold=.56-sensitivity*.38;const faceCount=s.faces.length;const visualEvidence=s.sceneMotion>threshold;const soundEvidence=s.audioLevel>threshold+.05;const combined=visualEvidence||(s.sceneMotion>threshold*.65&&soundEvidence);
+  if(faceCount||combined)s.presenceUntil=Date.now()+(faceCount?8000:4500);const presence=Date.now()<s.presenceUntil;let conf=faceCount?clamp(.82+faceCount*.04,0,1):presence?clamp(.42+s.sceneMotion*.42+s.audioLevel*.18,0,1):clamp(.16+s.sceneMotion*.25+s.audioLevel*.1,0,.45);
+  const activeSources=(s.cameraReady?1:0)+(s.micReady?1:0)+(s.motionAvailable?1:0);const health=activeSources/3;const phoneFall=s.fall;s.fall=false;
+  const raw={timestamp:Date.now(),source:'phone-sensors',nodes:[{node_id:0,rssi_dbm:-100,position:[0,0,0]}],features:{mean_rssi:-100,variance:s.lightChange,motion_band_power:s.sceneMotion,breathing_band_power:0,spectral_entropy:s.audioLevel},classification:{motion_level:s.sceneMotion>threshold?'active':presence?'present_still':'absent',presence,confidence:conf},vital_signs:{heart_rate_bpm:0,breathing_rate_bpm:0,heart_confidence:0,breathing_confidence:0},persons:[],estimated_persons:faceCount,posture:'unknown',signal_quality_score:health,fall_detected:phoneFall,sensor_metrics:{scene_motion:s.sceneMotion,sound_activity:s.audioLevel,phone_motion:s.phoneMotion,light_proxy:s.lightProxy,light_change:s.lightChange,faces:faceCount,orientation:s.rotation,active_sources:activeSources}};
+  pushHistory(s.historyMotion,s.phoneMotion*100);pushHistory(s.historyAudio,s.audioLevel*100);handleFrame(raw,false);s.phoneMotion*=.92;updateSensorReadouts();
+}
+function updateSensorReadouts(){const s=state.sensors;$('#sensorSceneReadout').textContent=Math.round(s.sceneMotion*100)+'%';$('#sensorSoundReadout').textContent=Math.round(s.audioLevel*100)+'%';$('#sensorPhoneReadout').textContent=Math.round(s.phoneMotion*100)+'%';$('#sensorLightReadout').textContent=s.cameraReady?Math.round(s.lightProxy):'--'}
+function setDisplayLabels(sensor){
+  $('#hudPersonsLabel').textContent=sensor?'Faces':'People';$('#hudRssiLabel').textContent=sensor?'Sound':'RSSI dBm';$('#hudConfidenceLabel').textContent='Confidence';$('#hudMotionLabel').textContent=sensor?'Scene':'Motion';
+  $('#qSignalLabel').textContent=sensor?'Sensor Fusion':'Signal Quality';$('#qPresenceLabel').textContent=sensor?'Local Detection':'Presence';$('#qBreathLabel').textContent=sensor?'Scene Motion':'Breathing';$('#qHeartLabel').textContent=sensor?'Sound Activity':'Heart';$('#qBreathUnit').textContent=sensor?'%':'BPM';$('#qHeartUnit').textContent=sensor?'%':'BPM';
+  $('#heartTitle').textContent=sensor?'Phone Motion':'Heart Rate';$('#heartIcon').textContent=sensor?'⌁':'♡';$('#heartUnit').textContent=sensor?'PERCENT':'BPM';$('#breathTitle').textContent=sensor?'Sound Activity':'Respiration';$('#breathIcon').textContent=sensor?'◖':'☼';$('#breathUnit').textContent=sensor?'PERCENT':'BREATHS/MIN';
+  $('#assessmentTitle').textContent=sensor?'Phone Sensor Assessment':'Signal Assessment';$('#assessmentText').textContent=sensor?'Local activity estimate from camera change, supported face detection, nearby sound, and phone movement. This is not through-wall sensing or a medical measurement.':'These are signal-derived estimates, not medical diagnoses. Movement, sensor placement, multipath interference, and limited CSI coverage can reduce accuracy.';
+  $('#varianceLabel').textContent=sensor?'Light Change':'Variance';$('#motionPowerLabel').textContent=sensor?'Scene Motion':'Motion Power';$('#breathPowerLabel').textContent=sensor?'Sound Level':'Breath Power';
+}
+function updatePhoneSensorUI(f){
+  setDisplayLabels(true);const m=f.raw.sensor_metrics||{},faces=num(m.faces),sound=clamp(num(m.sound_activity),0,1),scene=clamp(num(m.scene_motion),0,1),phone=clamp(num(m.phone_motion),0,1),p=f.classification.presence,c=f.classification.confidence;
+  $('#hudPersons').textContent=faces;$('#hudRssi').textContent=Math.round(sound*100)+'%';$('#hudConfidence').textContent=Math.round(c*100)+'%';$('#hudMotion').textContent=scene>.25?'Active':scene>.08?'Low':'Still';
+  $('#qSignal').textContent=(num(m.active_sources)||0)+'/3 sensors';$('#qPresence').textContent=faces?'Face detected':p?'Activity':'Clear';$('#qHeart').textContent=Math.round(sound*100);$('#qBreath').textContent=Math.round(scene*100);$('#presenceBar').style.width=Math.round(c*100)+'%';$('#signalBar').style.width=Math.round(f.signal_quality_score*100)+'%';
+  $('#heartValue').textContent=Math.round(phone*100);$('#breathValue').textContent=Math.round(sound*100);$('#heartConf').textContent=state.sensors.motionAvailable?100:0;$('#breathConf').textContent=state.sensors.micReady?100:0;setGauge($('#heartGauge'),phone*100,0,100);setGauge($('#breathGauge'),sound*100,0,100);
+  $('#varianceValue').textContent=clamp(num(m.light_change),0,1).toFixed(2);$('#motionPower').textContent=scene.toFixed(2);$('#breathPower').textContent=sound.toFixed(2);$('#vitalAge').textContent='Local';
+  $('#trendText').textContent=faces?`${faces} face${faces===1?'':'s'} visible to the camera. Nearby activity is being analyzed locally.`:p?'Recent visible or audible activity is being held briefly to reduce flicker.':'No qualifying activity in the camera view or nearby audio window.';
+  drawSpark($('#heartSpark'),state.sensors.historyMotion);drawSpark($('#breathSpark'),state.sensors.historyAudio);renderZones(f);
+}
+function buildWsUrl(raw,path){let text=(raw||'').trim();if(!text)throw new Error('Enter a server URL');if(/^wss?:\/\//i.test(text)&&/\/[^/]+/.test(text.replace(/^wss?:\/\//i,''))){if(state.settings.wsPath==='auto'&&(/\/ws\/|\/stream\//).test(text))return text}if(!/^[a-z]+:\/\//i.test(text))text='http://'+text;const u=new URL(text);u.protocol=(u.protocol==='https:'||u.protocol==='wss:')?'wss:':'ws:';u.pathname=path;u.search='';u.hash='';return u.toString()}
+function connect(){stopPhoneSensors(false);disconnect(false);const raw=$('#serverUrl').value.trim();state.settings.serverUrl=raw;state.settings.wsPath=$('#wsPath').value;saveSettings();if(!raw){toast('Enter the RuView server address');return}state.mode='live';state.autoPathIndex=0;state.reconnectAttempt=0;openSocket()}
+function openSocket(){clearTimeout(state.reconnectTimer);let path=state.settings.wsPath==='auto'?PATHS[state.autoPathIndex%PATHS.length]:state.settings.wsPath;let url;try{url=buildWsUrl(state.settings.serverUrl,path)}catch(e){toast(e.message);setStatus('disconnected');return}setStatus('connecting');$('#subtitle').textContent=url;log('Connecting to '+url);let opened=false;try{const ws=new WebSocket(url);state.socket=ws;const timeout=setTimeout(()=>{if(ws.readyState===WebSocket.CONNECTING)ws.close()},6500);ws.onopen=()=>{opened=true;clearTimeout(timeout);state.reconnectAttempt=0;setStatus('connected');log('Connected to '+url);toast('Live RuView stream connected')};ws.onmessage=async ev=>{try{let text=typeof ev.data==='string'?ev.data:await ev.data.text();let data=JSON.parse(text);if(data.data&&typeof data.data==='object')data=data.data;handleFrame(data,false)}catch(e){log('Ignored malformed frame: '+e.message)}};ws.onerror=()=>{};ws.onclose=ev=>{clearTimeout(timeout);if(state.socket===ws)state.socket=null;if(state.mode!=='live')return;log(`Socket closed (${ev.code||'no code'})`);if(!opened&&state.settings.wsPath==='auto'&&state.autoPathIndex<PATHS.length-1){state.autoPathIndex++;setTimeout(openSocket,350);return}scheduleReconnect()}}catch(e){log('WebSocket error: '+e.message);scheduleReconnect()}}
+function scheduleReconnect(){if(state.mode!=='live')return;state.reconnectAttempt++;if(state.reconnectAttempt>6){log('Live server unavailable; switching to demo fallback');startDemo(false);toast('Server unavailable — demo fallback');return}const delay=Math.min(16000,1000*Math.pow(2,state.reconnectAttempt-1));setStatus('connecting',`Retry ${state.reconnectAttempt}`);state.reconnectTimer=setTimeout(()=>{if(state.settings.wsPath==='auto')state.autoPathIndex=0;openSocket()},delay)}
+function disconnect(toDemo=true){clearTimeout(state.reconnectTimer);if(state.socket){try{state.socket.onclose=null;state.socket.close(1000,'client disconnect')}catch{}state.socket=null}stopReplay();if(toDemo)startDemo()}
+function startDemo(show=true){stopPhoneSensors(false);state.mode='simulated';state.reconnectAttempt=0;setStatus('simulated');$('#subtitle').textContent='Offline demo • no server required';if(show)toast('Demo mode active');log('Demo mode active')}
+function stopReplay(){if(state.replay.timer)clearInterval(state.replay.timer);state.replay.timer=null;state.replay.frames=[]}
+function normalizeFrame(f){f=f||{};const cls=f.classification||f.classifier||{};const features=f.features||f.feature_set||{};const vit=f.vital_signs||f.vitals||{};const nodes=Array.isArray(f.nodes)?f.nodes:[];let persons=[];
+ if(Array.isArray(f.persons))persons=f.persons.map((p,i)=>({id:p.id??i,confidence:num(p.confidence,cls.confidence||.8),keypoints:normalizeKeypoints(p.keypoints||p.pose_keypoints||[])}));
+ else if(Array.isArray(f.pose_keypoints))persons=[{id:0,confidence:num(cls.confidence,.8),keypoints:normalizeKeypoints(f.pose_keypoints)}];
+ const presence=Boolean(cls.presence??f.presence??persons.length>0??false);const conf=clamp(num(cls.confidence??f.confidence??(persons[0]&&persons[0].confidence),presence ? .75 : .2),0,1);
+ const heart=num(vit.heart_rate_bpm??vit.hr_proxy_bpm??f.heart_rate_bpm??f.heart_rate,0);const breath=num(vit.breathing_rate_bpm??vit.breathing_bpm??f.breathing_rate_bpm??f.breathing,0);
+ return {raw:f,timestamp:num(f.timestamp,Date.now()),nodes,features:{mean_rssi:num(features.mean_rssi??f.rssi_dbm??f.rssi,-70),variance:num(features.variance??f.variance,0),motion_band_power:num(features.motion_band_power??f.motion_power,0),breathing_band_power:num(features.breathing_band_power??f.breath_power,0),spectral_entropy:num(features.spectral_entropy,0)},classification:{presence,confidence:conf,motion_level:String(cls.motion_level??f.motion_level??(presence?'present_still':'absent'))},vital_signs:{heart_rate_bpm:heart,breathing_rate_bpm:breath,heart_confidence:clamp(num(vit.heart_confidence??vit.confidence??conf,conf),0,1),breathing_confidence:clamp(num(vit.breathing_confidence??vit.confidence??conf,conf),0,1)},persons,estimated_persons:Math.max(0,Math.round(num(f.estimated_persons??f.person_count??f.people_count,persons.length||(presence?1:0)))),posture:String(f.posture??cls.posture??''),signal_quality_score:clamp(num(f.signal_quality_score,(conf*.65+Math.max(0,Math.min(1,(100+num(features.mean_rssi,-70))/60))*.35)),0,1),fall:Boolean(f.fall_detected??f.fall??String(f.posture||'').toLowerCase().includes('fall'))}}
+function normalizeKeypoints(arr){if(!Array.isArray(arr))return[];return arr.map((k,i)=>{if(Array.isArray(k))return{name:COCO[i]||String(i),x:num(k[0]),y:num(k[1]),z:num(k[2]),confidence:clamp(num(k[3],1),0,1)};return{name:k.name||COCO[i]||String(i),x:num(k.x),y:num(k.y),z:num(k.z),confidence:clamp(num(k.confidence,1),0,1)}})}
+function handleFrame(raw,isSim){if(state.paused)return;const f=normalizeFrame(raw);state.frame=f;state.lastFrameAt=Date.now();if(raw&&raw.source==='phone-sensors')state.mode='sensors';else state.mode=isSim&&state.mode!=='replay'?'simulated':state.mode;pushHistory(state.history.heart,f.vital_signs.heart_rate_bpm||null);pushHistory(state.history.breath,f.vital_signs.breathing_rate_bpm||null);pushHistory(state.history.rssi,f.features.mean_rssi);detectEvents(f);updateUI(f)}
+function pushHistory(a,v){if(v==null||!Number.isFinite(v)||v===0)return;a.push(v);if(a.length>90)a.shift()}
+function detectEvents(f){const now=Date.now(),phone=f.raw&&f.raw.source==='phone-sensors';if(f.fall&&now>state.fallCooldown){state.fallCooldown=now+10000;addEvent(phone?'Possible phone drop / carried fall':'Fall detected',phone?'The phone sensors observed a free-fall/impact pattern. This does not prove a person fell.':'Possible fall posture or abrupt motion pattern detected. Verify the area immediately.','danger','⚠');if(state.settings.haptics&&navigator.vibrate)navigator.vibrate([250,100,250,100,400])}const prev=state._lastPresence;if(prev!==undefined&&prev!==f.classification.presence)addEvent(f.classification.presence?(phone?'Local activity detected':'Presence detected'):(phone?'Activity cleared':'Area cleared'),f.classification.presence?(phone?'Camera, face, or nearby sound evidence crossed the selected sensitivity threshold.':'A person entered the monitored field.'):(phone?'No qualifying activity is currently detected by the phone sensors.':'No person is currently detected.'),'info',f.classification.presence?'◉':'○');state._lastPresence=f.classification.presence}
+function addEvent(title,desc,type='info',icon='•'){const e={id:Date.now()+Math.random(),title,desc,type,icon,time:Date.now()};state.events.unshift(e);state.events=state.events.slice(0,100);saveSettings();if($('#view-events').classList.contains('active'))renderEvents();toast(title)}
+function renderEvents(){const root=$('#eventList');if(!state.events.length){root.innerHTML='<div class="empty card"><div class="big">◎</div>No events recorded yet.<br>Presence changes and fall alerts will appear here.</div>';return}root.innerHTML=state.events.map(e=>`<div class="event card ${e.type==='danger'?'danger':''}"><div class="event-icon">${escapeHtml(e.icon)}</div><div><h3>${escapeHtml(e.title)}</h3><p>${escapeHtml(e.desc)}</p></div><time>${relativeTime(e.time)}</time></div>`).join('')}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function relativeTime(t){const s=Math.max(0,Math.floor((Date.now()-t)/1000));if(s<5)return'now';if(s<60)return s+'s';if(s<3600)return Math.floor(s/60)+'m';return new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}
+function updateUI(f){if(f.raw&&f.raw.source==='phone-sensors'){updatePhoneSensorUI(f);return}setDisplayLabels(false);const p=f.classification.presence,c=f.classification.confidence,r=f.features.mean_rssi,persons=f.estimated_persons;const motion=motionLabel(f.classification.motion_level);$('#hudPersons').textContent=persons;$('#hudRssi').textContent=Math.round(r);$('#hudConfidence').textContent=Math.round(c*100)+'%';$('#hudMotion').textContent=motion;$('#qPresence').textContent=p?'Detected':'Clear';$('#qHeart').textContent=f.vital_signs.heart_rate_bpm?Math.round(f.vital_signs.heart_rate_bpm):'--';$('#qBreath').textContent=f.vital_signs.breathing_rate_bpm?f.vital_signs.breathing_rate_bpm.toFixed(1):'--';$('#presenceBar').style.width=Math.round(c*100)+'%';const sq=f.signal_quality_score;$('#signalBar').style.width=Math.round(sq*100)+'%';$('#qSignal').textContent=sq>.78?'Excellent':sq>.58?'Good':sq>.35?'Fair':'Weak';
+ $('#heartValue').textContent=f.vital_signs.heart_rate_bpm?Math.round(f.vital_signs.heart_rate_bpm):'--';$('#breathValue').textContent=f.vital_signs.breathing_rate_bpm?f.vital_signs.breathing_rate_bpm.toFixed(1):'--';$('#heartConf').textContent=Math.round(f.vital_signs.heart_confidence*100);$('#breathConf').textContent=Math.round(f.vital_signs.breathing_confidence*100);setGauge($('#heartGauge'),f.vital_signs.heart_rate_bpm,40,120);setGauge($('#breathGauge'),f.vital_signs.breathing_rate_bpm,6,30);$('#varianceValue').textContent=f.features.variance.toFixed(2);$('#motionPower').textContent=f.features.motion_band_power.toFixed(2);$('#breathPower').textContent=f.features.breathing_band_power.toFixed(2);$('#vitalAge').textContent=state.status==='connected'?'Live':state.mode==='replay'?'Replay':'Demo';updateTrend();if($('#view-vitals').classList.contains('active')){drawSpark($('#heartSpark'),state.history.heart);drawSpark($('#breathSpark'),state.history.breath)}if($('#view-zones').classList.contains('active'))renderZones(f)}
+function motionLabel(m){m=String(m).toLowerCase();if(m.includes('active')||m.includes('walk')||m.includes('high'))return'Active';if(m.includes('absent')||m.includes('none'))return'None';return'Still'}
+function setGauge(el,val,min,max){if(!val){el.style.strokeDashoffset=220;return}const pct=clamp((val-min)/(max-min),0,1);el.style.strokeDashoffset=(220-(pct*140)).toFixed(1)}
+function updateTrend(){const h=state.history.heart.slice(-30),b=state.history.breath.slice(-30);if(h.length<5||b.length<5)return;const hr=Math.max(...h)-Math.min(...h),br=Math.max(...b)-Math.min(...b);$('#trendText').textContent=(hr<8&&br<3)?'Stable respiration and heart-rate proxy. No abrupt signal changes detected.':(hr>20||br>8)?'Higher variation detected. Motion or signal interference may be affecting the estimates.':'Moderate variation within the recent signal window.'}
+function drawSpark(canvas,data){const rect=canvas.getBoundingClientRect(),dpr=devicePixelRatio||1;canvas.width=Math.max(1,rect.width*dpr);canvas.height=Math.max(1,rect.height*dpr);const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,rect.width,rect.height);if(data.length<2)return;const a=data.slice(-60),min=Math.min(...a),max=Math.max(...a),range=max-min||1;ctx.beginPath();a.forEach((v,i)=>{const x=i/(a.length-1)*rect.width,y=rect.height-5-(v-min)/range*(rect.height-10);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--accent');ctx.lineWidth=2;ctx.stroke();ctx.lineTo(rect.width,rect.height);ctx.lineTo(0,rect.height);ctx.closePath();const g=ctx.createLinearGradient(0,0,0,rect.height);g.addColorStop(0,'rgba(50,216,230,.2)');g.addColorStop(1,'rgba(50,216,230,0)');ctx.fillStyle=g;ctx.fill()}
+function renderZones(f){if(!f)return;const people=$('#zonePeople'),nodes=$('#zoneNodes');people.innerHTML='';nodes.innerHTML='';if(f.raw&&f.raw.source==='phone-sensors'){$$('.room').forEach(r=>r.classList.remove('active','hot'));const n=document.createElement('div');n.className='node-dot';n.style.left='50%';n.style.top='50%';nodes.appendChild(n);if(f.classification.presence){const d=document.createElement('div');d.className='person-dot';d.style.left='50%';d.style.top='38%';people.appendChild(d)}$('#zoneCount').textContent=f.classification.presence?1:0;$('#zoneSummary').textContent=f.classification.presence?'Activity is detected within the phone camera or microphone field. Room-level position cannot be determined from one phone.':'No qualifying activity detected. The phone covers only its camera view and nearby sound field.';return}let centers=[];if(f.persons.length){centers=f.persons.map((p,i)=>personCenter(p.keypoints,i))}else if(f.classification.presence){centers=[simZonePosition(state.t,0)]}for(let i=centers.length;i<f.estimated_persons;i++)centers.push(simZonePosition(state.t,i));centers.forEach(c=>{const d=document.createElement('div');d.className='person-dot';d.style.left=clamp(c.x,5,95)+'%';d.style.top=clamp(c.y,5,95)+'%';people.appendChild(d)});const ns=f.nodes.length?f.nodes.slice(0,8):[{position:[.08,.1]},{position:[.9,.12]},{position:[.88,.88]}];ns.forEach((n,i)=>{let pos=n.position||[];let x=num(pos[0],i===0 ? .08 : i===1 ? .9 : .88),y=num(pos[1],i===0 ? .1 : i===1 ? .12 : .88);if(Math.abs(x)<=2)x=(x+1)*50;if(Math.abs(y)<=2)y=(y+1)*50;const d=document.createElement('div');d.className='node-dot';d.style.left=clamp(x,3,97)+'%';d.style.top=clamp(y,3,97)+'%';nodes.appendChild(d)});$$('.room').forEach(r=>r.classList.remove('active','hot'));const occupied=new Set;centers.forEach(c=>{let room=roomFor(c.x,c.y);occupied.add(room);const el=$(`.room[data-zone="${room}"]`);if(el)el.classList.add(f.fall?'hot':'active')});$('#zoneCount').textContent=occupied.size;$('#zoneSummary').textContent=centers.length?`${centers.length} ${centers.length===1?'person':'people'} estimated in ${[...occupied].join(' and ')}. ${ns.length} sensing ${ns.length===1?'node has':'nodes have'} overlapping coverage.`:'No presence currently detected in the monitored zones.'}
+function roomFor(x,y){if(y<50)return x<62?'Living':'Kitchen';if(x<49)return'Bedroom';if(x<71)return'Hall';return'Bath'}
+function personCenter(kps,i){if(!kps.length)return simZonePosition(state.t,i);let pts=kps.filter(k=>k.confidence>.15);if(!pts.length)return simZonePosition(state.t,i);let xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);let x=xs.reduce((a,b)=>a+b,0)/xs.length,y=ys.reduce((a,b)=>a+b,0)/ys.length;if(Math.max(...xs)-Math.min(...xs)>4){x=(x-Math.min(...xs))/(Math.max(...xs)-Math.min(...xs))*70+15;y=(y-Math.min(...ys))/(Math.max(...ys)-Math.min(...ys))*70+15}else{x=clamp((x+1)*50,5,95);y=clamp((y+1)*50,5,95)}return{x,y}}
+function simZonePosition(t,i){return{x:35+Math.sin(t*.35+i*2.1)*18+i*24,y:30+Math.cos(t*.25+i)*14+i*18}}
+function makePose(kind,t,offset=0){const sway=Math.sin(t*1.5+offset)*.06,walk=Math.sin(t*3+offset),x=offset?offset:.0;let pts=[[x+sway,-.92,0],[x-.04+sway,-.95,0],[x+.04+sway,-.95,0],[x-.09+sway,-.92,0],[x+.09+sway,-.92,0],[x-.18+sway,-.64,0],[x+.18+sway,-.64,0],[x-.28+sway,-.35,0],[x+.28+sway,-.35,0],[x-.31+sway,-.05,0],[x+.31+sway,-.05,0],[x-.12+sway,-.12,0],[x+.12+sway,-.12,0],[x-.14+sway,.34,0],[x+.14+sway,.34,0],[x-.15+sway,.82,0],[x+.15+sway,.82,0]];
+ if(kind==='walking'){pts[13][0]-=.18*walk;pts[14][0]+=.18*walk;pts[15][0]-=.26*walk;pts[16][0]+=.26*walk;pts[7][0]+=.18*walk;pts[8][0]-=.18*walk;pts[9][0]+=.22*walk;pts[10][0]-=.22*walk}
+ if(kind==='sitting'){for(const i of [11,12])pts[i][1]=-.05;for(const i of [13,14]){pts[i][1]=.2;pts[i][0]+=(i===13?-1:1)*.3}for(const i of [15,16]){pts[i][1]=.55;pts[i][0]+=(i===15?-1:1)*.3}}
+ if(kind==='fall'){pts=pts.map((p,i)=>[-.55+p[1]*.65,.55+p[0]*.35,p[2]])}
+ return pts.map((p,i)=>({name:COCO[i],x:p[0],y:p[1],z:p[2],confidence:.92}))}
+function simulatedRaw(){state.t+=.05;const t=state.t,s=state.scenario;let presence=s!=='empty',count=s==='two'?2:(presence?1:0),heart=72+Math.sin(t*.7)*3+(s==='walking'?10:0),breath=15+Math.sin(t*.5)*1.2+(s==='walking'?5:0),rssi=-53+Math.sin(t*.9)*3,active=s==='walking'||s==='fall';let persons=[];if(presence){persons.push({id:0,confidence:.91,keypoints:makePose(s==='two'?'walking':s,t,s==='two'?-.33:0)});if(s==='two')persons.push({id:1,confidence:.86,keypoints:makePose('standing',t+1.8,.38)})}return{timestamp:Date.now(),source:'simulated',nodes:[{node_id:1,rssi_dbm:rssi,position:[-.9,-.8,0]},{node_id:2,rssi_dbm:rssi-2,position:[.9,-.8,0]},{node_id:3,rssi_dbm:rssi+1,position:[.8,.8,0]}],features:{mean_rssi:rssi,variance:presence ? .18+Math.abs(Math.sin(t))*0.08:.03,motion_band_power:active ? .72 : .16,breathing_band_power:presence ? .62 : .02,spectral_entropy:.31},classification:{motion_level:presence?(active?'active':'present_still'):'absent',presence,confidence:presence ? .91 : .95},vital_signs:{heart_rate_bpm:presence ? heart : 0,breathing_rate_bpm:presence ? breath : 0,heart_confidence:.88,breathing_confidence:.91},persons,estimated_persons:count,posture:s,signal_quality_score:.82,fall_detected:s==='fall'}}
+const canvas=$('#scene'),ctx=canvas.getContext('2d');let cw=0,ch=0,dpr=1;
+function resizeScene(){const r=canvas.getBoundingClientRect();dpr=Math.min(2,devicePixelRatio||1);canvas.width=Math.max(1,r.width*dpr);canvas.height=Math.max(1,r.height*dpr);cw=r.width;ch=r.height;ctx.setTransform(dpr,0,0,dpr,0,0)}
+new ResizeObserver(resizeScene).observe(canvas);
+function project(p){let x=p.x,y=p.y,z=p.z||0;const cy=Math.cos(state.camera.yaw),sy=Math.sin(state.camera.yaw);let xr=x*cy-z*sy,zr=x*sy+z*cy;const cp=Math.cos(state.camera.pitch),sp=Math.sin(state.camera.pitch);let yr=y*cp-zr*sp,z2=y*sp+zr*cp;const scale=Math.min(cw,ch)*.31*state.camera.zoom/(1+z2*.18);return{x:cw/2+xr*scale,y:ch*.5+yr*scale,depth:z2,scale}}
+function drawScene(now){state.fps.frames++;if(now-state.fps.last>700){state.fps.value=Math.round(state.fps.frames*1000/(now-state.fps.last));state.fps.frames=0;state.fps.last=now;$('#fps').textContent=state.fps.value}ctx.clearRect(0,0,cw,ch);if(state.mode==='sensors'){drawPhoneSensorScene(now);requestAnimationFrame(drawScene);return}const bg=ctx.createRadialGradient(cw*.5,ch*.42,10,cw*.5,ch*.45,Math.max(cw,ch)*.7);bg.addColorStop(0,'#0a2734');bg.addColorStop(.5,'#06131b');bg.addColorStop(1,'#02070b');ctx.fillStyle=bg;ctx.fillRect(0,0,cw,ch);drawRoom();const f=state.frame;if(f){if(state.settings.waves)drawSignalWaves(now,f);drawNodes(f);let persons=f.persons;if(!persons.length&&f.classification.presence&&state.mode==='simulated')persons=[{keypoints:makePose('standing',state.t)}];persons.forEach((p,i)=>drawSkeleton(p.keypoints,i,f.fall));if(!f.classification.presence)drawEmpty()}requestAnimationFrame(drawScene)}
+function drawPhoneSensorScene(now){const s=state.sensors,v=$('#sensorVideo');ctx.fillStyle='#02070b';ctx.fillRect(0,0,cw,ch);if(s.cameraReady&&v.readyState>=2){const vr=v.videoWidth/v.videoHeight||1.333,cr=cw/ch;let sx=0,sy=0,sw=v.videoWidth,sh=v.videoHeight;if(vr>cr){sw=v.videoHeight*cr;sx=(v.videoWidth-sw)/2}else{sh=v.videoWidth/cr;sy=(v.videoHeight-sh)/2}ctx.save();if(state.settings.cameraFacing==='user'){ctx.translate(cw,0);ctx.scale(-1,1)}ctx.drawImage(v,sx,sy,sw,sh,0,0,cw,ch);ctx.restore();ctx.fillStyle='rgba(2,9,13,.24)';ctx.fillRect(0,0,cw,ch)}else{const g=ctx.createRadialGradient(cw*.5,ch*.45,10,cw*.5,ch*.45,Math.max(cw,ch)*.7);g.addColorStop(0,'#12303b');g.addColorStop(1,'#02070b');ctx.fillStyle=g;ctx.fillRect(0,0,cw,ch)}
+ctx.save();ctx.strokeStyle=state.frame&&state.frame.classification.presence?'rgba(101,242,185,.85)':'rgba(50,216,230,.55)';ctx.lineWidth=2;const r=Math.min(cw,ch)*(.13+s.sceneMotion*.05);ctx.beginPath();ctx.arc(cw/2,ch*.46,r,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(cw/2-r-18,ch*.46);ctx.lineTo(cw/2-r+4,ch*.46);ctx.moveTo(cw/2+r-4,ch*.46);ctx.lineTo(cw/2+r+18,ch*.46);ctx.stroke();ctx.restore();
+if(s.faces.length&&v.videoWidth){ctx.save();ctx.lineWidth=3;ctx.strokeStyle='#65f2b9';ctx.shadowColor='#65f2b9';ctx.shadowBlur=12;for(const face of s.faces){const b=face.boundingBox||face;let x=b.x/v.videoWidth*cw,y=b.y/v.videoHeight*ch,w=b.width/v.videoWidth*cw,h=b.height/v.videoHeight*ch;if(state.settings.cameraFacing==='user')x=cw-x-w;ctx.strokeRect(x,y,w,h)}ctx.restore()}
+ctx.save();ctx.fillStyle='rgba(3,10,16,.72)';ctx.fillRect(12,ch-77,cw-24,52);ctx.font='700 11px system-ui';ctx.fillStyle='#eefbff';ctx.fillText(s.faces.length?`${s.faces.length} FACE${s.faces.length===1?'':'S'} VISIBLE`:(state.frame&&state.frame.classification.presence?'ACTIVITY DETECTED':'MONITORING LOCAL FIELD'),24,ch-55);ctx.font='10px system-ui';ctx.fillStyle='#82a5b3';ctx.fillText(`Scene ${Math.round(s.sceneMotion*100)}%  •  Sound ${Math.round(s.audioLevel*100)}%  •  Phone ${Math.round(s.phoneMotion*100)}%`,24,ch-37);ctx.restore()}
+function drawRoom(){ctx.save();ctx.strokeStyle='rgba(86,208,224,.13)';ctx.lineWidth=1;const floorY=ch*.78;ctx.beginPath();ctx.moveTo(cw*.08,floorY);ctx.lineTo(cw*.92,floorY);ctx.lineTo(cw*.72,ch*.53);ctx.lineTo(cw*.28,ch*.53);ctx.closePath();ctx.stroke();for(let i=1;i<8;i++){const a=i/8,ly=floorY-(floorY-ch*.53)*a;const left=cw*.08+(cw*.28-cw*.08)*a,right=cw*.92-(cw*.92-cw*.72)*a;ctx.beginPath();ctx.moveTo(left,ly);ctx.lineTo(right,ly);ctx.stroke()}for(let i=0;i<=8;i++){const a=i/8;ctx.beginPath();ctx.moveTo(cw*.08+(cw*.84*a),floorY);ctx.lineTo(cw*.28+(cw*.44*a),ch*.53);ctx.stroke()}ctx.strokeStyle='rgba(86,208,224,.09)';ctx.strokeRect(cw*.28,ch*.2,cw*.44,ch*.33);ctx.restore()}
+function drawSignalWaves(now,f){const t=now/1000,quality=f.signal_quality_score;ctx.save();ctx.globalCompositeOperation='lighter';for(let j=0;j<3;j++){for(let i=0;i<4;i++){const phase=(t*.45+j*.21+i*.18)%1;const rad=20+phase*Math.min(cw,ch)*.42;ctx.beginPath();ctx.ellipse(cw*(.18+j*.32),ch*.68,rad,rad*.34,0,0,Math.PI*2);ctx.strokeStyle=`rgba(50,216,230,${(1-phase)*.09*quality})`;ctx.lineWidth=1.2;ctx.stroke()}}ctx.restore()}
+function drawNodes(f){const nodes=f.nodes.length?f.nodes.slice(0,6):[{position:[-.85,.85,0]},{position:[.85,.85,0]},{position:[.8,-.6,0]}];ctx.save();ctx.globalCompositeOperation='lighter';nodes.forEach((n,i)=>{let p=n.position||[Math.cos(i*2.1)*.8,.8,Math.sin(i*2.1)*.3];p={x:clamp(num(p[0]),-1.2,1.2),y:.88,z:clamp(num(p[1]),-1,1)};const q=project(p);ctx.beginPath();ctx.arc(q.x,q.y,5,0,Math.PI*2);ctx.fillStyle='#32d8e6';ctx.shadowColor='#32d8e6';ctx.shadowBlur=14;ctx.fill()});ctx.restore()}
+function normalizePoseForDraw(kps){if(!kps||!kps.length)return[];let xs=kps.map(p=>p.x),ys=kps.map(p=>p.y),maxAbs=Math.max(...xs.map(Math.abs),...ys.map(Math.abs));if(maxAbs<3)return kps;const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),rx=maxX-minX||1,ry=maxY-minY||1;return kps.map(p=>({...p,x:(p.x-minX)/rx*1.1-.55,y:(p.y-minY)/ry*1.8-.9,z:num(p.z)}))}
+function drawSkeleton(raw,index,fall){const kps=normalizePoseForDraw(raw);if(kps.length<5)return;const pts=kps.map(project);ctx.save();ctx.globalCompositeOperation='lighter';const color=fall?'#ff5d73':index?'#65f2b9':'#32d8e6';ctx.lineCap='round';
+ctx.shadowColor=color;ctx.shadowBlur=12;ctx.strokeStyle=color;ctx.lineWidth=Math.max(2.5,Math.min(cw,ch)*.009);
+BONES.forEach(([a,b])=>{if(!pts[a]||!pts[b]||kps[a].confidence<.12||kps[b].confidence<.12)return;ctx.beginPath();ctx.moveTo(pts[a].x,pts[a].y);ctx.lineTo(pts[b].x,pts[b].y);ctx.stroke()});
+pts.forEach((p,i)=>{if(kps[i].confidence<.12)return;ctx.beginPath();ctx.arc(p.x,p.y,Math.max(3,Math.min(cw,ch)*.012),0,Math.PI*2);ctx.fillStyle=i===0?'#ffffff':color;ctx.fill()});
+ctx.globalAlpha=.1;ctx.beginPath();const cx=pts.reduce((a,p)=>a+p.x,0)/pts.length,cy=pts.reduce((a,p)=>a+p.y,0)/pts.length;ctx.arc(cx,cy,Math.min(cw,ch)*.26,0,Math.PI*2);const aura=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.min(cw,ch)*.26);aura.addColorStop(0,color);aura.addColorStop(1,'transparent');ctx.fillStyle=aura;ctx.fill();ctx.restore()}
+function drawEmpty(){ctx.save();ctx.textAlign='center';ctx.fillStyle='rgba(190,225,234,.62)';ctx.font='700 14px system-ui';ctx.fillText('NO PRESENCE DETECTED',cw/2,ch*.43);ctx.font='11px system-ui';ctx.fillStyle='rgba(130,165,179,.55)';ctx.fillText(state.mode==='sensors'?'Monitoring the local camera and sound field':'Monitoring the RuView signal field',cw/2,ch*.43+22);ctx.restore()}
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);state.touch.points.set(e.pointerId,{x:e.clientX,y:e.clientY});state.touch.lastX=e.clientX});
+canvas.addEventListener('pointermove',e=>{if(!state.touch.points.has(e.pointerId))return;state.touch.points.set(e.pointerId,{x:e.clientX,y:e.clientY});const pts=[...state.touch.points.values()];if(pts.length===1){const dx=e.clientX-state.touch.lastX;state.camera.yaw+=dx*.008;state.touch.lastX=e.clientX}else if(pts.length===2){const d=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);if(state.touch.lastDist)state.camera.zoom=clamp(state.camera.zoom*d/state.touch.lastDist,.65,1.7);state.touch.lastDist=d}});
+function endPointer(e){state.touch.points.delete(e.pointerId);state.touch.lastDist=0;if(state.touch.points.size===1)state.touch.lastX=[...state.touch.points.values()][0].x}canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
+$('#recenterBtn').addEventListener('click',()=>{state.camera={yaw:-.2,pitch:.05,zoom:1};toast('View recentered')});
+$('#pauseBtn').addEventListener('click',()=>{state.paused=!state.paused;$('#pauseBtn').textContent=state.paused?'▶':'Ⅱ';toast(state.paused?'Stream paused':'Stream resumed')});
+$('#scenarioBtn').addEventListener('click',()=>$('#scenarioModal').classList.add('open'));$('#closeScenario').addEventListener('click',()=>$('#scenarioModal').classList.remove('open'));$('#scenarioModal').addEventListener('click',e=>{if(e.target===$('#scenarioModal'))$('#scenarioModal').classList.remove('open')});
+$$('.scenario').forEach(b=>b.addEventListener('click',()=>{state.scenario=b.dataset.scenario;$$('.scenario').forEach(x=>x.classList.toggle('active',x===b));if(state.mode!=='simulated')startDemo(false);state.fallCooldown=0;$('#scenarioModal').classList.remove('open');toast(b.querySelector('b').textContent+' scenario')}));
+async function unlockMediaPlayback(){
+  const s=state.sensors;
+  try{if(s.audioCtx?.state==='suspended'){await s.audioCtx.resume();s.audioUnlocked=s.audioCtx.state==='running';if(s.micReady)chip('#micChip','ok',s.audioUnlocked?'Microphone analysis active':'Permission granted; audio still suspended')}}catch{}
+  for(const id of ['#sensorVideo','#sensorPreview']){const v=$(id);if(v?.srcObject&&v.paused)try{await v.play()}catch{}}
+}
+document.addEventListener('pointerdown',unlockMediaPlayback,true);
+document.addEventListener('touchend',unlockMediaPlayback,true);
+$('#enableSensorsBtn').addEventListener('click',enablePhoneSensors);$('#stopSensorsBtn').addEventListener('click',()=>stopPhoneSensors(true));
+$('#testCameraBtn').addEventListener('click',async()=>{try{state.mode='sensors';state.sensors.active=true;if(!state.sensors.timer)state.sensors.timer=setInterval(sensorTick,250);await requestCameraOnly(true);setStatus('connected','Camera');$('#subtitle').textContent='Camera sensor active • data stays on device'}catch(e){state.sensors.mediaErrors.camera=mediaErrorText(e,'Camera');chip('#cameraChip','bad',e?.name||'Camera failed');toast('Camera failed: '+(e?.name||'error'));log(state.sensors.mediaErrors.camera)}await updateSensorCapabilityUI()});
+$('#testMicBtn').addEventListener('click',async()=>{try{state.mode='sensors';state.sensors.active=true;if(!state.sensors.timer)state.sensors.timer=setInterval(sensorTick,250);await requestMicrophoneOnly(true);setStatus('connected','Microphone');$('#subtitle').textContent='Microphone sensor active • data stays on device'}catch(e){state.sensors.mediaErrors.microphone=mediaErrorText(e,'Microphone');chip('#micChip','bad',e?.name||'Microphone failed');toast('Microphone failed: '+(e?.name||'error'));log(state.sensors.mediaErrors.microphone)}await updateSensorCapabilityUI()});
+$('#capturePhotoBtn').addEventListener('click',()=>$('#photoCaptureInput').click());$('#captureAudioBtn').addEventListener('click',()=>$('#audioCaptureInput').click());
+$('#photoCaptureInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(f){chip('#cameraChip','warn','Still-photo fallback works');toast('Photo captured; continuous camera remains unavailable')}});
+$('#audioCaptureInput').addEventListener('change',e=>{const f=e.target.files?.[0];if(f){chip('#micChip','warn','Audio-recording fallback works');toast('Audio clip captured; continuous microphone remains unavailable')}});
+$('#sensorSensitivity').addEventListener('input',e=>{$('#sensitivityValue').textContent=e.target.value+'%';state.settings.sensorSensitivity=num(e.target.value,45);saveSettings()});
+$('#cameraFacing').addEventListener('change',e=>{state.settings.cameraFacing=e.target.value;saveSettings();if(state.sensors.active){toast('Restarting camera…');enablePhoneSensors()}});
+$('#connectBtn').addEventListener('click',connect);$('#demoBtn').addEventListener('click',()=>disconnect(true));
+$('#wsPath').addEventListener('change',()=>{state.settings.wsPath=$('#wsPath').value;saveSettings()});
+$('#serverUrl').addEventListener('change',()=>{state.settings.serverUrl=$('#serverUrl').value.trim();saveSettings()});
+$('#clearEventsBtn').addEventListener('click',()=>{state.events=[];saveSettings();renderEvents();toast('Event log cleared')});
+$('#importBtn').addEventListener('click',()=>$('#fileInput').click());
+$('#fileInput').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;try{const text=await file.text();let frames=[];try{const parsed=JSON.parse(text);frames=Array.isArray(parsed)?parsed:(Array.isArray(parsed.frames)?parsed.frames:[parsed])}catch{frames=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(x=>JSON.parse(x))}frames=frames.filter(x=>x&&typeof x==='object');if(!frames.length)throw new Error('No frames found');disconnect(false);state.mode='replay';state.replay.frames=frames;state.replay.index=0;setStatus('simulated','Replay');$('#subtitle').textContent=`${file.name} • ${frames.length} frames`;log(`Loaded recording ${file.name} (${frames.length} frames)`);state.replay.timer=setInterval(()=>{const f=state.replay.frames[state.replay.index++%state.replay.frames.length];handleFrame(f,false)},100);toast(`Replaying ${frames.length} frames`)}catch(err){toast('Could not read recording');log('Recording import failed: '+err.message)}finally{e.target.value=''}});
+function download(name,text,type){const blob=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+$('#snapshotBtn').addEventListener('click',()=>{if(!state.frame){toast('No frame available');return}download(`ruview-snapshot-${Date.now()}.json`,JSON.stringify(state.frame.raw||state.frame,null,2),'application/json');toast('Snapshot saved')});
+$('#exportEventsBtn').addEventListener('click',()=>{const rows=[['time','type','title','description'],...state.events.map(e=>[new Date(e.time).toISOString(),e.type,e.title,e.desc])];const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');download(`ruview-events-${Date.now()}.csv`,csv,'text/csv');toast('Event log exported')});
+setInterval(()=>{if(state.mode==='simulated'&&!state.paused)handleFrame(simulatedRaw(),true);if(state.lastFrameAt&&Date.now()-state.lastFrameAt>3000&&state.status==='connected'){$('#vitalAge').textContent=Math.floor((Date.now()-state.lastFrameAt)/1000)+'s old'}},100);
+setInterval(()=>{if($('#view-events').classList.contains('active'))renderEvents()},15000);
+window.addEventListener('beforeunload',()=>{if(state.socket)state.socket.close();stopPhoneSensors(false);if(state.wakeLock)state.wakeLock.release()});
+loadSettings();renderEvents();startDemo(false);handleFrame(simulatedRaw(),true);resizeScene();requestAnimationFrame(drawScene);log('Ready. Enable Phone Sensors for local detection, or enter a RuView server URL for CSI data.');
+</script>
+</body>
+</html>

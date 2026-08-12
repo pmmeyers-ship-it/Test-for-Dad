@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polyphonic Noise + Tone + Instrument Mixer v3</title>
+<style>
+:root{
+  --bg:#0b1016; --panel:#151b23; --panel2:#0e141b; --text:#eef3f8;
+  --muted:#9aa7b5; --border:#2d3742; --accent:#65b7ff; --accent2:#9cd1ff;
+  --danger:#ff7f78; --ok:#47cf73;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(101,183,255,.13), transparent 32%),
+    linear-gradient(180deg,#070b10,var(--bg));
+  padding:24px 14px 48px;
+}
+.app{width:min(1120px,100%);margin:auto}
+h1{margin:0 0 5px;font-size:clamp(27px,5vw,44px)}
+.subtitle{color:var(--muted);margin-bottom:20px;line-height:1.45}
+.toolbar,.card{
+  background:rgba(21,27,35,.96); border:1px solid var(--border);
+  border-radius:16px; box-shadow:0 14px 42px rgba(0,0,0,.24);
+}
+.toolbar{padding:15px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+button{
+  border:1px solid var(--border); background:#212a34; color:var(--text);
+  padding:10px 14px; border-radius:10px; font-weight:750; cursor:pointer;
+}
+button:hover{filter:brightness(1.12)}
+button.primary{background:var(--accent);color:#05101a;border-color:transparent}
+button.everything{background:#7ee787;color:#06110a;border-color:transparent}
+button.stop{background:#351d21;color:#ffc0bb;border-color:#6b3439}
+button.add{background:#183226;color:#a9f2bf;border-color:#2f6544}
+button.small{padding:7px 9px;font-size:12px}
+button.active{outline:2px solid var(--ok);outline-offset:2px}
+.layout{display:grid;grid-template-columns:330px minmax(0,1fr);gap:16px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}}
+.card{padding:17px}
+.card h2{margin:0 0 13px;font-size:20px}
+.label{font-size:13px;color:var(--muted)}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;margin:11px 0}
+.stack{display:grid;gap:6px;margin:11px 0}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select{
+  width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:9px;
+  color:var(--text);background:var(--panel2);font-size:14px;
+}
+.value{min-width:68px;text-align:right;color:var(--accent2);font-variant-numeric:tabular-nums}
+.status{
+  display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:9px;
+  border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:13px;
+}
+.dot{width:9px;height:9px;border-radius:50%;background:#66717c}
+.dot.on{background:var(--ok);box-shadow:0 0 10px rgba(71,207,115,.7)}
+.voice-list{display:grid;gap:12px}
+.voice{
+  border:1px solid var(--border);border-radius:13px;padding:13px;background:#101720;
+}
+.voice-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.voice-title{font-weight:800}
+.voice-grid{
+  display:grid;grid-template-columns:1.1fr 1fr .85fr 1fr;gap:9px;align-items:end
+}
+@media(max-width:720px){.voice-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:470px){.voice-grid{grid-template-columns:1fr}}
+.voice-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.master{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:850px){.master{grid-template-columns:1fr}}
+.meter{height:10px;background:#080c11;border-radius:999px;overflow:hidden;border:1px solid var(--border);margin-top:12px}
+.meter>div{width:0;height:100%;background:linear-gradient(90deg,#47cf73,#e4b85c,#ff6b63);transition:width .07s linear}
+.note{color:var(--muted);font-size:12px;line-height:1.55;margin-top:15px}
+.badge{
+  display:inline-block;padding:3px 7px;border-radius:999px;background:#18232e;border:1px solid var(--border);
+  color:var(--muted);font-size:11px;margin-left:6px
+}
+.quality{
+  display:grid;gap:7px;margin-top:10px;padding:10px;border-radius:10px;
+  border:1px solid var(--border);background:#0e151d;color:var(--muted);font-size:12px
+}
+.quality strong{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Polyphonic Sound Mixer <span class="badge">Acoustic Engine v3</span></h1>
+  <div class="subtitle">
+    Mix white noise with multiple simultaneous tones and higher-fidelity synthesized trumpet, saxophone, and tuba voices.
+  </div>
+
+  <div class="toolbar">
+    <button class="add" id="addVoiceBtn">+ Add Voice</button>
+    <button class="primary" id="playAllBtn">Play All Voices</button>
+    <button class="everything" id="playEverythingBtn">Play Everything + White Noise</button>
+    <button class="stop" id="stopAllBtn">Stop Everything</button>
+    <span class="badge" id="voiceCount">0 voices</span>
+  </div>
+
+  <div class="layout">
+    <section class="card">
+      <h2>White Noise</h2>
+
+      <div class="row">
+        <span class="label">Noise volume</span>
+        <span class="value" id="noiseVolText">30%</span>
+      </div>
+      <input id="noiseVol" type="range" min="0" max="100" value="30">
+
+      <div class="voice-actions">
+        <button class="primary" id="noiseBtn">Start White Noise</button>
+      </div>
+
+      <div class="status" style="margin-top:13px">
+        <span class="dot" id="noiseDot"></span>
+        <span id="noiseStatus">White noise: Off</span>
+      </div>
+
+      <h2 style="margin-top:22px">Master</h2>
+      <div class="row">
+        <span class="label">Master volume</span>
+        <span class="value" id="masterVolText">55%</span>
+      </div>
+      <input id="masterVol" type="range" min="0" max="100" value="55">
+      <div class="meter"><div id="meterFill"></div></div>
+
+      <div class="status" style="margin-top:13px">
+        <span class="dot" id="audioDot"></span>
+        <span id="audioStatus">Audio engine: Ready</span>
+      </div>
+
+      <div class="quality">
+        <strong>Instrument realism upgrades</strong>
+        <span>• Harmonic spectral modeling</span>
+        <span>• Breath/reed excitation noise</span>
+        <span>• Formant/body resonances</span>
+        <span>• Pitch attack & natural vibrato</span>
+        <span>• Soft saturation and dynamics</span>
+        <span>• Generated room ambience</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Voices</h2>
+      <div class="voice-list" id="voiceList"></div>
+    </section>
+  </div>
+
+  <div class="master">
+    <section class="card">
+      <h2>Available Notes</h2>
+      <div class="note" style="margin-top:0">
+        Highest to lowest: C5, G4, E4, D4, C Sharp 4, C4, B3, A Sharp 3, A3, G3, E3, C3.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>About the Instruments</h2>
+      <div class="note" style="margin-top:0">
+        These are fully synthesized acoustic approximations, not recordings. The new engine models each instrument differently:
+        trumpet emphasizes a bright brass harmonic series and lip-like pitch behavior; saxophone adds reed saturation,
+        breath noise and formants; tuba uses a darker low-frequency harmonic structure, slower attack and resonant body.
+        Everything remains self-contained and offline.
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  let ctx = null, masterGain = null, analyser = null, compressor = null;
+  let roomConvolver = null, roomWet = null;
+  let noiseSource = null, noiseGain = null;
+  let nextVoiceId = 1;
+  const voices = new Map();
+
+  const NOTE_OPTIONS = [
+    ["C5", 523.25],
+    ["G4", 392.00],
+    ["E4", 329.63],
+    ["D4", 293.66],
+    ["C Sharp 4", 277.18],
+    ["C4", 261.63],
+    ["B3", 246.94],
+    ["A Sharp 3", 233.08],
+    ["A3", 220.00],
+    ["G3", 196.00],
+    ["E3", 164.81],
+    ["C3", 130.81]
+  ];
+
+  const $ = id => document.getElementById(id);
+
+  function gainCurve(v){
+    const n = Math.max(0, Math.min(100, Number(v)||0))/100;
+    return n*n;
+  }
+
+  function createImpulse(seconds=1.35, decay=2.8){
+    const length = Math.floor(ctx.sampleRate * seconds);
+    const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+    for(let c=0;c<2;c++){
+      const d=impulse.getChannelData(c);
+      for(let i=0;i<length;i++){
+        const t=i/length;
+        const early = i < ctx.sampleRate*0.045 ? 0.30 : 0;
+        d[i]=(Math.random()*2-1) * Math.pow(1-t,decay) * (0.55+early);
+      }
+    }
+    return impulse;
+  }
+
+  function makeSoftClip(amount=1.9){
+    const n=4096, curve=new Float32Array(n);
+    for(let i=0;i<n;i++){
+      const x=i*2/(n-1)-1;
+      curve[i]=Math.tanh(x*amount)/Math.tanh(amount);
+    }
+    return curve;
+  }
+
+  async function ensureAudio(){
+    if(!ctx){
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+      masterGain = ctx.createGain();
+      masterGain.gain.value = gainCurve($("masterVol").value);
+
+      compressor = ctx.createDynamicsCompressor();
+      compressor.threshold.value = -16;
+      compressor.knee.value = 18;
+      compressor.ratio.value = 3.2;
+      compressor.attack.value = 0.006;
+      compressor.release.value = 0.22;
+
+      analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+
+      roomConvolver = ctx.createConvolver();
+      roomConvolver.buffer = createImpulse();
+      roomWet = ctx.createGain();
+      roomWet.gain.value = 0.10;
+      roomConvolver.connect(roomWet).connect(masterGain);
+
+      masterGain.connect(compressor).connect(analyser).connect(ctx.destination);
+
+      $("audioDot").classList.add("on");
+      $("audioStatus").textContent = "Audio engine: Acoustic model active";
+      drawMeter();
+    }
+    if(ctx.state === "suspended") await ctx.resume();
+  }
+
+  function makeNoiseBuffer(seconds=3){
+    const buffer = ctx.createBuffer(1, ctx.sampleRate*seconds, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let last=0;
+    for(let i=0;i<data.length;i++){
+      const white=Math.random()*2-1;
+      last = last*0.15 + white*0.85;
+      data[i]=last;
+    }
+    return buffer;
+  }
+
+  async function startNoise(){
+    await ensureAudio();
+    if(noiseSource) return;
+    noiseSource = ctx.createBufferSource();
+    noiseSource.buffer = makeNoiseBuffer(2);
+    noiseSource.loop = true;
+    noiseGain = ctx.createGain();
+    noiseGain.gain.value = gainCurve($("noiseVol").value);
+    noiseSource.connect(noiseGain).connect(masterGain);
+    noiseSource.start();
+    $("noiseBtn").textContent = "Stop White Noise";
+    $("noiseBtn").classList.add("active");
+    $("noiseDot").classList.add("on");
+    $("noiseStatus").textContent = "White noise: Playing";
+  }
+
+  function stopNoise(){
+    if(!noiseSource) return;
+    try{noiseSource.stop()}catch(e){}
+    try{noiseSource.disconnect()}catch(e){}
+    try{noiseGain.disconnect()}catch(e){}
+    noiseSource = null; noiseGain = null;
+    $("noiseBtn").textContent = "Start White Noise";
+    $("noiseBtn").classList.remove("active");
+    $("noiseDot").classList.remove("on");
+    $("noiseStatus").textContent = "White noise: Off";
+  }
+
+  function createVoiceElement(id){
+    const div = document.createElement("div");
+    div.className = "voice";
+    div.dataset.id = id;
+
+    const noteOptions = NOTE_OPTIONS.map(([name, f]) =>
+      `<option value="${f}">${name}</option>`
+    ).join("");
+
+    div.innerHTML = `
+      <div class="voice-head">
+        <div class="voice-title">Voice ${id} <span class="badge voiceState">Stopped</span></div>
+        <button class="small stop removeBtn">Remove</button>
+      </div>
+
+      <div class="voice-grid">
+        <div class="stack">
+          <label class="label">Sound</label>
+          <select class="soundType">
+            <option value="tone">Tone</option>
+            <option value="trumpet">Trumpet</option>
+            <option value="sax">Saxophone</option>
+            <option value="tuba">Tuba</option>
+          </select>
+        </div>
+
+        <div class="stack">
+          <label class="label">Note</label>
+          <select class="noteSelect">${noteOptions}</select>
+        </div>
+
+        <div class="stack waveformWrap">
+          <label class="label">Waveform</label>
+          <select class="waveform">
+            <option value="sine">Sine</option>
+            <option value="triangle">Triangle</option>
+            <option value="sawtooth">Sawtooth</option>
+            <option value="square">Square</option>
+          </select>
+        </div>
+
+        <div class="stack">
+          <label class="label">Volume <span class="volText">20%</span></label>
+          <input class="voiceVol" type="range" min="0" max="100" value="20">
+        </div>
+      </div>
+
+      <div class="voice-actions">
+        <button class="primary toggleBtn">Play Voice</button>
+        <span class="status"><span class="dot voiceDot"></span><span class="statusText">C4</span></span>
+      </div>
+    `;
+    return div;
+  }
+
+  function addVoice(sound="tone", noteName="C4"){
+    const id = nextVoiceId++;
+    const el = createVoiceElement(id);
+    $("voiceList").appendChild(el);
+
+    el.querySelector(".soundType").value = sound;
+    const opt = NOTE_OPTIONS.find(([name]) => name === noteName) || NOTE_OPTIONS[5];
+    el.querySelector(".noteSelect").value = String(opt[1]);
+
+    voices.set(id, {id, el, playing:false, nodes:[], output:null});
+    bindVoice(id);
+    updateVoiceUI(id);
+    updateVoiceCount();
+  }
+
+  function updateVoiceCount(){
+    const n = voices.size;
+    $("voiceCount").textContent = `${n} voice${n===1?"":"s"}`;
+  }
+
+  function getSelectedNote(el){
+    const sel = el.querySelector(".noteSelect");
+    return {
+      name: sel.options[sel.selectedIndex].textContent,
+      freq: Number(sel.value)
+    };
+  }
+
+  function bindVoice(id){
+    const v = voices.get(id), el = v.el;
+    const soundType = el.querySelector(".soundType");
+    const noteSelect = el.querySelector(".noteSelect");
+    const waveform = el.querySelector(".waveform");
+    const vol = el.querySelector(".voiceVol");
+
+    el.querySelector(".toggleBtn").addEventListener("click", async ()=>{
+      if(v.playing) stopVoice(id);
+      else await startVoice(id);
+    });
+
+    el.querySelector(".removeBtn").addEventListener("click", ()=>{
+      stopVoice(id);
+      el.remove();
+      voices.delete(id);
+      updateVoiceCount();
+    });
+
+    soundType.addEventListener("change", async ()=>{
+      const wasPlaying = v.playing;
+      if(wasPlaying) stopVoice(id);
+      updateVoiceUI(id);
+      if(wasPlaying) await startVoice(id);
+    });
+
+    waveform.addEventListener("change", async ()=>{
+      if(soundType.value !== "tone") return;
+      if(v.playing){ stopVoice(id); await startVoice(id); }
+    });
+
+    noteSelect.addEventListener("change", async ()=>{
+      updateVoiceUI(id);
+      if(v.playing){
+        stopVoice(id);
+        await startVoice(id);
+      }
+    });
+
+    vol.addEventListener("input", ()=>{
+      el.querySelector(".volText").textContent = vol.value+"%";
+      if(v.output && ctx){
+        v.output.gain.setTargetAtTime(gainCurve(vol.value), ctx.currentTime, 0.015);
+      }
+    });
+  }
+
+  function updateVoiceUI(id){
+    const v = voices.get(id), el = v.el;
+    const type = el.querySelector(".soundType").value;
+    const note = getSelectedNote(el);
+
+    el.querySelector(".waveformWrap").style.opacity = type==="tone" ? "1" : ".38";
+    el.querySelector(".waveform").disabled = type!=="tone";
+
+    const soundName =
+      type==="tone" ? "Tone" :
+      type==="sax" ? "Saxophone" :
+      type[0].toUpperCase()+type.slice(1);
+
+    el.querySelector(".statusText").textContent =
+      `${soundName} • ${note.name} • ${note.freq.toFixed(2)} Hz`;
+  }
+
+  function periodicWave(harmonics){
+    const size=harmonics.length+1;
+    const real=new Float32Array(size);
+    const imag=new Float32Array(size);
+    for(let i=1;i<size;i++) imag[i]=harmonics[i-1];
+    return ctx.createPeriodicWave(real,imag,{disableNormalization:false});
+  }
+
+  function makeOsc(freq, waveOrType, gainValue, destination, detune=0){
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    if(typeof waveOrType==="string") o.type=waveOrType;
+    else o.setPeriodicWave(waveOrType);
+    o.frequency.value=freq;
+    o.detune.value=detune;
+    g.gain.value=gainValue;
+    o.connect(g).connect(destination);
+    o.start();
+    return [o,g];
+  }
+
+  function makeBreathNoise(destination, amount, low=500, high=6500){
+    const src=ctx.createBufferSource();
+    src.buffer=makeNoiseBuffer(2.5);
+    src.loop=true;
+
+    const hp=ctx.createBiquadFilter();
+    hp.type="highpass"; hp.frequency.value=low; hp.Q.value=.5;
+
+    const lp=ctx.createBiquadFilter();
+    lp.type="lowpass"; lp.frequency.value=high; lp.Q.value=.6;
+
+    const g=ctx.createGain();
+    g.gain.value=amount;
+
+    src.connect(hp).connect(lp).connect(g).connect(destination);
+    src.start();
+    return [src,hp,lp,g];
+  }
+
+  function addVibrato(oscillators, rate, cents, delay=0.35){
+    const lfo=ctx.createOscillator();
+    const depth=ctx.createGain();
+    lfo.type="sine";
+    lfo.frequency.value=rate;
+    depth.gain.setValueAtTime(0,ctx.currentTime);
+    depth.gain.linearRampToValueAtTime(cents,ctx.currentTime+delay+0.3);
+    lfo.connect(depth);
+    oscillators.forEach(o=>depth.connect(o.detune));
+    lfo.start();
+    return [lfo,depth];
+  }
+
+  function connectRoom(source, level){
+    if(!roomConvolver) return null;
+    const send=ctx.createGain();
+    send.gain.value=level;
+    source.connect(send).connect(roomConvolver);
+    return send;
+  }
+
+  function scheduleAttack(gainNode, peak, attack, settle=0.94){
+    const now=ctx.currentTime;
+    gainNode.gain.cancelScheduledValues(now);
+    gainNode.gain.setValueAtTime(0.0001,now);
+    gainNode.gain.exponentialRampToValueAtTime(Math.max(0.001,peak),now+attack);
+    gainNode.gain.exponentialRampToValueAtTime(Math.max(0.001,peak*settle),now+attack+0.12);
+  }
+
+  function buildTone(f,waveform,output){
+    const [o,g]=makeOsc(f,waveform,1,output);
+    return [o,g];
+  }
+
+  function buildTrumpet(f, output){
+    const nodes=[];
+    const amp=ctx.createGain();
+    const body=ctx.createBiquadFilter();
+    const brilliance=ctx.createBiquadFilter();
+    const hp=ctx.createBiquadFilter();
+    const shaper=ctx.createWaveShaper();
+
+    hp.type="highpass";
+    hp.frequency.value=Math.max(75,f*0.35);
+    hp.Q.value=.5;
+
+    body.type="peaking";
+    body.frequency.value=Math.min(1800,Math.max(650,f*2.7));
+    body.Q.value=1.1;
+    body.gain.value=4.5;
+
+    brilliance.type="peaking";
+    brilliance.frequency.value=Math.min(5200,Math.max(1600,f*6.5));
+    brilliance.Q.value=.9;
+    brilliance.gain.value=5.5;
+
+    shaper.curve=makeSoftClip(1.7);
+    shaper.oversample="4x";
+
+    amp.connect(hp).connect(body).connect(brilliance).connect(shaper).connect(output);
+    nodes.push(amp,hp,body,brilliance,shaper);
+
+    scheduleAttack(amp,0.82,0.045,0.92);
+
+    const h=[1.0,.90,.76,.62,.50,.39,.31,.25,.19,.145,.11,.085,.065,.048,.035,.025];
+    const wave=periodicWave(h);
+
+    const [o1,g1]=makeOsc(f,wave,.74,amp,-2.5);
+    const [o2,g2]=makeOsc(f,wave,.32,amp,3.2);
+    nodes.push(o1,g1,o2,g2);
+
+    // Lip slur into pitch at the beginning.
+    const now=ctx.currentTime;
+    o1.detune.setValueAtTime(-16,now);
+    o1.detune.exponentialRampToValueAtTime(0.01,now+0.09);
+    o2.detune.setValueAtTime(-11,now);
+    o2.detune.exponentialRampToValueAtTime(0.01,now+0.075);
+
+    nodes.push(...addVibrato([o1,o2],5.35,4.4,0.32));
+    nodes.push(...makeBreathNoise(amp,0.022,900,7200));
+
+    const air=ctx.createBiquadFilter();
+    air.type="bandpass";
+    air.frequency.value=Math.min(4300,Math.max(1500,f*5));
+    air.Q.value=1.0;
+    const airGain=ctx.createGain();
+    airGain.gain.value=.08;
+    amp.connect(air).connect(airGain).connect(output);
+    nodes.push(air,airGain);
+
+    const send=connectRoom(output,0.07);
+    if(send) nodes.push(send);
+    return nodes;
+  }
+
+  function buildSax(f, output){
+    const nodes=[];
+    const amp=ctx.createGain();
+    const preLP=ctx.createBiquadFilter();
+    const form1=ctx.createBiquadFilter();
+    const form2=ctx.createBiquadFilter();
+    const form3=ctx.createBiquadFilter();
+    const shaper=ctx.createWaveShaper();
+
+    preLP.type="lowpass";
+    preLP.frequency.value=Math.min(7200,Math.max(2600,f*12));
+    preLP.Q.value=.55;
+
+    form1.type="peaking";
+    form1.frequency.value=Math.min(1150,Math.max(520,f*2.2));
+    form1.Q.value=2.1;
+    form1.gain.value=7.0;
+
+    form2.type="peaking";
+    form2.frequency.value=Math.min(2500,Math.max(1150,f*4.5));
+    form2.Q.value=2.35;
+    form2.gain.value=5.2;
+
+    form3.type="peaking";
+    form3.frequency.value=Math.min(4300,Math.max(2100,f*7.2));
+    form3.Q.value=2.1;
+    form3.gain.value=2.8;
+
+    shaper.curve=makeSoftClip(2.25);
+    shaper.oversample="4x";
+
+    amp.connect(shaper).connect(preLP).connect(form1).connect(form2).connect(form3).connect(output);
+    nodes.push(amp,shaper,preLP,form1,form2,form3);
+
+    scheduleAttack(amp,0.76,0.075,0.91);
+
+    // Reed-like spectrum: strong fundamental, odd/even partials with irregular rolloff.
+    const h=[1,.68,.49,.37,.29,.22,.18,.14,.115,.09,.072,.056,.044,.034,.027,.021];
+    const wave=periodicWave(h);
+
+    const [o1,g1]=makeOsc(f,wave,.64,amp,-3.5);
+    const [o2,g2]=makeOsc(f,periodicWave([1,.40,.58,.22,.30,.14,.18,.09,.11]),.28,amp,3.7);
+    nodes.push(o1,g1,o2,g2);
+
+    const now=ctx.currentTime;
+    o1.detune.setValueAtTime(-9,now);
+    o1.detune.linearRampToValueAtTime(0,now+.11);
+    o2.detune.setValueAtTime(-6,now);
+    o2.detune.linearRampToValueAtTime(0,now+.10);
+
+    nodes.push(...addVibrato([o1,o2],5.0,6.5,0.24));
+
+    // Audible reed/breath component.
+    const breath=makeBreathNoise(amp,0.047,650,7000);
+    nodes.push(...breath);
+
+    // Slight low-mid body resonance.
+    const body=ctx.createBiquadFilter();
+    body.type="peaking";
+    body.frequency.value=Math.min(850,Math.max(250,f*1.45));
+    body.Q.value=1.35;
+    body.gain.value=3.2;
+    amp.connect(body).connect(output);
+    nodes.push(body);
+
+    const send=connectRoom(output,0.10);
+    if(send) nodes.push(send);
+    return nodes;
+  }
+
+  function buildTuba(f, output){
+    const nodes=[];
+    const amp=ctx.createGain();
+    const body1=ctx.createBiquadFilter();
+    const body2=ctx.createBiquadFilter();
+    const lp=ctx.createBiquadFilter();
+    const shaper=ctx.createWaveShaper();
+
+    body1.type="peaking";
+    body1.frequency.value=Math.min(420,Math.max(110,f*1.45));
+    body1.Q.value=1.4;
+    body1.gain.value=6;
+
+    body2.type="peaking";
+    body2.frequency.value=Math.min(900,Math.max(260,f*3.0));
+    body2.Q.value=1.05;
+    body2.gain.value=3.5;
+
+    lp.type="lowpass";
+    lp.frequency.value=Math.min(3000,Math.max(950,f*6.5));
+    lp.Q.value=.72;
+
+    shaper.curve=makeSoftClip(1.45);
+    shaper.oversample="4x";
+
+    amp.connect(body1).connect(body2).connect(lp).connect(shaper).connect(output);
+    nodes.push(amp,body1,body2,lp,shaper);
+
+    scheduleAttack(amp,0.86,0.11,0.96);
+
+    const h=[1,.56,.32,.20,.14,.10,.072,.052,.038,.028,.020,.014];
+    const wave=periodicWave(h);
+
+    const [o1,g1]=makeOsc(f,wave,.78,amp,-2);
+    const [o2,g2]=makeOsc(f,"sine",.30,amp,2);
+    const [o3,g3]=makeOsc(f*2,"sine",.10,amp,-1.5);
+    nodes.push(o1,g1,o2,g2,o3,g3);
+
+    const now=ctx.currentTime;
+    [o1,o2].forEach((o,i)=>{
+      o.detune.setValueAtTime(-20+i*4,now);
+      o.detune.exponentialRampToValueAtTime(0.01,now+.14);
+    });
+
+    nodes.push(...addVibrato([o1,o2],4.35,3.1,0.48));
+    nodes.push(...makeBreathNoise(amp,0.018,120,2400));
+
+    const send=connectRoom(output,0.075);
+    if(send) nodes.push(send);
+    return nodes;
+  }
+
+  async function startVoice(id){
+    const v = voices.get(id);
+    if(!v || v.playing) return;
+    await ensureAudio();
+
+    const el = v.el;
+    const type = el.querySelector(".soundType").value;
+    const f = getSelectedNote(el).freq;
+    const vol = el.querySelector(".voiceVol").value;
+    const waveform = el.querySelector(".waveform").value;
+
+    const output = ctx.createGain();
+    output.gain.value = 0;
+    output.connect(masterGain);
+
+    let nodes=[];
+    if(type==="tone") nodes=buildTone(f,waveform,output);
+    else if(type==="trumpet") nodes=buildTrumpet(f,output);
+    else if(type==="sax") nodes=buildSax(f,output);
+    else if(type==="tuba") nodes=buildTuba(f,output);
+
+    v.nodes=nodes;
+    v.output=output;
+    v.playing=true;
+
+    const now=ctx.currentTime;
+    output.gain.setValueAtTime(0.0001,now);
+    output.gain.exponentialRampToValueAtTime(Math.max(.001,gainCurve(vol)),now+.055);
+
+    el.querySelector(".toggleBtn").textContent="Stop Voice";
+    el.querySelector(".toggleBtn").classList.add("active");
+    el.querySelector(".voiceDot").classList.add("on");
+    el.querySelector(".voiceState").textContent="Playing";
+    updateVoiceUI(id);
+  }
+
+  function stopVoice(id){
+    const v=voices.get(id);
+    if(!v || !v.playing) return;
+
+    const nodes=v.nodes.slice();
+    const output=v.output;
+    v.nodes=[]; v.output=null; v.playing=false;
+
+    try{
+      const now=ctx.currentTime;
+      output.gain.cancelScheduledValues(now);
+      output.gain.setValueAtTime(Math.max(.0001,output.gain.value),now);
+      output.gain.exponentialRampToValueAtTime(.0001,now+.085);
+    }catch(e){}
+
+    setTimeout(()=>{
+      nodes.forEach(n=>{
+        try{ if(typeof n.stop==="function") n.stop(); }catch(e){}
+        try{ n.disconnect(); }catch(e){}
+      });
+      try{output.disconnect()}catch(e){}
+    },125);
+
+    const el=v.el;
+    el.querySelector(".toggleBtn").textContent="Play Voice";
+    el.querySelector(".toggleBtn").classList.remove("active");
+    el.querySelector(".voiceDot").classList.remove("on");
+    el.querySelector(".voiceState").textContent="Stopped";
+  }
+
+  async function playAllVoices(){
+    await ensureAudio();
+    for(const id of voices.keys()) await startVoice(id);
+  }
+
+  async function playEverything(){
+    await ensureAudio();
+    await startNoise();
+    for(const id of voices.keys()) await startVoice(id);
+  }
+
+  function stopEverything(){
+    stopNoise();
+    for(const id of voices.keys()) stopVoice(id);
+  }
+
+  function drawMeter(){
+    if(!analyser) return;
+    const data=new Uint8Array(analyser.frequencyBinCount);
+    function tick(){
+      if(!analyser) return;
+      analyser.getByteTimeDomainData(data);
+      let sum=0;
+      for(const n of data){
+        const x=(n-128)/128; sum+=x*x;
+      }
+      const rms=Math.sqrt(sum/data.length);
+      $("meterFill").style.width=Math.min(100,rms*235)+"%";
+      requestAnimationFrame(tick);
+    }
+    tick();
+  }
+
+  $("addVoiceBtn").addEventListener("click",()=>addVoice());
+  $("playAllBtn").addEventListener("click",playAllVoices);
+  $("playEverythingBtn").addEventListener("click",playEverything);
+  $("stopAllBtn").addEventListener("click",stopEverything);
+
+  $("noiseBtn").addEventListener("click",async()=>{
+    if(noiseSource) stopNoise(); else await startNoise();
+  });
+
+  $("noiseVol").addEventListener("input",e=>{
+    $("noiseVolText").textContent=e.target.value+"%";
+    if(noiseGain&&ctx) noiseGain.gain.setTargetAtTime(gainCurve(e.target.value),ctx.currentTime,.01);
+  });
+
+  $("masterVol").addEventListener("input",e=>{
+    $("masterVolText").textContent=e.target.value+"%";
+    if(masterGain&&ctx) masterGain.gain.setTargetAtTime(gainCurve(e.target.value),ctx.currentTime,.01);
+  });
+
+  window.addEventListener("beforeunload",()=>{
+    stopEverything();
+    if(ctx) ctx.close();
+  });
+
+  addVoice("tone","C4");
+  addVoice("trumpet","E4");
+  addVoice("sax","G3");
+  addVoice("tuba","C3");
+})();
+</script>
+</body>
+</html>

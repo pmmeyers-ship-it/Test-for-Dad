@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Fincept Terminal V2 — Live Browser Terminal</title>
+<style>
+  :root{
+    --bg:#070b10; --panel:#0d131b; --panel2:#111a24; --line:#213041; --line2:#172433;
+    --text:#dce7f2; --muted:#7f92a6; --accent:#f0a020; --accent2:#55b6ff;
+    --good:#31d07c; --bad:#ff5c66; --warn:#ffd166; --shadow:0 16px 44px rgba(0,0,0,.28);
+    --radius:10px; --navw:210px; --top:44px; --density:1;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;font-size:13px;overflow:hidden}
+  button,input,select{font:inherit}
+  button{cursor:pointer}
+  .app{height:100%;display:grid;grid-template-rows:var(--top) 1fr 25px}
+  .topbar{display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--line);background:#091019;padding:0 10px;min-width:0}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:.08em;white-space:nowrap}
+  .brand-badge{width:24px;height:24px;border:1px solid #92661e;border-radius:5px;display:grid;place-items:center;color:var(--accent);background:#19150e;font-weight:900}
+  .brand small{color:var(--muted);font-weight:600;letter-spacing:0}
+  .ticker{display:flex;align-items:center;gap:15px;overflow:hidden;min-width:0;flex:1;border-left:1px solid var(--line);padding-left:12px}
+  .tick{white-space:nowrap;font-variant-numeric:tabular-nums}.tick b{margin-right:5px}.up{color:var(--good)}.down{color:var(--bad)}
+  .top-actions{display:flex;gap:6px}.iconbtn{height:30px;padding:0 9px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:6px}
+  .shell{display:grid;grid-template-columns:var(--navw) 1fr;min-height:0}
+  .nav{background:#091019;border-right:1px solid var(--line);padding:9px 7px;overflow:auto}
+  .nav-section{margin:8px 8px 5px;color:#566c82;font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:800}
+  .nav button{width:100%;border:0;background:transparent;color:#99aabd;text-align:left;padding:8px 10px;border-radius:6px;display:flex;gap:9px;align-items:center;margin:1px 0}
+  .nav button:hover{background:#101b27;color:var(--text)}.nav button.active{background:#162230;color:#fff;box-shadow:inset 2px 0 var(--accent)}
+  .nav .key{margin-left:auto;color:#506276;font-size:10px;border:1px solid #27384b;padding:1px 4px;border-radius:3px}
+  .content{min-width:0;min-height:0;overflow:auto;padding:12px;background:radial-gradient(circle at 70% -20%,rgba(40,78,108,.12),transparent 42%),var(--bg)}
+  .screen{display:none}.screen.active{display:block}
+  .pagehead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:1px 0 10px}
+  .pagehead h1{font-size:19px;margin:0 0 3px}.sub{color:var(--muted);font-size:12px}
+  .badge{display:inline-flex;gap:5px;align-items:center;padding:4px 7px;border:1px solid var(--line);border-radius:999px;color:var(--muted);background:var(--panel)}
+  .badge .dot{width:6px;height:6px;border-radius:50%;background:var(--warn)}
+  .grid{display:grid;gap:10px}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.main2{grid-template-columns:minmax(0,2fr) minmax(280px,1fr)}
+  .card{background:linear-gradient(180deg,#0e1620,#0b121a);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);min-width:0}
+  .card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border-bottom:1px solid var(--line2);min-height:38px}.card-h b{font-size:12px;letter-spacing:.02em}.card-b{padding:10px}
+  .metric{padding:10px 11px}.metric .label{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.09em}.metric .value{font-size:21px;font-weight:800;margin-top:5px;font-variant-numeric:tabular-nums}.metric .delta{font-size:11px;margin-top:2px}
+  .toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  input,select{background:#0a1119;color:var(--text);border:1px solid #26384b;border-radius:6px;padding:6px 8px;outline:none}.toolbar input{min-width:130px}
+  input:focus,select:focus{border-color:#477aa0;box-shadow:0 0 0 2px rgba(85,182,255,.09)}
+  .btn{border:1px solid #2a3c4f;background:#121d29;color:#dbe7f2;padding:6px 9px;border-radius:6px}.btn:hover{background:#172535}.btn.primary{background:#744d0f;border-color:#a56c12;color:#fff4de}.btn.good{background:#123424;border-color:#215b3f}.btn.danger{background:#37171b;border-color:#67262e}
+  .chart-wrap{height:325px;position:relative}.chart-wrap.small{height:210px}canvas{width:100%;height:100%;display:block}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}th,td{padding:7px 8px;border-bottom:1px solid var(--line2);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{position:sticky;top:0;background:#0d151e;color:#71879c;font-size:10px;text-transform:uppercase;letter-spacing:.06em;z-index:1}tr:hover td{background:#101a25}.tablebox{overflow:auto;max-height:410px}
+  .symbol{font-weight:800;color:#fff}.tiny{font-size:10px;color:var(--muted)}
+  .watchrow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--line2)}
+  .watchrow:last-child{border-bottom:0}.watch-price{text-align:right;font-weight:700}.xbtn{border:0;background:transparent;color:#60778e;padding:3px}.xbtn:hover{color:var(--bad)}
+  .formgrid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px}.field label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}.field input,.field select{width:100%}
+  .result{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}.result div{background:#091018;border:1px solid var(--line2);border-radius:7px;padding:9px}.result small{display:block;color:var(--muted);margin-bottom:4px}.result strong{font-size:17px}
+  .newsitem{padding:10px;border-bottom:1px solid var(--line2)}.newsitem:last-child{border-bottom:0}.newsitem h3{font-size:13px;margin:0 0 5px;line-height:1.3}.meta{font-size:10px;color:#6f8499;display:flex;gap:8px;margin-bottom:4px}.newsitem p{margin:0;color:#9eb0c1;font-size:12px;line-height:1.45}
+  .status{display:flex;align-items:center;justify-content:space-between;padding:0 9px;border-top:1px solid var(--line);background:#080e14;color:#5f7489;font-size:10px}.status .left{display:flex;gap:13px}.status b{color:#8ca2b6}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.58);display:none;align-items:flex-start;justify-content:center;padding-top:12vh;z-index:50}.modal.open{display:flex}.palette{width:min(620px,92vw);background:#0d151e;border:1px solid #334a61;border-radius:10px;box-shadow:0 30px 80px #000;overflow:hidden}.palette input{width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:13px 14px;font-size:14px}.commands{max-height:340px;overflow:auto;padding:6px}.cmd{padding:9px 10px;border-radius:6px;display:flex;align-items:center;justify-content:space-between}.cmd:hover,.cmd.sel{background:#152231}.cmd span:last-child{color:#61788f;font-size:10px}
+  .toast{position:fixed;right:14px;bottom:38px;background:#14202c;border:1px solid #2d4359;border-radius:8px;padding:9px 12px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;z-index:80}.toast.show{opacity:1;transform:none}
+  .heat{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.heat div{min-height:68px;border:1px solid rgba(255,255,255,.08);border-radius:5px;padding:7px;display:flex;flex-direction:column;justify-content:space-between}.heat b{font-size:12px}.heat span{font-size:11px}
+  .adapter{display:flex;gap:10px;align-items:flex-start;padding:10px;border:1px solid var(--line2);border-radius:7px;margin:7px 0;background:#091018}.adapter .ico{width:30px;height:30px;border:1px solid #2d4155;border-radius:6px;display:grid;place-items:center;color:var(--accent)}.adapter b{display:block;margin-bottom:2px}.adapter p{margin:0;color:var(--muted);font-size:11px;line-height:1.4}
+  .footnote{color:#667c91;font-size:10px;line-height:1.45;margin-top:7px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  @media(max-width:1050px){:root{--navw:170px}.g4{grid-template-columns:repeat(2,1fr)}.main2{grid-template-columns:1fr}.formgrid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:720px){body{overflow:auto}.app{height:auto;min-height:100%;grid-template-rows:auto auto 25px}.topbar{height:auto;min-height:44px;flex-wrap:wrap;padding:6px}.ticker{order:3;width:100%;border-left:0;padding-left:0}.shell{grid-template-columns:1fr}.nav{display:flex;overflow:auto;border-right:0;border-bottom:1px solid var(--line);padding:5px}.nav-section,.nav .key{display:none}.nav button{width:auto;white-space:nowrap}.content{overflow:visible}.g4,.g3,.g2,.formgrid,.result{grid-template-columns:1fr}.heat{grid-template-columns:repeat(2,1fr)}}
+
+  /* V2 live-data additions */
+  .badge.ok .dot{background:var(--good);box-shadow:0 0 8px rgba(49,208,124,.55)}
+  .pill{display:inline-flex;align-items:center;padding:3px 7px;border:1px solid var(--line);border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.04em}
+  .pill.good{color:var(--good);border-color:#215b3f;background:#0c281b}.pill.bad{color:var(--bad);border-color:#67262e;background:#2b1115}.pill.muted{color:#7f92a6;background:#0b121a}
+  .connrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line2)}.connrow:last-child{border-bottom:0}
+  .connrow b{display:block;margin-bottom:2px}.secret{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .diag{margin:0;white-space:pre-wrap;word-break:break-word;background:#070c12;border:1px solid var(--line2);border-radius:7px;padding:9px;color:#7f92a6;font-size:10px;line-height:1.45;max-height:190px;overflow:auto}
+  .newsitem a{color:var(--text);text-decoration:none}.newsitem a:hover{color:var(--accent2);text-decoration:underline}
+  .sourcebar{display:flex;gap:7px;align-items:center;color:var(--muted);font-size:10px}
+  .wideform{display:grid;grid-template-columns:1fr auto;gap:7px}.wideform input{width:100%}
+  .notice{border:1px solid #4b3b1e;background:#17130b;color:#c9ad79;border-radius:7px;padding:8px 9px;font-size:11px;line-height:1.45}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="brand-badge">F</div><div>FINCEPT <small>/ WEB</small></div></div>
+    <div class="ticker" id="ticker"></div>
+    <div class="top-actions"><button class="iconbtn" id="cmdBtn" title="Command palette (Ctrl+K)">⌘ K</button><button class="iconbtn" id="clock">--:--:--</button></div>
+  </header>
+
+  <div class="shell">
+    <aside class="nav" id="nav">
+      <div class="nav-section">Terminal</div>
+      <button data-screen="dashboard" class="active">◫ Dashboard <span class="key">1</span></button>
+      <button data-screen="markets">⌁ Markets <span class="key">2</span></button>
+      <button data-screen="screener">⎙ Screener <span class="key">3</span></button>
+      <div class="nav-section">Workspace</div>
+      <button data-screen="portfolio">◆ Portfolio <span class="key">4</span></button>
+      <button data-screen="analytics">∿ Analytics <span class="key">5</span></button>
+      <button data-screen="backtest">↻ Backtest <span class="key">6</span></button>
+      <button data-screen="news">▤ News <span class="key">7</span></button>
+      <div class="nav-section">System</div>
+      <button data-screen="adapters">⚡ Connections <span class="key">8</span></button>
+      <button data-screen="settings">⚙ Settings <span class="key">9</span></button>
+    </aside>
+
+    <main class="content">
+      <section class="screen active" id="screen-dashboard">
+        <div class="pagehead"><div><h1>Market Dashboard</h1><div class="sub">Live-capable market workspace with automatic cache and deterministic offline fallback</div></div><span class="badge" id="dataBadge"><span class="dot"></span> CONNECTING</span></div>
+        <div class="grid g4" id="dashMetrics"></div>
+        <div class="grid main2" style="margin-top:10px">
+          <div class="card">
+            <div class="card-h"><b>MARKET CHART</b><div class="toolbar"><span class="tiny" id="dashChartSource">loading…</span><select id="dashSymbol"></select><select id="dashRange"><option value="60">1M</option><option value="120" selected>3M</option><option value="252">1Y</option></select></div></div>
+            <div class="card-b"><div class="chart-wrap"><canvas id="marketChart"></canvas></div></div>
+          </div>
+          <div class="card"><div class="card-h"><b>WATCHLIST</b><div class="toolbar"><input id="watchInput" placeholder="Add symbol" maxlength="8"><button class="btn" id="watchAdd">Add</button></div></div><div class="card-b" id="watchlist"></div></div>
+        </div>
+        <div class="grid g2" style="margin-top:10px">
+          <div class="card"><div class="card-h"><b>SECTOR HEATMAP</b><span class="tiny">session %</span></div><div class="card-b"><div class="heat" id="heatmap"></div></div></div>
+          <div class="card"><div class="card-h"><b>TOP MOVERS</b><span class="tiny" id="moversSource">loading…</span></div><div class="card-b tablebox" style="max-height:250px"><table><thead><tr><th>Symbol</th><th>Price</th><th>Change</th><th>Volume</th></tr></thead><tbody id="movers"></tbody></table></div></div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-markets">
+        <div class="pagehead"><div><h1>Markets</h1><div class="sub">Multi-asset live quotes and interactive price history</div></div><div class="toolbar"><span class="tiny" id="marketSource">loading…</span><input id="marketSearch" placeholder="Symbol e.g. AAPL"><button class="btn primary" id="marketLoad">Load</button></div></div>
+        <div class="grid g4" id="marketDetailMetrics"></div>
+        <div class="card" style="margin-top:10px"><div class="card-h"><b id="marketChartTitle">AAPL PRICE HISTORY</b><div class="toolbar"><select id="marketRange"><option value="30">1M</option><option value="90">3M</option><option value="180">6M</option><option value="365" selected>1Y</option><option value="730">2Y</option></select></div></div><div class="card-b"><div class="chart-wrap"><canvas id="detailChart"></canvas></div></div></div>
+      </section>
+
+      <section class="screen" id="screen-screener">
+        <div class="pagehead"><div><h1>Equity Screener</h1><div class="sub">Local screening engine with live market marks and provider fundamentals when available</div></div><span class="badge">HYBRID ENGINE</span></div>
+        <div class="card"><div class="card-h"><b>FILTERS</b><button class="btn" id="screenReset">Reset</button></div><div class="card-b"><div class="formgrid">
+          <div class="field"><label>Sector</label><select id="fSector"><option value="">All sectors</option></select></div>
+          <div class="field"><label>Min Market Cap ($B)</label><input id="fCap" type="number" min="0" value="0"></div>
+          <div class="field"><label>Max P/E</label><input id="fPE" type="number" min="0" value="80"></div>
+          <div class="field"><label>Min Daily Change %</label><input id="fChange" type="number" step="0.1" value="-20"></div>
+        </div></div></div>
+        <div class="card" style="margin-top:10px"><div class="card-h"><b>RESULTS</b><span class="tiny" id="screenCount"></span></div><div class="tablebox"><table><thead><tr><th>Symbol</th><th>Company</th><th>Sector</th><th>Price</th><th>Change</th><th>Market Cap</th><th>P/E</th><th>Yield</th></tr></thead><tbody id="screenBody"></tbody></table></div></div>
+      </section>
+
+      <section class="screen" id="screen-portfolio">
+        <div class="pagehead"><div><h1>Portfolio</h1><div class="sub">Local portfolio book stored in your browser</div></div><button class="btn danger" id="portfolioClear">Clear Portfolio</button></div>
+        <div class="card"><div class="card-h"><b>ADD POSITION</b><span class="tiny">saved via localStorage</span></div><div class="card-b"><div class="formgrid">
+          <div class="field"><label>Symbol</label><input id="pSymbol" value="AAPL"></div><div class="field"><label>Quantity</label><input id="pQty" type="number" value="10" step="0.01"></div><div class="field"><label>Cost Basis / Share</label><input id="pCost" type="number" value="180" step="0.01"></div><div class="field"><label>&nbsp;</label><button class="btn primary" id="portfolioAdd" style="width:100%">Add Position</button></div>
+        </div></div></div>
+        <div class="grid g4" id="portfolioMetrics" style="margin-top:10px"></div>
+        <div class="card" style="margin-top:10px"><div class="card-h"><b>POSITIONS</b><span class="tiny">live marks when connected · fallback otherwise</span></div><div class="tablebox"><table><thead><tr><th>Symbol</th><th>Qty</th><th>Cost</th><th>Mark</th><th>Market Value</th><th>P/L</th><th>P/L %</th><th></th></tr></thead><tbody id="portfolioBody"></tbody></table></div></div>
+      </section>
+
+      <section class="screen" id="screen-analytics">
+        <div class="pagehead"><div><h1>Analytics</h1><div class="sub">Local quantitative calculations applied to live, cached, or fallback history</div></div><span class="badge">LOCAL COMPUTE</span></div>
+        <div class="card"><div class="card-h"><b>RISK / RETURN LAB</b><span class="tiny" id="analyticsSource">loading…</span></div><div class="card-b"><div class="formgrid">
+          <div class="field"><label>Symbol</label><input id="aSymbol" value="SPY"></div><div class="field"><label>History Days</label><select id="aDays"><option value="252">1 Year</option><option value="504">2 Years</option><option value="1260" selected>5 Years</option></select></div><div class="field"><label>Risk-free Rate %</label><input id="aRF" type="number" value="4.0" step="0.1"></div><div class="field"><label>&nbsp;</label><button class="btn primary" id="aRun" style="width:100%">Run Analytics</button></div>
+        </div><div class="result" id="aResult"></div></div></div>
+        <div class="grid g2" style="margin-top:10px">
+          <div class="card"><div class="card-h"><b>EQUITY CURVE</b></div><div class="card-b"><div class="chart-wrap small"><canvas id="analyticsChart"></canvas></div></div></div>
+          <div class="card"><div class="card-h"><b>DCF QUICK MODEL</b></div><div class="card-b"><div class="formgrid" style="grid-template-columns:repeat(2,1fr)">
+            <div class="field"><label>Free Cash Flow ($M)</label><input id="dFcf" type="number" value="5000"></div><div class="field"><label>Growth %</label><input id="dGrowth" type="number" value="6"></div><div class="field"><label>Discount %</label><input id="dDiscount" type="number" value="10"></div><div class="field"><label>Terminal Growth %</label><input id="dTerminal" type="number" value="2.5"></div><div class="field"><label>Net Debt ($M)</label><input id="dDebt" type="number" value="10000"></div><div class="field"><label>Shares ($M)</label><input id="dShares" type="number" value="1000"></div>
+          </div><button class="btn" id="dcfRun" style="margin-top:8px">Calculate DCF</button><div class="result" id="dcfResult" style="grid-template-columns:repeat(2,1fr)"></div></div></div>
+        </div>
+        <div class="card" style="margin-top:10px"><div class="card-h"><b>FINCEPT QUANTLIB · BLACK-SCHOLES</b><span class="tiny">authenticated API call · may consume Fincept credits</span></div><div class="card-b">
+          <div class="formgrid"><div class="field"><label>Spot</label><input id="bsSpot" type="number" value="100" step="0.01"></div><div class="field"><label>Strike</label><input id="bsStrike" type="number" value="105" step="0.01"></div><div class="field"><label>Rate</label><input id="bsRate" type="number" value="0.05" step="0.001"></div><div class="field"><label>Volatility</label><input id="bsVol" type="number" value="0.20" step="0.01"></div><div class="field"><label>Time to Maturity (years)</label><input id="bsTime" type="number" value="0.25" step="0.01"></div><div class="field"><label>Option Type</label><select id="bsType"><option value="call">Call</option><option value="put">Put</option></select></div><div class="field"><label>&nbsp;</label><button class="btn primary" id="finceptBsRun" style="width:100%">Run Fincept API</button></div></div>
+          <div class="result" id="finceptBsResult"><div><small>Status</small><strong>Configure Fincept API key in Connections</strong></div></div>
+        </div></div>
+      </section>
+
+      <section class="screen" id="screen-backtest">
+        <div class="pagehead"><div><h1>Strategy Backtest</h1><div class="sub">Moving-average crossover engine running entirely in the browser</div></div><span class="badge">LOCAL COMPUTE</span></div>
+        <div class="card"><div class="card-h"><b>PARAMETERS</b></div><div class="card-b"><div class="formgrid">
+          <div class="field"><label>Symbol</label><input id="bSymbol" value="SPY"></div><div class="field"><label>Fast MA</label><input id="bFast" type="number" value="20" min="2"></div><div class="field"><label>Slow MA</label><input id="bSlow" type="number" value="50" min="3"></div><div class="field"><label>&nbsp;</label><button class="btn primary" id="bRun" style="width:100%">Run Backtest</button></div>
+        </div><div class="result" id="bResult"></div></div></div>
+        <div class="card" style="margin-top:10px"><div class="card-h"><b>EQUITY CURVE</b><span class="tiny" id="backtestSource">loading…</span></div><div class="card-b"><div class="chart-wrap"><canvas id="backtestChart"></canvas></div></div></div>
+      </section>
+
+      <section class="screen" id="screen-news">
+        <div class="pagehead"><div><h1>News</h1><div class="sub">Live financial headlines through the gateway with cached fallback</div></div><span class="badge" id="newsBadge"><span class="dot"></span> LOADING</span></div>
+        <div class="card" style="margin-bottom:10px"><div class="card-h"><b>NEWS SEARCH</b><div class="toolbar"><input id="newsQuery" value="markets" placeholder="markets, AAPL, Federal Reserve…"><button class="btn primary" id="newsRefresh">Refresh</button><select id="newsFilter"><option>All</option><option>Markets</option><option>Technology</option><option>Energy</option><option>Macro</option></select></div></div></div>
+        <div class="grid main2"><div class="card"><div class="card-h"><b>HEADLINES</b><span class="tiny">provider links open in a new tab</span></div><div id="newsList"></div></div>
+        <div class="card"><div class="card-h"><b>SENTIMENT SNAPSHOT</b></div><div class="card-b" id="sentiment"></div></div></div>
+      </section>
+
+      <section class="screen" id="screen-adapters">
+        <div class="pagehead"><div><h1>Connections</h1><div class="sub">Live data gateway, provider credentials, macro feeds, and regulatory retrieval</div></div><span class="pill muted" id="gatewayState">CHECKING</span></div>
+        <div class="grid g2">
+          <div class="card"><div class="card-h"><b>LIVE GATEWAY</b><span class="tiny">loopback only by default</span></div><div class="card-b">
+            <div class="field" style="margin-bottom:8px"><label>Data Mode</label><select id="dataMode"><option value="auto">Auto — live, then cache/fallback</option><option value="live">Live preferred</option><option value="offline">Offline only</option></select></div>
+            <div class="wideform"><input id="gatewayUrl" value="http://127.0.0.1:8742" class="mono"><button class="btn" id="gatewaySave">Save URL</button></div>
+            <div class="toolbar" style="margin-top:8px"><button class="btn primary" id="connectGateway">Connect / Test</button><button class="btn good" id="refreshLive">Refresh Live Data</button><span class="tiny">Last refresh: <span id="lastRefresh">—</span></span></div>
+            <p class="footnote">Open V2 through <span class="mono">http://127.0.0.1:8742</span> for the cleanest live configuration. Opening the HTML directly still works and can call the gateway over CORS.</p>
+          </div></div>
+          <div class="card"><div class="card-h"><b>PROVIDERS</b></div><div class="card-b" id="connList"></div></div>
+        </div>
+
+        <div class="grid g2" style="margin-top:10px">
+          <div class="card"><div class="card-h"><b>FINCEPT API</b><span class="tiny">session memory only</span></div><div class="card-b">
+            <div class="field"><label>Fincept API Key</label><input type="password" id="finceptKey" class="secret" placeholder="fk_user_…"></div>
+            <div class="toolbar" style="margin-top:8px"><button class="btn primary" id="saveSessionConfig">Send Credentials to Local Gateway</button><button class="btn" id="testFincept">Test Fincept</button><span class="tiny" id="finceptResult"></span></div>
+            <div class="notice" style="margin-top:9px">The API key is not written into this HTML or localStorage. V2 sends it to the local gateway and keeps it in gateway process memory for the current session. You can also set <span class="mono">FINCEPT_API_KEY</span> before launching Node.</div>
+          </div></div>
+          <div class="card"><div class="card-h"><b>SEC EDGAR IDENTITY</b><span class="tiny">required by SEC access policy</span></div><div class="card-b">
+            <div class="field"><label>SEC User-Agent — descriptive name + email</label><input id="secUA" placeholder="Your Name your.email@example.com"></div>
+            <p class="footnote">Use the same “Send Credentials” button at left after entering this field. It is held in gateway memory and used only for SEC requests.</p>
+            <div class="toolbar"><input id="secCik" value="0000320193" placeholder="CIK"><button class="btn" id="secLoad">Load Recent Filings</button></div>
+            <div id="secResults" style="margin-top:8px"><div class="sub">Configure your SEC User-Agent, then retrieve filings by CIK.</div></div>
+          </div></div>
+        </div>
+
+        <div class="grid g2" style="margin-top:10px">
+          <div class="card"><div class="card-h"><b>MACRO MONITOR · FRED</b><button class="btn" id="macroRefresh">Refresh</button></div><div class="tablebox"><table><thead><tr><th>Series</th><th>Latest</th><th>Δ</th><th>Date</th></tr></thead><tbody id="macroTable"></tbody></table></div></div>
+          <div class="card"><div class="card-h"><b>DIAGNOSTICS</b></div><div class="card-b"><pre class="diag" id="diag">Initializing…</pre><p class="footnote">Provider errors never silently become “live” data. V2 labels cached and offline values explicitly.</p></div></div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-settings">
+        <div class="pagehead"><div><h1>Settings</h1><div class="sub">Interface and live-data behavior</div></div></div>
+        <div class="grid g2"><div class="card"><div class="card-h"><b>DISPLAY</b></div><div class="card-b">
+          <div class="field" style="margin-bottom:10px"><label>Interface Density</label><select id="density"><option value="1">Comfortable</option><option value=".88">Compact</option></select></div>
+          <div class="field"><label>Accent</label><select id="accent"><option value="#f0a020">Terminal Amber</option><option value="#55b6ff">Market Blue</option><option value="#31d07c">Signal Green</option></select></div>
+        </div></div><div class="card"><div class="card-h"><b>LIVE DATA</b></div><div class="card-b">
+          <div class="field" style="margin-bottom:10px"><label>Quote Refresh Interval</label><select id="refreshSec"><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">1 minute</option><option value="300">5 minutes</option><option value="0">Manual only</option></select></div>
+          <label style="display:flex;gap:8px;align-items:center;color:#9eb0c1"><input type="checkbox" id="fallback"> Allow cache / offline fallback when live providers fail</label>
+          <p class="footnote">Live quotes are refreshed only while the page is visible. Historical data and news are cached in IndexedDB for resilience.</p>
+        </div></div></div>
+        <div class="card" style="margin-top:10px"><div class="card-h"><b>V2 ARCHITECTURE</b></div><div class="card-b"><p style="margin-top:0;line-height:1.55;color:#9eb0c1">The HTML remains the browser-native terminal and analytics engine. The companion zero-dependency Node gateway handles provider calls, credentials, SEC identity headers, and cross-origin restrictions. If the gateway is absent, the application remains usable with cached or deterministic offline data.</p><p class="footnote">No API key is embedded in the HTML. No npm packages or CDN libraries are required.</p></div></div>
+      </section>
+    </main>
+  </div>
+  <footer class="status"><div class="left"><span id="modeStatus"><b>MODE</b> Initializing</span><span id="dataStatus"><b>DATA</b> Checking</span><span><b>PROVIDER</b> <span id="providerStatus">—</span></span><span id="statusScreen"><b>VIEW</b> Dashboard</span></div><span>V2 · Ctrl+K command palette · 1–9 navigation</span></footer>
+</div>
+
+<div class="modal" id="modal"><div class="palette"><input id="cmdInput" placeholder="Type a command or screen name…" autocomplete="off"><div class="commands" id="commands"></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const fmt = (n,d=2) => Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+const money = n => '$' + Number(n).toLocaleString(undefined,{maximumFractionDigits:2});
+const pct = n => `${Number(n)>=0?'+':''}${fmt(Number(n),2)}%`;
+const store={get(k,d){try{return JSON.parse(localStorage.getItem('fincept.v2.'+k))??d}catch{return d}},set(k,v){localStorage.setItem('fincept.v2.'+k,JSON.stringify(v))}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),2200)}
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+
+// ---------- IndexedDB cache ----------
+const DB='FinceptTerminalV2Cache', STORE='cache';
+let dbPromise=null;
+function dbOpen(){
+  if(!('indexedDB' in window)) return Promise.resolve(null);
+  if(dbPromise) return dbPromise;
+  dbPromise=new Promise(resolve=>{try{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>resolve(null)}catch{resolve(null)}});
+  return dbPromise;
+}
+async function cachePut(key,value){const db=await dbOpen();if(!db)return;try{await new Promise(res=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put({time:Date.now(),value},key);tx.oncomplete=()=>res();tx.onerror=()=>res()})}catch{}}
+async function cacheGet(key,maxAge=Infinity){const db=await dbOpen();if(!db)return null;try{return await new Promise(res=>{const tx=db.transaction(STORE,'readonly'),r=tx.objectStore(STORE).get(key);r.onsuccess=()=>{const x=r.result;res(x&&Date.now()-x.time<=maxAge?x.value:null)};r.onerror=()=>res(null)})}catch{return null}}
+
+// ---------- Offline deterministic fallback ----------
+const bases={SPY:645,QQQ:575,DIA:458,IWM:235,AAPL:232,MSFT:525,NVDA:181,AMZN:232,GOOGL:204,META:775,TSLA:349,JPM:298,XOM:109,GLD:310,BTCUSD:117400,ETHUSD:4550,EURUSD:1.17,US10Y:4.31};
+function baseFor(sym){sym=sym.toUpperCase();return bases[sym]||25+(hash(sym)%45000)/100}
+function offlineSeries(sym,n=252){const r=rng(hash(sym.toUpperCase())^n);let p=baseFor(sym)*(.76+r()*.23),out=[];const drift=((hash(sym)%19)-7)/100000,vol=.006+(hash(sym)%90)/10000;for(let i=0;i<n;i++){const z=r()+r()+r()+r()+r()+r()-3;p=Math.max(.05,p*(1+drift+z*vol));out.push(p)}const k=baseFor(sym)/out.at(-1);return out.map(v=>v*k)}
+function offlineQuote(sym){const s=offlineSeries(sym,40),p=s.at(-1),prev=s.at(-2);return {sym:sym.toUpperCase(),price:p,change:(p/prev-1)*100,open:s.at(-2),high:p*1.006,low:p*.994,vol:1e6+(hash(sym)%95000000),source:'OFFLINE'}}
+
+// ---------- Live state / provider ----------
+const live={gateway:false,quoteMap:new Map(),history:new Map(),news:[],macro:[],lastRefresh:null,lastError:'',provider:'OFFLINE',status:null};
+const appCfg={
+  mode:store.get('dataMode','auto'),
+  gateway:store.get('gateway','http://127.0.0.1:8742'),
+  refreshSec:Number(store.get('refreshSec',30)),
+  fallback:store.get('fallback',true)
+};
+function gatewayBase(){
+  if(location.protocol.startsWith('http') && location.hostname==='127.0.0.1' && location.port==='8742') return '';
+  return appCfg.gateway.replace(/\/$/,'');
+}
+async function api(path,opts={},timeout=12000){
+  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),timeout);
+  try{const r=await fetch(gatewayBase()+path,{...opts,signal:ctrl.signal,headers:{'Accept':'application/json','Content-Type':'application/json',...(opts.headers||{})}});const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error('Gateway returned non-JSON data')}if(!r.ok||data.ok===false)throw new Error(data.error||`HTTP ${r.status}`);return data}finally{clearTimeout(timer)}
+}
+function normalizeQuote(raw){
+  const sym=String(raw.symbol||raw.sym||'').toUpperCase(),off=offlineQuote(sym);
+  const num=(v,d)=>Number.isFinite(Number(v))?Number(v):d;
+  return {sym,price:num(raw.price,off.price),change:num(raw.changePct,off.change),open:num(raw.open,off.open),high:num(raw.high,off.high),low:num(raw.low,off.low),vol:num(raw.volume,off.vol),marketCap:num(raw.marketCap,null),trailingPE:num(raw.trailingPE,null),dividendYield:num(raw.dividendYield,null),name:raw.name||sym,currency:raw.currency||null,marketState:raw.marketState||null,timestamp:raw.timestamp||null,source:'LIVE'};
+}
+function quote(sym){return live.quoteMap.get(String(sym).toUpperCase())||offlineQuote(sym)}
+function series(sym,n){const key=`${String(sym).toUpperCase()}|${n}`;return live.history.get(key)?.prices||offlineSeries(sym,n)}
+function dataLabel(source){return source==='LIVE'?'LIVE':source==='CACHE'?'CACHE':'OFFLINE'}
+
+async function testGateway(showToast=false){
+  if(appCfg.mode==='offline'){live.gateway=false;live.provider='OFFLINE';updateStatus();return false}
+  try{const s=await api('/api/status',{},3500);live.gateway=true;live.status=s;live.provider='Yahoo Finance';live.lastError='';if(showToast)toast('Live gateway connected');updateStatus();renderConnections();return true}
+  catch(e){live.gateway=false;live.status=null;live.provider='OFFLINE';live.lastError=e.message;if(showToast)toast('Gateway unavailable — offline fallback active');updateStatus();renderConnections();return false}
+}
+async function hydrateCache(){
+  const qs=await cacheGet('quotes:last',24*3600*1000);if(Array.isArray(qs))for(const q of qs){q.source='CACHE';live.quoteMap.set(q.sym,q)}
+  const ns=await cacheGet('news:last',6*3600*1000);if(Array.isArray(ns))live.news=ns.map(x=>({...x,source:'CACHE'}));
+}
+async function refreshQuotes(extra=[]){
+  if(appCfg.mode==='offline'||!live.gateway)return false;
+  const syms=[...new Set(['SPY','QQQ','DIA','BTCUSD','US10Y',...watch,...universe.map(x=>x.sym),...portfolio.map(x=>x.sym),...extra].map(x=>String(x).toUpperCase()))].slice(0,40);
+  try{
+    const d=await api('/api/quote?symbols='+encodeURIComponent(syms.join(',')),{},16000);let count=0;
+    for(const raw of d.quotes||[]){if(raw.error||raw.price==null)continue;const q=normalizeQuote(raw);live.quoteMap.set(q.sym,q);count++;const u=universe.find(x=>x.sym===q.sym);if(u){u.price=q.price;u.chg=q.change;if(q.marketCap)u.cap=q.marketCap/1e9;if(q.trailingPE)u.pe=q.trailingPE;if(q.dividendYield!=null)u.yield=q.dividendYield}}
+    if(!count)throw new Error('No live quote values returned');
+    live.lastRefresh=new Date();live.provider=d.provider||'Yahoo Finance';live.lastError='';await cachePut('quotes:last',[...live.quoteMap.values()]);updateStatus();return true;
+  }catch(e){live.lastError=e.message;updateStatus();return false}
+}
+async function ensureQuote(sym){sym=String(sym).toUpperCase();if(appCfg.mode==='offline'||!live.gateway)return quote(sym);try{const d=await api('/api/quote?symbols='+encodeURIComponent(sym),{},10000),raw=(d.quotes||[]).find(x=>!x.error&&x.price!=null);if(raw){const q=normalizeQuote(raw);live.quoteMap.set(sym,q);await cachePut('quotes:last',[...live.quoteMap.values()]);return q}}catch(e){live.lastError=e.message}return quote(sym)}
+async function getHistory(sym,n){
+  sym=String(sym).toUpperCase();const key=`${sym}|${n}`;
+  if(live.history.has(key))return live.history.get(key);
+  if(appCfg.mode!=='offline'&&live.gateway){try{const d=await api(`/api/history?symbol=${encodeURIComponent(sym)}&days=${n}`,{},18000),prices=(d.rows||[]).map(x=>Number(x.close)).filter(Number.isFinite);if(prices.length>=5){const x={prices,rows:d.rows,source:'LIVE',provider:d.provider||'Yahoo Finance'};live.history.set(key,x);cachePut('history:'+key,x);return x}}catch(e){live.lastError=e.message}}
+  const cached=await cacheGet('history:'+key,14*24*3600*1000);if(cached?.prices?.length){cached.source='CACHE';live.history.set(key,cached);return cached}
+  const x={prices:offlineSeries(sym,n),rows:[],source:'OFFLINE',provider:'Deterministic fallback'};live.history.set(key,x);return x;
+}
+
+// ---------- Static universe ----------
+const universe=[
+['AAPL','Apple','Technology',232,1.18,3520,34.9,.43],['MSFT','Microsoft','Technology',525,.62,3900,38.6,.63],['NVDA','NVIDIA','Technology',181,2.45,4420,58.1,.03],['GOOGL','Alphabet','Communication',204,-.38,2520,27.4,.41],['META','Meta Platforms','Communication',775,1.57,1950,29.8,.27],['AMZN','Amazon','Consumer Discretionary',232,.85,2470,35.4,0],['TSLA','Tesla','Consumer Discretionary',349,-2.13,1120,151.8,0],['JPM','JPMorgan','Financials',298,.39,820,15.1,2.0],['BAC','Bank of America','Financials',49,-.22,379,14.4,2.2],['V','Visa','Financials',358,.42,708,35.0,.66],['XOM','Exxon Mobil','Energy',109,-1.05,470,15.3,3.5],['CVX','Chevron','Energy',157,-.64,286,17.2,4.3],['LLY','Eli Lilly','Health Care',752,1.92,713,46.5,.8],['UNH','UnitedHealth','Health Care',313,-1.26,287,17.4,2.8],['COST','Costco','Consumer Staples',985,.33,437,55.7,.47],['WMT','Walmart','Consumer Staples',104,.77,830,39.5,.89],['CAT','Caterpillar','Industrials',417,1.10,200,20.9,1.4],['GE','GE Aerospace','Industrials',279,.56,298,39.7,.5],['NEE','NextEra Energy','Utilities',71,-.15,147,24.7,3.2],['PLD','Prologis','Real Estate',111,.24,103,30.4,3.5]
+].map(x=>({sym:x[0],name:x[1],sector:x[2],price:x[3],chg:x[4],cap:x[5],pe:x[6],yield:x[7]}));
+let watch=store.get('watch',['SPY','QQQ','AAPL','MSFT','NVDA','BTCUSD']);
+let portfolio=store.get('portfolio',[{sym:'SPY',qty:15,cost:590},{sym:'MSFT',qty:8,cost:470}]);
+const symbols=['SPY','QQQ','DIA','IWM','AAPL','MSFT','NVDA','AMZN','GOOGL','META','TSLA','JPM','XOM','GLD','BTCUSD'];
+
+// ---------- Chart ----------
+function drawLine(canvas,data,opts={}){const dpr=devicePixelRatio||1,rect=canvas.getBoundingClientRect();canvas.width=Math.max(1,rect.width*dpr);canvas.height=Math.max(1,rect.height*dpr);const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);const w=rect.width,h=rect.height,pad=32;c.clearRect(0,0,w,h);if(!data?.length)return;let min=Math.min(...data),max=Math.max(...data);if(min===max){min*=.99;max*=1.01}const x=i=>pad+i*(w-pad*1.25)/(data.length-1||1),y=v=>h-pad-(v-min)/(max-min)*(h-pad*1.6);c.strokeStyle='#1b2b3b';c.lineWidth=1;for(let i=0;i<5;i++){let yy=18+i*(h-48)/4;c.beginPath();c.moveTo(pad,yy);c.lineTo(w-10,yy);c.stroke()}c.fillStyle='#668097';c.font='10px ui-monospace,monospace';for(let i=0;i<5;i++){let val=max-(max-min)*i/4;c.fillText(val<10?fmt(val,3):fmt(val,1),2,21+i*(h-48)/4)}const grad=c.createLinearGradient(0,15,0,h);grad.addColorStop(0,'rgba(85,182,255,.25)');grad.addColorStop(1,'rgba(85,182,255,0)');c.beginPath();data.forEach((v,i)=>i?c.lineTo(x(i),y(v)):c.moveTo(x(i),y(v)));c.lineTo(x(data.length-1),h-pad);c.lineTo(x(0),h-pad);c.closePath();c.fillStyle=grad;c.fill();c.beginPath();data.forEach((v,i)=>i?c.lineTo(x(i),y(v)):c.moveTo(x(i),y(v)));c.strokeStyle=opts.color||getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim();c.lineWidth=1.6;c.stroke()}
+function metric(label,value,delta='',cls=''){return `<div class="card metric"><div class="label">${esc(label)}</div><div class="value">${esc(value)}</div>${delta?`<div class="delta ${cls}">${esc(delta)}</div>`:''}</div>`}
+
+// ---------- Rendering ----------
+function updateStatus(){
+  const online=live.gateway&&appCfg.mode!=='offline';
+  $('#modeStatus').innerHTML=`<b>MODE</b> ${online?'Live-capable':'Offline'}`;
+  $('#dataStatus').innerHTML=`<b>DATA</b> ${online?(live.lastRefresh?'LIVE':'Gateway ready'):(live.quoteMap.size?'Cached / fallback':'Offline fallback')}`;
+  $('#providerStatus').textContent=online?live.provider:'Deterministic fallback';
+  const badge=$('#dataBadge');if(badge){badge.className='badge '+(online?'ok':'');badge.innerHTML=`<span class="dot"></span> ${online?'LIVE READY':'OFFLINE'}`}
+  if($('#lastRefresh'))$('#lastRefresh').textContent=live.lastRefresh?live.lastRefresh.toLocaleTimeString():'—';
+}
+function renderTicker(){const arr=['SPY','QQQ','DIA','BTCUSD','US10Y'].map(quote);$('#ticker').innerHTML=arr.map(q=>`<span class="tick"><b>${esc(q.sym)}</b> ${q.sym==='BTCUSD'?money(q.price):fmt(q.price,q.price<10?3:2)} <span class="${q.change>=0?'up':'down'}">${pct(q.change)}</span></span>`).join('')}
+function renderDashboard(){const ms=[['S&P 500','SPY'],['Nasdaq 100','QQQ'],['Dow','DIA'],['Bitcoin','BTCUSD']];$('#dashMetrics').innerHTML=ms.map(([n,s])=>{const q=quote(s);return metric(n,s==='BTCUSD'?money(q.price):fmt(q.price),pct(q.change),q.change>=0?'up':'down')}).join('');renderWatch();renderHeat();renderMovers()}
+function renderWatch(){if(!watch.length){$('#watchlist').innerHTML='<div class="sub">No symbols. Add one above.</div>';return}$('#watchlist').innerHTML=watch.map(s=>{const q=quote(s);return `<div class="watchrow"><div><div class="symbol">${esc(q.sym)}</div><div class="tiny">${dataLabel(q.source)}</div></div><div class="watch-price">${q.price>1000?money(q.price):fmt(q.price,q.price<10?3:2)}<div class="tiny ${q.change>=0?'up':'down'}">${pct(q.change)}</div></div><button class="xbtn" data-rm="${esc(q.sym)}">×</button></div>`}).join('');$$('[data-rm]').forEach(b=>b.onclick=()=>{watch=watch.filter(x=>x!==b.dataset.rm);store.set('watch',watch);renderWatch()})}
+function renderHeat(){const groups={};for(const x of universe){(groups[x.sector]??=[]).push(x.chg)}const rows=Object.entries(groups).map(([s,a])=>[s,a.reduce((x,y)=>x+y,0)/a.length]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,8);$('#heatmap').innerHTML=rows.map(([s,v])=>{const alpha=.15+Math.min(.55,Math.abs(v)/5),bg=v>=0?`rgba(49,208,124,${alpha})`:`rgba(255,92,102,${alpha})`;return `<div style="background:${bg}"><b>${esc(s)}</b><span>${pct(v)}</span></div>`}).join('')}
+function renderMovers(){const m=[...universe].sort((a,b)=>Math.abs(b.chg)-Math.abs(a.chg)).slice(0,8);$('#movers').innerHTML=m.map(x=>`<tr><td class="symbol">${x.sym}</td><td>${money(x.price)}</td><td class="${x.chg>=0?'up':'down'}">${pct(x.chg)}</td><td>${fmt((quote(x.sym).vol||0)/1e6,1)}M</td></tr>`).join('');$('#moversSource').textContent=live.lastRefresh?'live snapshot':'fallback snapshot'}
+async function updateDashChart(){const s=$('#dashSymbol').value||'SPY',n=Number($('#dashRange').value),h=await getHistory(s,n);drawLine($('#marketChart'),h.prices);$('#dashChartSource').textContent=`${h.source} · ${h.provider}`}
+async function loadMarket(sym){sym=(sym||'AAPL').trim().toUpperCase();$('#marketSearch').value=sym;const q=await ensureQuote(sym);$('#marketDetailMetrics').innerHTML=metric('Last',q.price>1000?money(q.price):fmt(q.price,q.price<10?4:2),pct(q.change),q.change>=0?'up':'down')+metric('Open',fmt(q.open,q.open<10?4:2))+metric('Day Range',`${fmt(q.low,2)} – ${fmt(q.high,2)}`)+metric('Volume',fmt((q.vol||0)/1e6,1)+'M');$('#marketChartTitle').textContent=`${sym} PRICE HISTORY`;const h=await getHistory(sym,Number($('#marketRange').value));drawLine($('#detailChart'),h.prices);$('#marketSource').textContent=`${q.source} quote · ${h.source} history`;store.set('lastSymbol',sym)}
+function initScreener(){[...new Set(universe.map(x=>x.sector))].sort().forEach(s=>$('#fSector').insertAdjacentHTML('beforeend',`<option>${esc(s)}</option>`));['#fSector','#fCap','#fPE','#fChange'].forEach(id=>$(id).addEventListener('input',renderScreener));renderScreener()}
+function renderScreener(){const sector=$('#fSector').value,cap=Number($('#fCap').value)||0,pe=Number($('#fPE').value)||9999,ch=Number($('#fChange').value)||-999,r=universe.filter(x=>(!sector||x.sector===sector)&&x.cap>=cap&&x.pe<=pe&&x.chg>=ch);$('#screenCount').textContent=`${r.length} of ${universe.length} securities · ${live.lastRefresh?'live marks':'baseline fundamentals'}`;$('#screenBody').innerHTML=r.map(x=>`<tr><td class="symbol">${x.sym}</td><td style="text-align:left">${esc(x.name)}</td><td style="text-align:left">${esc(x.sector)}</td><td>${money(x.price)}</td><td class="${x.chg>=0?'up':'down'}">${pct(x.chg)}</td><td>$${fmt(x.cap,0)}B</td><td>${fmt(x.pe,1)}</td><td>${fmt(x.yield,2)}%</td></tr>`).join('')}
+function renderPortfolio(){let cost=0,val=0,pl=0;$('#portfolioBody').innerHTML=portfolio.map((p,i)=>{const q=quote(p.sym),mv=q.price*p.qty,cb=p.cost*p.qty,d=mv-cb;cost+=cb;val+=mv;pl+=d;return `<tr><td class="symbol">${esc(p.sym)}</td><td>${fmt(p.qty,2)}</td><td>${money(p.cost)}</td><td>${money(q.price)}<div class="tiny">${dataLabel(q.source)}</div></td><td>${money(mv)}</td><td class="${d>=0?'up':'down'}">${money(d)}</td><td class="${d>=0?'up':'down'}">${pct(cb?d/cb*100:0)}</td><td><button class="xbtn" data-prm="${i}">×</button></td></tr>`}).join('');const ret=cost?pl/cost*100:0;$('#portfolioMetrics').innerHTML=metric('Market Value',money(val))+metric('Cost Basis',money(cost))+metric('Unrealized P/L',money(pl),pct(ret),pl>=0?'up':'down')+metric('Positions',portfolio.length);$$('[data-prm]').forEach(b=>b.onclick=()=>{portfolio.splice(Number(b.dataset.prm),1);store.set('portfolio',portfolio);renderPortfolio()})}
+function returns(s){const r=[];for(let i=1;i<s.length;i++)r.push(s[i]/s[i-1]-1);return r}function avg(a){return a.reduce((x,y)=>x+y,0)/(a.length||1)}function std(a){const m=avg(a);return Math.sqrt(avg(a.map(x=>(x-m)**2)))}function maxDD(s){let peak=s[0],m=0;for(const v of s){peak=Math.max(peak,v);m=Math.min(m,v/peak-1)}return m}
+async function runAnalytics(){const sym=$('#aSymbol').value.trim().toUpperCase()||'SPY',days=Number($('#aDays').value),rf=Number($('#aRF').value)/100,h=await getHistory(sym,days),s=h.prices;if(s.length<3)return toast('Not enough history');const r=returns(s),ann=avg(r)*252,vol=std(r)*Math.sqrt(252),sh=(ann-rf)/(vol||1),cagr=(s.at(-1)/s[0])**(252/(s.length-1))-1,dd=maxDD(s);$('#aResult').innerHTML=[["CAGR",pct(cagr*100),cagr>=0?'up':'down'],['Annualized Return',pct(ann*100),ann>=0?'up':'down'],['Volatility',fmt(vol*100)+'%',''],['Sharpe',fmt(sh,2),sh>=0?'up':'down'],['Max Drawdown',fmt(dd*100)+'%','down'],['Start',money(s[0]),''],['End',money(s.at(-1)),''],['Observations',s.length,'']].map(x=>`<div><small>${x[0]}</small><strong class="${x[2]}">${x[1]}</strong></div>`).join('');drawLine($('#analyticsChart'),s.map(v=>100*v/s[0]));$('#analyticsSource').textContent=`${h.source} · ${h.provider}`}
+function runDCF(){const f=Number($('#dFcf').value),g=Number($('#dGrowth').value)/100,w=Number($('#dDiscount').value)/100,tg=Number($('#dTerminal').value)/100,debt=Number($('#dDebt').value),shares=Math.max(.0001,Number($('#dShares').value));if(w<=tg){toast('Discount rate must exceed terminal growth');return}let pv=0,fcf=f;for(let y=1;y<=5;y++){fcf*=1+g;pv+=fcf/(1+w)**y}const terminal=fcf*(1+tg)/(w-tg),ev=pv+terminal/(1+w)**5,equity=ev-debt,ps=equity/shares;$('#dcfResult').innerHTML=`<div><small>Enterprise Value</small><strong>${money(ev)}M</strong></div><div><small>Equity / Share</small><strong>${money(ps)}</strong></div>`}
+function ma(a,n){return a.map((_,i)=>i<n-1?NaN:avg(a.slice(i-n+1,i+1)))}
+async function runBacktest(){const sym=$('#bSymbol').value.trim().toUpperCase()||'SPY',fast=Number($('#bFast').value),slow=Number($('#bSlow').value);if(fast>=slow||fast<2){toast('Fast MA must be smaller than Slow MA');return}const h=await getHistory(sym,756),p=h.prices;if(p.length<slow+5)return toast('Not enough history for strategy');const f=ma(p,fast),s=ma(p,slow),eq=[100];let cash=true,trades=0;for(let i=1;i<p.length;i++){const want=Number.isFinite(f[i])&&f[i]>s[i];if(want!==!cash&&Number.isFinite(f[i])){cash=!want;trades++}eq.push(eq.at(-1)*(1+(cash?0:p[i]/p[i-1]-1)))}const total=eq.at(-1)/100-1,cagr=(eq.at(-1)/100)**(252/(p.length-1))-1,dd=maxDD(eq);$('#bResult').innerHTML=[["Ending Equity",'$'+fmt(eq.at(-1),2)],['Total Return',pct(total*100)],['CAGR',pct(cagr*100)],['Max Drawdown',fmt(dd*100)+'%'],['Trades',trades],['Exposure','Long / Cash'],['Fast MA',fast+'d'],['Slow MA',slow+'d']].map(x=>`<div><small>${x[0]}</small><strong>${x[1]}</strong></div>`).join('');drawLine($('#backtestChart'),eq);$('#backtestSource').textContent=`${h.source} · ${h.provider}`}
+
+async function runFinceptBS(){
+  if(!live.gateway){toast('Connect the gateway first');return}
+  const payload={spot:Number($('#bsSpot').value),strike:Number($('#bsStrike').value),rate:Number($('#bsRate').value),volatility:Number($('#bsVol').value),time_to_maturity:Number($('#bsTime').value),option_type:$('#bsType').value};
+  $('#finceptBsResult').innerHTML='<div><small>Status</small><strong>Calling Fincept…</strong></div>';
+  try{const d=await api('/api/fincept/quantlib',{method:'POST',body:JSON.stringify({path:'/quantlib/pricing/black-scholes',payload})},22000),x=d.data?.data||d.data||{};const fields=[['Price',x.price],['Delta',x.delta],['Gamma',x.gamma],['Vega',x.vega],['Theta',x.theta],['Rho',x.rho]].filter(v=>v[1]!=null);$('#finceptBsResult').innerHTML=fields.length?fields.map(([k,v])=>`<div><small>${k}</small><strong>${fmt(v,4)}</strong></div>`).join(''):`<div><small>Result</small><strong>API completed</strong></div>`;toast('Fincept QuantLib calculation completed')}catch(e){$('#finceptBsResult').innerHTML=`<div><small>Error</small><strong class="down">${esc(e.message)}</strong></div>`;toast('Fincept QuantLib call failed')}
+}
+
+// ---------- News ----------
+const demoNews=[
+{cat:'Markets',time:'09:42',src:'Offline Sample',title:'Live news unavailable — cached/offline mode is active',text:'Start the V2 gateway or refresh Connections to retrieve current market headlines.',source:'OFFLINE'},
+{cat:'Technology',time:'09:17',src:'Offline Sample',title:'Technology monitoring workspace ready',text:'When connected, this area populates from the live news provider.',source:'OFFLINE'},
+{cat:'Macro',time:'08:55',src:'Offline Sample',title:'Macro monitoring workspace ready',text:'FRED macro data is available through the local gateway.',source:'OFFLINE'}
+];
+function classifyNews(t){t=(t||'').toLowerCase();if(/fed|inflation|cpi|jobs|treasury|rate|gdp|econom/.test(t))return'Macro';if(/oil|gas|energy|opec|crude/.test(t))return'Energy';if(/chip|ai|software|apple|microsoft|nvidia|google|meta|amazon|tesla|technology/.test(t))return'Technology';return'Markets'}
+async function refreshNews(showToast=false){
+  if(appCfg.mode!=='offline'&&live.gateway){try{const q=$('#newsQuery').value.trim()||'markets',d=await api('/api/news?query='+encodeURIComponent(q)+'&count=28',{},14000);live.news=(d.news||[]).map(n=>({cat:classifyNews(n.title),time:n.published?new Date(n.published).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}):'',src:n.publisher||d.provider,title:n.title,text:'',link:n.link||'',published:n.published,source:'LIVE'}));await cachePut('news:last',live.news);if(showToast)toast(`Loaded ${live.news.length} live headlines`);renderNews();return true}catch(e){live.lastError=e.message}}
+  const c=await cacheGet('news:last',6*3600*1000);if(c?.length)live.news=c.map(x=>({...x,source:'CACHE'}));renderNews();return false;
+}
+function renderNews(){const all=live.news.length?live.news:demoNews,f=$('#newsFilter').value,r=all.filter(n=>f==='All'||n.cat===f);$('#newsList').innerHTML=r.map(n=>`<div class="newsitem"><div class="meta"><span>${esc(n.time)}</span><span>${esc(n.cat)}</span><span>${esc(n.src)}</span><span>${esc(n.source||'')}</span></div><h3>${n.link?`<a href="${esc(n.link)}" target="_blank" rel="noopener noreferrer">${esc(n.title)}</a>`:esc(n.title)}</h3>${n.text?`<p>${esc(n.text)}</p>`:''}</div>`).join('')||'<div class="card-b sub">No matching headlines.</div>';const titles=r.map(x=>x.title.toLowerCase()).join(' '),pos=(titles.match(/gain|rise|beat|growth|strong|record|surge|higher|optim/g)||[]).length,neg=(titles.match(/fall|drop|miss|weak|risk|cut|lower|decline|loss/g)||[]).length,total=Math.max(1,pos+neg),positive=Math.round(100*pos/total),negative=Math.round(100*neg/total),neutral=Math.max(0,100-positive-negative);$('#sentiment').innerHTML=`<div class="result" style="grid-template-columns:1fr"><div><small>Positive terms</small><strong class="up">${positive}%</strong></div><div><small>Neutral</small><strong>${neutral}%</strong></div><div><small>Negative terms</small><strong class="down">${negative}%</strong></div></div><p class="footnote">Local headline heuristic, not an LLM sentiment model.</p>`;$('#newsBadge').innerHTML=`<span class="dot"></span> ${all.some(x=>x.source==='LIVE')?'LIVE':all.some(x=>x.source==='CACHE')?'CACHE':'OFFLINE'}`}
+
+// ---------- Connections / macro / SEC ----------
+function connRow(name,status,detail,ok=false){return `<div class="connrow"><div><b>${esc(name)}</b><div class="tiny">${esc(detail)}</div></div><span class="pill ${ok?'good':'muted'}">${esc(status)}</span></div>`}
+function renderConnections(){
+  if(!$('#connList'))return;const s=live.status||{};
+  $('#gatewayState').className='pill '+(live.gateway?'good':'bad');$('#gatewayState').textContent=live.gateway?'CONNECTED':'OFFLINE';
+  $('#connList').innerHTML=connRow('Market data',live.gateway?'READY':'OFFLINE',live.gateway?'Yahoo Finance via local gateway':'Start gateway.js',live.gateway)+connRow('News',live.gateway?'READY':'OFFLINE','Yahoo Finance search feed',live.gateway)+connRow('Macro',live.gateway?'READY':'OFFLINE','Official FRED CSV feed',live.gateway)+connRow('Fincept API',s.finceptConfigured?'CONFIGURED':'KEY REQUIRED','Authenticated QuantLib/API access',!!s.finceptConfigured)+connRow('SEC EDGAR',s.secConfigured?'CONFIGURED':'USER-AGENT REQUIRED','Official SEC submissions endpoint',!!s.secConfigured);
+  $('#diag').textContent=JSON.stringify({gateway:live.gateway,mode:appCfg.mode,provider:live.provider,lastRefresh:live.lastRefresh?.toISOString()||null,lastError:live.lastError||null,finceptConfigured:!!s.finceptConfigured,secConfigured:!!s.secConfigured},null,2);
+}
+async function saveSessionConfig(){const fincept=$('#finceptKey').value.trim(),sec=$('#secUA').value.trim();try{const d=await api('/api/config',{method:'POST',body:JSON.stringify({...(fincept?{finceptApiKey:fincept}:{}),...(sec?{secUserAgent:sec}:{})})});$('#finceptKey').value='';live.status={...(live.status||{}),...d};toast('Gateway session configuration updated');await testGateway();renderConnections()}catch(e){toast(e.message)}}
+async function testFincept(){try{const d=await api('/api/fincept/profile',{},15000);const profile=d.data?.data||d.data;$('#finceptResult').textContent='Connected'+(profile?.username?` as ${profile.username}`:'');toast('Fincept API connection verified');await testGateway()}catch(e){$('#finceptResult').textContent=e.message;toast('Fincept API test failed')}}
+async function refreshMacro(showToast=false){if(!live.gateway){renderMacro([]);return}try{const d=await api('/api/macro?series=GDP,CPIAUCSL,UNRATE,DFF,DGS10',{},20000);live.macro=d.series||[];renderMacro(live.macro);if(showToast)toast('Macro data refreshed')}catch(e){live.lastError=e.message;renderMacro([])}}
+function renderMacro(series){const names={GDP:'GDP',CPIAUCSL:'CPI',UNRATE:'Unemployment',DFF:'Fed Funds',DGS10:'10Y Treasury'};$('#macroTable').innerHTML=(series||[]).map(s=>{const rows=(s.rows||[]).filter(x=>Number.isFinite(Number(x.value))),a=rows.at(-1),b=rows.at(-2),chg=a&&b?Number(a.value)-Number(b.value):null;return `<tr><td><b>${esc(names[s.series]||s.series)}</b><div class="tiny">${esc(s.series)}</div></td><td>${a?fmt(a.value,a.value<10?3:2):'—'}</td><td class="${chg==null?'':chg>=0?'up':'down'}">${chg==null?'—':(chg>=0?'+':'')+fmt(chg,3)}</td><td>${a?esc(a.date):'—'}</td></tr>`}).join('')||'<tr><td colspan="4" class="sub">Connect the gateway to load FRED macro series.</td></tr>'}
+async function loadSEC(){if(!live.gateway)return toast('Gateway is offline');const cik=$('#secCik').value.trim();$('#secResults').innerHTML='<div class="sub">Loading SEC submissions…</div>';try{const d=await api('/api/sec/submissions?cik='+encodeURIComponent(cik),{},20000),x=d.data||{},r=x.filings?.recent||{},forms=r.form||[],rows=[];for(let i=0;i<Math.min(forms.length,12);i++){const accession=String(r.accessionNumber?.[i]||''),doc=r.primaryDocument?.[i]||'',cikNum=String(x.cik||cik).replace(/^0+/,'');const href=accession&&doc?`https://www.sec.gov/Archives/edgar/data/${cikNum}/${accession.replace(/-/g,'')}/${doc}`:'';rows.push(`<tr><td>${esc(forms[i])}</td><td>${esc(r.filingDate?.[i]||'')}</td><td>${esc(r.reportDate?.[i]||'')}</td><td>${href?`<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">Open filing</a>`:'—'}</td></tr>`)}$('#secResults').innerHTML=`<div class="tiny" style="margin-bottom:6px">${esc(x.name||'')} · CIK ${esc(String(x.cik||cik))}</div><div class="tablebox" style="max-height:300px"><table><thead><tr><th>Form</th><th>Filed</th><th>Report</th><th>Link</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>`}catch(e){$('#secResults').innerHTML=`<div class="sub">${esc(e.message)}</div>`}}
+
+// ---------- Navigation ----------
+const screenNames=['dashboard','markets','screener','portfolio','analytics','backtest','news','adapters','settings'];
+function go(name){if(!screenNames.includes(name))return;$$('.screen').forEach(x=>x.classList.remove('active'));$('#screen-'+name).classList.add('active');$$('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.screen===name));$('#statusScreen').innerHTML='<b>VIEW</b> '+name[0].toUpperCase()+name.slice(1);store.set('screen',name);closePalette();setTimeout(()=>{if(name==='dashboard')updateDashChart();if(name==='markets')loadMarket($('#marketSearch').value);if(name==='analytics')runAnalytics();if(name==='backtest')runBacktest();if(name==='adapters'){renderConnections();refreshMacro()}},30)}
+$$('#nav button').forEach(b=>b.onclick=()=>go(b.dataset.screen));
+const commands=screenNames.map((s,i)=>({name:'Open '+(s==='adapters'?'Connections':s[0].toUpperCase()+s.slice(1)),screen:s,key:String(i+1)}));
+function openPalette(){renderCommands('');$('#modal').classList.add('open');setTimeout(()=>$('#cmdInput').focus(),10)}function closePalette(){$('#modal').classList.remove('open');$('#cmdInput').value=''}function renderCommands(q){q=q.toLowerCase();const r=commands.filter(c=>c.name.toLowerCase().includes(q));$('#commands').innerHTML=r.map(c=>`<div class="cmd" data-go="${c.screen}"><span>${esc(c.name)}</span><span>${c.key}</span></div>`).join('');$$('[data-go]').forEach(e=>e.onclick=()=>go(e.dataset.go))}
+$('#cmdBtn').onclick=openPalette;$('#cmdInput').oninput=e=>renderCommands(e.target.value);$('#modal').onclick=e=>{if(e.target===$('#modal'))closePalette()};
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openPalette();return}if(e.key==='Escape')closePalette();if(!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)&&e.key>='1'&&e.key<='9')go(screenNames[Number(e.key)-1])});
+
+// ---------- Events ----------
+$('#watchAdd').onclick=async()=>{const s=$('#watchInput').value.trim().toUpperCase();if(!s)return;if(!watch.includes(s))watch.push(s);store.set('watch',watch);$('#watchInput').value='';await ensureQuote(s);renderWatch()};$('#watchInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#watchAdd').click()});
+$('#dashSymbol').innerHTML=symbols.map(s=>`<option>${s}</option>`).join('');$('#dashSymbol').value='SPY';$('#dashSymbol').onchange=updateDashChart;$('#dashRange').onchange=updateDashChart;
+$('#marketLoad').onclick=()=>loadMarket($('#marketSearch').value);$('#marketSearch').addEventListener('keydown',e=>{if(e.key==='Enter')loadMarket(e.target.value)});$('#marketRange').onchange=()=>loadMarket($('#marketSearch').value);
+$('#screenReset').onclick=()=>{$('#fSector').value='';$('#fCap').value=0;$('#fPE').value=80;$('#fChange').value=-20;renderScreener()};
+$('#portfolioAdd').onclick=async()=>{const sym=$('#pSymbol').value.trim().toUpperCase(),qty=Number($('#pQty').value),cost=Number($('#pCost').value);if(!sym||qty<=0||cost<0){toast('Enter a valid position');return}portfolio.push({sym,qty,cost});store.set('portfolio',portfolio);await ensureQuote(sym);renderPortfolio();toast('Position added')};$('#portfolioClear').onclick=()=>{portfolio=[];store.set('portfolio',portfolio);renderPortfolio()};
+$('#aRun').onclick=runAnalytics;$('#dcfRun').onclick=runDCF;$('#finceptBsRun').onclick=runFinceptBS;$('#bRun').onclick=runBacktest;$('#newsFilter').onchange=renderNews;$('#newsRefresh').onclick=()=>refreshNews(true);$('#newsQuery').addEventListener('keydown',e=>{if(e.key==='Enter')refreshNews(true)});
+$('#connectGateway').onclick=()=>testGateway(true).then(async ok=>{if(ok){await refreshQuotes();renderAllLive();await refreshNews();await refreshMacro()}});
+$('#refreshLive').onclick=async()=>{if(!live.gateway&&!await testGateway(true))return;await refreshQuotes([$('#marketSearch').value]);renderAllLive();await updateDashChart();toast('Live market data refreshed')};
+$('#saveSessionConfig').onclick=saveSessionConfig;$('#testFincept').onclick=testFincept;$('#macroRefresh').onclick=()=>refreshMacro(true);$('#secLoad').onclick=loadSEC;
+$('#dataMode').value=appCfg.mode;$('#dataMode').onchange=async e=>{appCfg.mode=e.target.value;store.set('dataMode',appCfg.mode);live.history.clear();if(appCfg.mode==='offline'){live.gateway=false;live.lastRefresh=null}else await testGateway(true);await refreshQuotes();renderAllLive();updateStatus()};
+$('#gatewayUrl').value=appCfg.gateway;$('#gatewaySave').onclick=async()=>{appCfg.gateway=$('#gatewayUrl').value.trim().replace(/\/$/,'')||'http://127.0.0.1:8742';store.set('gateway',appCfg.gateway);live.gateway=false;await testGateway(true)};
+$('#refreshSec').value=String(appCfg.refreshSec);$('#refreshSec').onchange=e=>{appCfg.refreshSec=Number(e.target.value);store.set('refreshSec',appCfg.refreshSec);startRefreshTimer()};
+$('#fallback').checked=!!appCfg.fallback;$('#fallback').onchange=e=>{appCfg.fallback=e.target.checked;store.set('fallback',appCfg.fallback)};
+$('#density').value=store.get('density','1');document.body.style.fontSize=(13*Number($('#density').value))+'px';$('#density').onchange=e=>{document.body.style.fontSize=(13*Number(e.target.value))+'px';store.set('density',e.target.value)};
+$('#accent').value=store.get('accent','#f0a020');document.documentElement.style.setProperty('--accent',$('#accent').value);$('#accent').onchange=e=>{document.documentElement.style.setProperty('--accent',e.target.value);store.set('accent',e.target.value)};
+
+function renderAllLive(){renderTicker();renderDashboard();renderScreener();renderPortfolio();renderConnections();updateStatus()}
+let refreshTimer=null;function startRefreshTimer(){clearInterval(refreshTimer);if(appCfg.refreshSec>0)refreshTimer=setInterval(async()=>{if(document.hidden||appCfg.mode==='offline'||!live.gateway)return;await refreshQuotes([$('#marketSearch').value]);renderAllLive()},Math.max(15,appCfg.refreshSec)*1000)}
+function clock(){const d=new Date();$('#clock').textContent=d.toLocaleTimeString([],{hour12:false})}clock();setInterval(clock,1000);
+window.addEventListener('resize',()=>{const active=$('.screen.active').id;if(active==='screen-dashboard')updateDashChart();if(active==='screen-markets')loadMarket($('#marketSearch').value);if(active==='screen-analytics')runAnalytics();if(active==='screen-backtest')runBacktest()});
+
+// ---------- Startup ----------
+(async function init(){
+  await hydrateCache();renderTicker();renderDashboard();initScreener();renderPortfolio();renderNews();renderConnections();updateStatus();runDCF();
+  const saved=store.get('screen','dashboard');if(screenNames.includes(saved))go(saved);
+  if(appCfg.mode!=='offline'){await testGateway(false);if(live.gateway){await refreshQuotes();renderAllLive();await Promise.all([refreshNews(false),refreshMacro(false)]);renderNews();renderMacro(live.macro)}}
+  await Promise.all([updateDashChart(),loadMarket(store.get('lastSymbol','AAPL')),runAnalytics(),runBacktest()]);startRefreshTimer();
+})();
+})();
+
+</script>
+</body>
+</html>

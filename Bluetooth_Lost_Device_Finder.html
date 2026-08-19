@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>BLE Lost Device Finder</title>
+<style>
+  :root{
+    --bg:#07111f; --panel:#0d1b2d; --panel2:#102238; --text:#e8f1ff;
+    --muted:#91a8c4; --line:#203a59; --ok:#66e3a4; --warn:#ffd166;
+    --bad:#ff6b6b; --accent:#58a6ff; --hot:#ff8c42;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; color:var(--text); background:
+    radial-gradient(circle at 20% 0%, #12345a 0, transparent 35%),
+    linear-gradient(180deg,#06101c,#091522 60%,#07111f);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  .wrap{max-width:1180px;margin:auto;padding:22px}
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+  h1{font-size:clamp(25px,4vw,42px);line-height:1;margin:0 0 8px}
+  .sub{color:var(--muted);max-width:760px;line-height:1.45}
+  .badge{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);white-space:nowrap}
+  .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}
+  .panel{background:rgba(13,27,45,.92);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+  .panel h2{margin:0 0 12px;font-size:18px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+  button{
+    border:1px solid #315579;background:#123051;color:white;border-radius:12px;
+    padding:11px 14px;font-weight:700;cursor:pointer
+  }
+  button:hover{filter:brightness(1.13)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.primary{background:#1769aa}
+  button.danger{background:#6e2630}
+  input{
+    width:100%;border:1px solid var(--line);background:#071523;color:var(--text);
+    padding:10px 12px;border-radius:10px;outline:none
+  }
+  .status{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+  .pill{background:#091a2a;border:1px solid var(--line);padding:9px;border-radius:12px}
+  .pill b{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+  .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+  .radarWrap{display:grid;place-items:center;min-height:360px}
+  .radar{
+    width:min(320px,78vw);aspect-ratio:1;border-radius:50%;position:relative;
+    border:1px solid #2d537c;
+    background:
+      radial-gradient(circle,transparent 0 24%,#1d426144 25% 25.5%,transparent 26% 49%,#1d426144 50% 50.5%,transparent 51% 74%,#1d426144 75% 75.5%,transparent 76%),
+      linear-gradient(90deg,transparent 49.7%,#21425f 50%,transparent 50.3%),
+      linear-gradient(0deg,transparent 49.7%,#21425f 50%,transparent 50.3%),
+      radial-gradient(circle,#113a5d 0,#092039 48%,#071522 75%);
+    box-shadow:inset 0 0 55px #0008,0 0 35px #0b76d744;
+  }
+  .sweep{
+    position:absolute;inset:50% 50% 50% 50%;transform-origin:0 0;
+    width:48%;height:2px;background:linear-gradient(90deg,#60d6ff,transparent);
+    animation:sweep 3.4s linear infinite;opacity:.7
+  }
+  @keyframes sweep{to{transform:rotate(360deg)}}
+  .targetDot{
+    position:absolute;width:26px;height:26px;border-radius:50%;left:50%;top:50%;
+    transform:translate(-50%,-50%) scale(.7);background:var(--bad);
+    box-shadow:0 0 25px currentColor;transition:.25s ease;opacity:.25
+  }
+  .targetDot.active{opacity:1}
+  .centerReadout{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    text-align:center;pointer-events:none;text-shadow:0 2px 8px #000;
+  }
+  #rssiBig{font-size:38px;font-weight:900}
+  #proximityText{font-size:14px;color:var(--muted);font-weight:700}
+  #targetName{font-size:13px;margin-top:8px;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .meter{height:14px;background:#06101b;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:12px 0 4px}
+  .meter > div{height:100%;width:0%;background:linear-gradient(90deg,#ff6464,#ffd166,#66e3a4);transition:width .25s}
+  .trend{font-size:13px;color:var(--muted)}
+  canvas{width:100%;height:150px;background:#071522;border:1px solid var(--line);border-radius:12px}
+  .tableWrap{overflow:auto;max-height:390px;border:1px solid var(--line);border-radius:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:10px;text-align:left;border-bottom:1px solid #19324d;white-space:nowrap}
+  th{position:sticky;top:0;background:#0d2136;z-index:1;color:#b7c9df}
+  tr:hover{background:#112a43}
+  tr.target{background:#173d5c}
+  .selectBtn{padding:6px 9px;border-radius:8px;font-size:12px}
+  .log{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#06111d;border:1px solid var(--line);padding:10px;border-radius:12px;height:130px;overflow:auto;font-size:12px;color:#b9cce3}
+  .note{font-size:13px;color:var(--muted);line-height:1.5}
+  .callout{border-left:4px solid var(--warn);background:#3c331a66;padding:10px 12px;border-radius:9px;margin:10px 0;font-size:13px}
+  label.toggle{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:13px}
+  footer{margin:18px 0 6px;color:var(--muted);font-size:12px;line-height:1.45}
+  @media(max-width:800px){.grid{grid-template-columns:1fr}.status{grid-template-columns:repeat(2,1fr)}header{flex-direction:column}.radarWrap{min-height:320px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>BLE Lost Device Finder</h1>
+      <div class="sub">Use Bluetooth Low Energy advertising strength to hunt for an active nearby device. Choose a target, move slowly, and follow the stronger signal.</div>
+    </div>
+    <div class="badge">Local-only • No cloud</div>
+  </header>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>1. Scan & choose a target</h2>
+      <div class="controls">
+        <button class="primary" id="scanBtn">Scan Nearby BLE</button>
+        <button id="pickBtn">Choose Known Device</button>
+        <button class="danger" id="stopBtn" disabled>Stop</button>
+      </div>
+
+      <div class="status">
+        <div class="pill"><b>Web Bluetooth</b><span id="btStatus">Checking…</span></div>
+        <div class="pill"><b>BLE Scan API</b><span id="scanApiStatus">Checking…</span></div>
+        <div class="pill"><b>Secure Context</b><span id="secureStatus">Checking…</span></div>
+        <div class="pill"><b>Bluetooth Radio</b><span id="radioStatus">Checking…</span></div>
+      </div>
+
+      <label for="filter">Filter device list by name</label>
+      <input id="filter" placeholder="Example: Buds, Tile, keyboard, mouse…">
+
+      <div class="tableWrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Target</th><th>Device</th><th>RSSI</th><th>Signal</th><th>Last seen</th></tr></thead>
+          <tbody id="deviceRows"><tr><td colspan="5" style="color:#91a8c4">No advertisements received yet.</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="callout" id="compatNote">
+        Broad scanning may be unavailable unless your Chromium-based browser exposes the experimental BLE scanning API. The page will detect that automatically.
+      </div>
+
+      <div class="controls">
+        <label class="toggle"><input type="checkbox" id="soundToggle"> Proximity beeps</label>
+        <label class="toggle"><input type="checkbox" id="keepScreen" checked> Keep screen awake</label>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>2. Follow the signal</h2>
+      <div class="radarWrap">
+        <div class="radar">
+          <div class="sweep"></div>
+          <div class="targetDot" id="targetDot"></div>
+          <div class="centerReadout">
+            <div id="rssiBig">--</div>
+            <div id="proximityText">NO TARGET</div>
+            <div id="targetName">Choose a device</div>
+          </div>
+        </div>
+      </div>
+      <div class="meter"><div id="meterBar"></div></div>
+      <div class="trend" id="trendText">Signal trend: waiting</div>
+      <div style="margin-top:12px"><canvas id="chart" width="640" height="180"></canvas></div>
+      <div class="note" id="pathLossText" style="margin-top:10px">Tx power/path loss: unavailable</div>
+    </section>
+  </div>
+
+  <section class="panel" style="margin-top:16px">
+    <h2>Diagnostics</h2>
+    <div class="log" id="log"></div>
+    <div class="note" style="margin-top:10px">
+      RSSI is a relative radio-strength measurement, not a precise distance. Walls, your body, antenna orientation, reflections, and the device's transmit power can move the reading substantially. For best results: stand still for a few seconds at each position, then move in one direction and compare the smoothed reading.
+    </div>
+  </section>
+
+  <footer>
+    Use only to locate devices you own or are authorized to locate. This tool does not obtain GPS location, cannot find a device outside Bluetooth radio range, and may not detect classic-Bluetooth-only or non-advertising devices.
+  </footer>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+const $ = id => document.getElementById(id);
+const devices = new Map();
+let scan = null;
+let targetId = null;
+let targetDevice = null;
+let watchAbortController = null;
+let wakeLock = null;
+let audioCtx = null;
+let beepTimer = null;
+let advHandlerInstalled = false;
+let lastTargetPacket = 0;
+
+const hist = [];
+const MAX_HIST = 80;
+
+function log(msg){
+  const t = new Date().toLocaleTimeString();
+  const el = $('log');
+  el.textContent += `[${t}] ${msg}\n`;
+  el.scrollTop = el.scrollHeight;
+}
+function setStatus(id, text, cls=''){
+  const e=$(id); e.textContent=text; e.className=cls;
+}
+function maskId(id){
+  if(!id) return 'unknown';
+  return id.length > 10 ? id.slice(0,5)+'…'+id.slice(-4) : id;
+}
+function strengthPct(rssi){
+  // Useful relative visualization, not a physical calibration.
+  return Math.max(0, Math.min(100, ((rssi + 100) / 55) * 100));
+}
+function proximityLabel(rssi){
+  if(rssi == null) return 'WAITING';
+  if(rssi >= -50) return 'VERY CLOSE';
+  if(rssi >= -60) return 'CLOSE';
+  if(rssi >= -70) return 'NEARBY';
+  if(rssi >= -80) return 'WEAK';
+  return 'VERY WEAK';
+}
+function ema(values, alpha=.32){
+  if(!values.length) return null;
+  let v=values[0];
+  for(let i=1;i<values.length;i++) v = alpha*values[i] + (1-alpha)*v;
+  return v;
+}
+function ageText(ts){
+  if(!ts) return '—';
+  const s=(Date.now()-ts)/1000;
+  if(s<1) return 'now';
+  if(s<60) return `${Math.floor(s)}s`;
+  return `${Math.floor(s/60)}m`;
+}
+function updateDeviceTable(){
+  const f=$('filter').value.trim().toLowerCase();
+  const arr=[...devices.values()]
+    .filter(d => !f || (d.name||'').toLowerCase().includes(f))
+    .sort((a,b)=>(b.rssi??-999)-(a.rssi??-999));
+  const body=$('deviceRows');
+  if(!arr.length){
+    body.innerHTML='<tr><td colspan="5" style="color:#91a8c4">No matching advertisements received yet.</td></tr>';
+    return;
+  }
+  body.innerHTML='';
+  for(const d of arr){
+    const tr=document.createElement('tr');
+    if(d.id===targetId) tr.classList.add('target');
+    const name=d.name || `Unnamed BLE (${maskId(d.id)})`;
+    const pct=d.rssi==null?0:strengthPct(d.rssi);
+    tr.innerHTML = `
+      <td><button class="selectBtn" data-id="${CSS.escape(d.id)}">${d.id===targetId?'Tracking':'Track'}</button></td>
+      <td title="${escapeHtml(d.id)}">${escapeHtml(name)}</td>
+      <td>${d.rssi==null?'—':Math.round(d.rssi)+' dBm'}</td>
+      <td>${Math.round(pct)}%</td>
+      <td>${ageText(d.lastSeen)}</td>`;
+    tr.querySelector('button').addEventListener('click',()=>selectTarget(d.id));
+    body.appendChild(tr);
+  }
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+function selectTarget(id){
+  const d=devices.get(id);
+  if(!d) return;
+  targetId=id;
+  targetDevice=d.device || null;
+  hist.length=0;
+  $('targetName').textContent=d.name || `Unnamed BLE (${maskId(id)})`;
+  log(`Tracking target: ${d.name || 'unnamed device'} (${maskId(id)})`);
+  updateDeviceTable();
+  if(d.rssi!=null) updateTargetVisual(d);
+}
+function onAdvertisement(event){
+  const dev=event.device;
+  const id=dev?.id || `anon-${event.name || 'device'}`;
+  const prior=devices.get(id) || {samples:[]};
+  const rssi=Number.isFinite(event.rssi) ? event.rssi : null;
+  const txPower=Number.isFinite(event.txPower) ? event.txPower : null;
+  const name=event.name || dev?.name || prior.name || '';
+  const rec = {
+    ...prior, id, device:dev || prior.device, name,
+    rssi, txPower, lastSeen:Date.now(),
+    samples:(prior.samples||[]).slice(-14)
+  };
+  if(rssi!=null) rec.samples.push(rssi);
+  devices.set(id,rec);
+
+  if(id===targetId){
+    lastTargetPacket=Date.now();
+    updateTargetVisual(rec);
+  }
+  updateDeviceTable();
+}
+function installAdvertisementHandler(){
+  if(advHandlerInstalled || !navigator.bluetooth) return;
+  navigator.bluetooth.addEventListener('advertisementreceived', onAdvertisement);
+  advHandlerInstalled=true;
+}
+function updateTargetVisual(d){
+  if(d.rssi==null) return;
+  hist.push({t:Date.now(), rssi:d.rssi});
+  if(hist.length>MAX_HIST) hist.shift();
+
+  const recent=hist.slice(-8).map(x=>x.rssi);
+  const smooth=ema(recent);
+  const pct=strengthPct(smooth);
+  $('rssiBig').textContent=`${Math.round(smooth)} dBm`;
+  $('proximityText').textContent=proximityLabel(smooth);
+  $('meterBar').style.width=`${pct}%`;
+
+  const dot=$('targetDot');
+  dot.classList.add('active');
+  const radius = 42 * (1 - pct/100); // percent of radar radius from center
+  const angle = (Date.now()/40)%360;
+  dot.style.left=`calc(50% + ${Math.cos(angle*Math.PI/180)*radius}%)`;
+  dot.style.top=`calc(50% + ${Math.sin(angle*Math.PI/180)*radius}%)`;
+  dot.style.background = smooth >= -60 ? '#66e3a4' : smooth >= -75 ? '#ffd166' : '#ff6b6b';
+
+  if(hist.length>=8){
+    const first=ema(hist.slice(-8,-4).map(x=>x.rssi));
+    const second=ema(hist.slice(-4).map(x=>x.rssi));
+    const delta=second-first;
+    $('trendText').textContent = delta>2 ? `Signal trend: warmer (+${delta.toFixed(1)} dB)` :
+      delta<-2 ? `Signal trend: colder (${delta.toFixed(1)} dB)` :
+      `Signal trend: steady (${delta>=0?'+':''}${delta.toFixed(1)} dB)`;
+  } else {
+    $('trendText').textContent='Signal trend: collecting samples…';
+  }
+
+  if(d.txPower!=null){
+    const pathLoss=d.txPower-smooth;
+    $('pathLossText').textContent=`Tx power ${d.txPower} dBm • path loss ≈ ${pathLoss.toFixed(1)} dB (relative only)`;
+  } else {
+    $('pathLossText').textContent='Tx power/path loss: device did not advertise Tx power';
+  }
+  drawChart();
+  manageBeep(pct);
+}
+function drawChart(){
+  const c=$('chart'), ctx=c.getContext('2d');
+  const w=c.width,h=c.height;
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#071522'; ctx.fillRect(0,0,w,h);
+  ctx.strokeStyle='#1c3855'; ctx.lineWidth=1;
+  for(let i=1;i<5;i++){const y=i*h/5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  if(hist.length<2) return;
+  const min=-100,max=-35;
+  ctx.strokeStyle='#66e3a4'; ctx.lineWidth=3; ctx.beginPath();
+  hist.forEach((p,i)=>{
+    const x=i/(MAX_HIST-1)*w;
+    const y=h-((p.rssi-min)/(max-min))*h;
+    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+  ctx.fillStyle='#91a8c4';ctx.font='12px system-ui';
+  ctx.fillText('-35 dBm',8,14);ctx.fillText('-100 dBm',8,h-8);
+}
+async function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') await audioCtx.resume();
+}
+function beep(){
+  if(!$('soundToggle').checked || !audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.frequency.value=880;
+  g.gain.setValueAtTime(.0001,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.12,audioCtx.currentTime+.01);
+  g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+.08);
+  o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+.09);
+}
+function manageBeep(pct){
+  clearTimeout(beepTimer);
+  if(!$('soundToggle').checked) return;
+  const delay=Math.round(1500-(pct/100)*1250);
+  beepTimer=setTimeout(()=>{beep(); if(targetId) manageBeep(pct);},Math.max(250,delay));
+}
+async function requestWake(){
+  if(!$('keepScreen').checked || !('wakeLock' in navigator)) return;
+  try{ wakeLock=await navigator.wakeLock.request('screen'); log('Screen wake lock active.'); }
+  catch(e){ log(`Wake lock unavailable: ${e.message}`); }
+}
+async function releaseWake(){
+  try{ if(wakeLock){await wakeLock.release();wakeLock=null;} }catch{}
+}
+async function startBroadScan(){
+  await ensureAudio().catch(()=>{});
+  if(!navigator.bluetooth){
+    log('Web Bluetooth is not available in this browser.');
+    return;
+  }
+  if(typeof navigator.bluetooth.requestLEScan!=='function'){
+    log('Broad BLE scanning API (requestLEScan) is not exposed by this browser.');
+    $('compatNote').innerHTML='Your browser does not currently expose <code>requestLEScan()</code>. Try <b>Choose Known Device</b>. In Chromium builds where the feature remains experimental, enabling <code>chrome://flags/#enable-experimental-web-platform-features</code> or the equivalent Edge flag may expose it. Restart the browser after changing a flag.';
+    return;
+  }
+  installAdvertisementHandler();
+  try{
+    if(scan?.active) scan.stop();
+    scan = await navigator.bluetooth.requestLEScan({
+      acceptAllAdvertisements:true,
+      keepRepeatedDevices:true
+    });
+    $('scanBtn').disabled=true; $('stopBtn').disabled=false;
+    log('BLE advertisement scan started. Move slowly and wait for repeated packets.');
+    await requestWake();
+  }catch(e){
+    log(`Scan failed: ${e.name}: ${e.message}`);
+    if(e.name==='NotAllowedError') log('Permission was denied or browser policy blocked Bluetooth scanning.');
+    if(e.name==='InvalidStateError') log('Bluetooth may be turned off.');
+  }
+}
+async function chooseKnownDevice(){
+  await ensureAudio().catch(()=>{});
+  if(!navigator.bluetooth){log('Web Bluetooth unavailable.');return;}
+  try{
+    const dev = await navigator.bluetooth.requestDevice({acceptAllDevices:true});
+    const id=dev.id;
+    const rec=devices.get(id)||{id,device:dev,name:dev.name||'',rssi:null,txPower:null,lastSeen:0,samples:[]};
+    rec.device=dev;rec.name=dev.name||rec.name;
+    devices.set(id,rec);
+    selectTarget(id);
+    installAdvertisementHandler();
+
+    if(typeof dev.watchAdvertisements==='function'){
+      if(watchAbortController) watchAbortController.abort();
+      watchAbortController = new AbortController();
+      dev.addEventListener('advertisementreceived', onAdvertisement, {signal: watchAbortController.signal});
+      await dev.watchAdvertisements({signal: watchAbortController.signal});
+      log(`Watching advertisements from ${dev.name || 'selected device'}.`);
+      $('stopBtn').disabled=false;
+      await requestWake();
+    }else{
+      log('This browser can select the device but does not expose watchAdvertisements(), so live RSSI tracking is unavailable.');
+      $('compatNote').innerHTML='The selected device was granted, but this browser does not expose <code>watchAdvertisements()</code>. Live proximity requires advertisement events with RSSI.';
+    }
+  }catch(e){
+    log(`Device selection failed: ${e.name}: ${e.message}`);
+  }
+}
+function stopAll(){
+  try{if(scan?.active)scan.stop();}catch{}
+  scan=null;
+  try{if(watchAbortController) watchAbortController.abort();}catch{}
+  watchAbortController=null;
+  clearTimeout(beepTimer);
+  $('scanBtn').disabled=false;$('stopBtn').disabled=true;
+  releaseWake();
+  log('Scanning/watch stopped.');
+}
+async function diagnostics(){
+  const hasBT=!!navigator.bluetooth;
+  setStatus('btStatus',hasBT?'Available':'Unavailable',hasBT?'ok':'bad');
+  setStatus('scanApiStatus',hasBT && typeof navigator.bluetooth.requestLEScan==='function'?'Available':'Not exposed',
+            hasBT && typeof navigator.bluetooth.requestLEScan==='function'?'ok':'warn');
+  setStatus('secureStatus',window.isSecureContext?'Yes':'No',window.isSecureContext?'ok':'bad');
+
+  if(hasBT && typeof navigator.bluetooth.getAvailability==='function'){
+    try{
+      const a=await navigator.bluetooth.getAvailability();
+      setStatus('radioStatus',a?'Available':'Unavailable',a?'ok':'warn');
+    }catch{setStatus('radioStatus','Unknown','warn');}
+  }else setStatus('radioStatus','Unknown','warn');
+
+  log(`Browser: ${navigator.userAgent}`);
+  log(`Secure context: ${window.isSecureContext}`);
+  log(`Web Bluetooth: ${hasBT}`);
+  log(`requestLEScan(): ${hasBT && typeof navigator.bluetooth.requestLEScan==='function'}`);
+  if(!window.isSecureContext){
+    $('compatNote').innerHTML='Web Bluetooth requires a secure context. If opening this file directly does not qualify in your browser, serve it from <code>https://</code> or <code>http://localhost</code>.';
+  }
+}
+$('scanBtn').addEventListener('click',startBroadScan);
+$('pickBtn').addEventListener('click',chooseKnownDevice);
+$('stopBtn').addEventListener('click',stopAll);
+$('filter').addEventListener('input',updateDeviceTable);
+$('soundToggle').addEventListener('change',async e=>{if(e.target.checked){await ensureAudio().catch(()=>{});if(targetId)beep();}else clearTimeout(beepTimer);});
+$('keepScreen').addEventListener('change',e=>e.target.checked?requestWake():releaseWake());
+
+setInterval(()=>{
+  updateDeviceTable();
+  if(targetId && lastTargetPacket && Date.now()-lastTargetPacket>7000){
+    $('proximityText').textContent='SIGNAL LOST';
+    $('targetDot').classList.remove('active');
+  }
+},1000);
+
+window.addEventListener('beforeunload',stopAll);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible' && $('keepScreen').checked)requestWake();});
+
+diagnostics();
+drawChart();
+})();
+</script>
+</body>
+</html>
